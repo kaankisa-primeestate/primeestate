@@ -1,44 +1,43 @@
-import Sidebar from "../components/Sidebar";
-import MorningBrief from "../components/MorningBrief";
-import TodayPriorities from "../components/TodayPriorities";
+import Link from "next/link";
 
-export default function Home() {
+import RelationshipHeader from "@/components/RelationshipHeader";
+import PersonSummary from "@/components/PersonSummary";
+import PrimeMemory from "@/components/PrimeMemory";
+import ConversationPlan from "@/components/ConversationPlan";
+import Timeline from "@/components/Timeline";
+import Notes from "@/components/Notes";
+
+export default function RelationshipPage() {
   return (
-    <main className="flex min-h-screen bg-slate-50">
-      <Sidebar />
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-7xl p-8">
 
-      <div className="flex-1 p-8">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900"
+        >
+          ← Dashboard'a Dön
+        </Link>
 
-        {/* Header */}
-        <header className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              🏡 PrimeEstate
-            </h1>
+        <RelationshipHeader />
 
-            <p className="mt-1 text-sm text-slate-500">
-              📅 1 Ağustos Cumartesi
-            </p>
+        <div className="mt-8 grid gap-8">
+
+          <PersonSummary />
+
+          <PrimeMemory />
+
+          <ConversationPlan />
+
+          <div className="grid gap-8 lg:grid-cols-2">
+
+            <Timeline />
+
+            <Notes />
+
           </div>
 
-          <MorningBrief />
-        </header>
-
-        {/* Greeting */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-bold text-slate-900">
-            Günaydın Kaan 👋
-          </h2>
-
-          <p className="mt-3 text-lg text-slate-600">
-            <strong>Harika bir destekçin yanında.</strong>
-            <br />
-            Bugün önemli hiçbir şeyi kaçırmayacaksın.
-          </p>
-        </section>
-
-        {/* Bugünün Öncelikleri */}
-        <TodayPriorities />
+        </div>
 
       </div>
     </main>
