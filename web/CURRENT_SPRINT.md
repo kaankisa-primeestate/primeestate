@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Customer & Demand Workspace V1
+Portfolio Workspace V1
 
 ## Durum
-🚧 Development
+✅ Completed
 
 ## Ürün Vizyonu
 
@@ -23,28 +23,28 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Responsive PrimeEstate global design foundation
 - [x] Dashboard workspace V1
 - [x] Relationship Workspace V1
-- [x] Customer domain types (`Customer`, `CustomerRole`, `Demand`)
-- [x] Customer + Demand seed data
-- [x] Customer list, search and role filtering
-- [x] Customer 360-style summary
-- [x] Multiple roles per customer
-- [x] Multiple demand profiles per customer
-- [x] Demand detail cards and next-action context
-- [x] Prime insight V1 preview panel
+- [x] Customer + Demand Workspace V1
+- [x] Portfolio domain model (`Portfolio`, `PortfolioStatus`, `PortfolioPurpose`, `PropertyType`)
+- [x] Portfolio seed data
+- [x] Portfolio list/search/filter workspace
+- [x] Portfolio detail workspace
+- [x] Ownership & consultant context
+- [x] Demand match signal prepared for matching engine
+- [x] Prime portfolio insight V1 preview
 
 ## Bu Aşamanın Amacı
 
-Müşteriyi tekil bir kayıt olarak ele almak ve aynı müşteri altında birden fazla rol ile birden fazla talep profilini destekleyen temel çalışma alanını oluşturmak.
+Gayrimenkulü müşteriden bağımsız, tekil bir portföy kaydı olarak modellemek; mal sahibi, danışman, ilan bilgileri ve sonraki eşleştirme motoru için gerekli kriterleri aynı veri yapısında toplamak.
 
 **Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
 
 ## Sonraki Adım
 
-Portföy veri modeli ve Portföy Workspace V1. Buradaki talep yapısı, sonraki eşleştirme motorunun temel girdisi olacak.
+Eşleştirme Motoru V1: Talep profili ↔ Portföy. Konum, bütçe, mülk tipi, m², oda ve diğer kriterler üzerinden 0–100 uyum skoru ve açıklanabilir eşleşme nedenleri.
 
 ## Teknik Not
 
-Bu sprintte ekran ve tipli domain/seed katmanı hazırlandı. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamalarında eklenecek; V1 ekranı bunu varmış gibi göstermiyor.
+Bu sprintte ekran ve tipli domain/seed katmanı hazırlandı. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamalarında eklenecek; V1 ekranı bunlar varmış gibi göstermiyor.
 
 ## Kural
 
