@@ -1,7 +1,7 @@
 # 🏡 PRIME01
 
 ## Sprint
-Workspace V1
+Customer & Demand Workspace V1
 
 ## Durum
 🚧 Development
@@ -18,40 +18,36 @@ Prime, emlak danışmanının ikinci beynidir.
 
 ---
 
-## Workspace Akışı
-
-1. 👤 PersonSummary
-2. 🧠 PrimeMemory
-3. 🎯 OpportunityAnalysis
-4. 🏡 PortfolioRecommendations
-5. ☎ ConversationPlan
-6. 📅 Timeline
-7. 📝 Notes
-
----
-
 ## Tamamlananlar
 
-- [x] PrimeInsight → PrimeMemory
-- [x] NextAction → ConversationPlan
-- [x] Workspace V1 tasarımı belirlendi
+- [x] Responsive PrimeEstate global design foundation
+- [x] Dashboard workspace V1
+- [x] Relationship Workspace V1
+- [x] Customer domain types (`Customer`, `CustomerRole`, `Demand`)
+- [x] Customer + Demand seed data
+- [x] Customer list, search and role filtering
+- [x] Customer 360-style summary
+- [x] Multiple roles per customer
+- [x] Multiple demand profiles per customer
+- [x] Demand detail cards and next-action context
+- [x] Prime insight V1 preview panel
 
----
+## Bu Aşamanın Amacı
 
-## Şu An Üzerinde Çalışılan
+Müşteriyi tekil bir kayıt olarak ele almak ve aynı müşteri altında birden fazla rol ile birden fazla talep profilini destekleyen temel çalışma alanını oluşturmak.
 
-PrimeMemory
+**Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
 
----
+## Sonraki Adım
 
-## Bir Sonraki Adım
+Portföy veri modeli ve Portföy Workspace V1. Buradaki talep yapısı, sonraki eşleştirme motorunun temel girdisi olacak.
 
-PersonSummary
+## Teknik Not
 
----
+Bu sprintte ekran ve tipli domain/seed katmanı hazırlandı. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamalarında eklenecek; V1 ekranı bunu varmış gibi göstermiyor.
 
 ## Kural
 
 **Finished > Perfect**
 
-Prime01 tamamlanmadan yeni özellik eklenmez.
+Her aşama bir sonraki modülün veri modeline bağlanabilecek şekilde tamamlanır; kritik mimari kararlar dokümante edilmeden sonraki katmana geçilmez.
