@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Matching Engine V1
+Sales Ops V1
 
 ## Durum
-✅ Completed
+🚧 Development complete · Review pending
 
 ## Ürün Vizyonu
 
@@ -24,31 +24,34 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Dashboard workspace V1
 - [x] Relationship Workspace V1
 - [x] Customer + Demand Workspace V1
-- [x] Portfolio domain model and seed data
-- [x] Portfolio list/search/filter workspace
-- [x] Portfolio detail workspace
-- [x] Matching domain types (`PropertyMatch`, `MatchScoreBreakdown`, `MatchReason`)
-- [x] Deterministic matching engine V1
-- [x] 0–100 explainable compatibility score
-- [x] Weighted scoring: type, location, budget, m², features, preferences, availability
-- [x] Strong mismatch penalty for incompatible property type / budget risk
-- [x] Customer → Demand → Portfolio → Score → Reason → Next Action flow
-- [x] Matching workspace with customer/demand selection and filters
-- [x] Matching navigation entry
+- [x] Portfolio Workspace V1
+- [x] Matching Engine V1
+- [x] Sales Ops domain types: Activity, Task, Showing, Offer
+- [x] Sales Ops seed workflow
+- [x] Activity timeline
+- [x] Task queue with status transition preview
+- [x] Showing workspace with customer + portfolio relationship
+- [x] Offer workspace with amount, status and next action
+- [x] Eşleşme → Aktivite → Görev → Gösterim → Teklif zinciri
+- [x] Mobile-first responsive Sales Ops workspace
 
 ## Bu Aşamanın Amacı
 
-Müşteri talebini mevcut portföylerle tek veri üzerinden eşleştirmek ve danışmana yalnızca bir skor değil, skorun nedenini ve önerilen sonraki aksiyonu göstermek.
+Eşleştirme sonucunu yalnızca bir öneri olarak bırakmamak; danışmanın gerçek operasyonunu aynı müşteri–portföy bağlamı üzerinde ilerletmek.
+
+**Temel akış:**
+
+> Müşteri → Talep → Eşleşme → Aktivite → Görev → Gösterim → Teklif → Kapanış
 
 **Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
 
 ## Sonraki Adım
 
-Sales Ops V1: Activity → Task → Showing → Offer/Deal zincirini kurmak ve eşleşmeden aksiyona geçişi gerçek bir operasyon akışına dönüştürmek.
+Foundation V1: gerçek persistence + PostgreSQL veri modeli + API katmanı + auth/RBAC + tenant izolasyonu. Ardından Sales Ops ekranındaki seed verileri gerçek kayıtlara bağlanacak.
 
 ## Teknik Not
 
-Bu sprintte eşleştirme motoru saf TypeScript fonksiyonu olarak kuruldu; müşteri, talep ve portföy seed verileri üzerinden deterministik çalışıyor. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamalarında eklenecek. V1 ekranı bunlar varmış gibi göstermiyor.
+Bu sprintte Sales Ops domain katmanı tipli seed veri ve responsive workspace olarak hazırlandı. Görev tamamlandı durumu gibi etkileşimler ekran önizlemesidir; henüz kalıcı değildir. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamasında eklenecek. V1 ekranı bunlar varmış gibi göstermiyor.
 
 ## Kural
 
