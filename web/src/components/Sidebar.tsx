@@ -5,6 +5,7 @@ const menu = [
   { name: "İlişkiler", href: "/relationships", icon: "🤝" },
   { name: "Portföyler", href: "/portfolio", icon: "🏡" },
   { name: "Eşleştirme", href: "/matching", icon: "🎯" },
+  { name: "İş Akışı", href: "/sales", icon: "⚡" },
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
