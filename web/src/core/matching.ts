@@ -15,6 +15,16 @@ function rangeFromText(text: string): [number, number] | null {
   return [Math.min(n[0], n[1]), Math.max(n[0], n[1])];
 }
 
+function budgetRange(text: string): [number, number] | null {
+  const normalized = text.toLocaleLowerCase("tr-TR");
+  const values = numbers(text);
+  if (!values.length) return null;
+  const multiplier = normalized.includes("m tl") || normalized.includes("milyon") ? 1_000_000 : 1;
+  const converted = values.map((value) => value * multiplier);
+  if (converted.length === 1) return [converted[0], converted[0]];
+  return [Math.min(converted[0], converted[1]), Math.max(converted[0], converted[1])];
+}
+
 function sizeScore(demand: Demand, portfolio: Portfolio) {
   const d = rangeFromText(demand.size);
   const p = numbers(portfolio.size)[0];
@@ -25,7 +35,7 @@ function sizeScore(demand: Demand, portfolio: Portfolio) {
 }
 
 function budgetScore(demand: Demand, portfolio: Portfolio) {
-  const d = rangeFromText(demand.budget);
+  const d = budgetRange(demand.budget);
   if (!d) return 0.55;
   const p = portfolio.priceValue;
   if (p >= d[0] && p <= d[1]) return 1;
