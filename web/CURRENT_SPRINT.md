@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Foundation V1 · PostgreSQL Data Model
+Foundation V1 · PostgreSQL + Authentication
 
 ## Durum
-🚧 Step 3 · Database provisioning + staging migration pending
+🚧 Step 4 · Authentication + tenant context
 
 ## Ürün Vizyonu
 
@@ -39,6 +39,11 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Prisma Client singleton
 - [x] Database health endpoint: /api/health
 - [x] Database connection is kept out of source control
+- [x] Better Auth + Prisma adapter configured
+- [x] Auth session/account/verification schema added
+- [x] Protected tenant-aware user context helper added
+- [x] Auth API mounted at /api/auth/[...all]
+- [x] Protected context probe added at /api/auth-context
 
 ## Bu Aşamanın Amacı
 
@@ -52,18 +57,20 @@ Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek p
 
 ## Mevcut Durum
 
-Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı hazırlandı.
+Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı ve kimlik doğrulama temeli hazırlandı.
 
 - Prisma schema mevcut.
 - Prisma Client üretimi build/postinstall akışına bağlandı.
 - /api/health gerçek database bağlantısını test edecek şekilde hazır.
 - DATABASE_URL GitHub'a yazılmıyor.
-- Gerçek migration henüz çalıştırılmadı.
-- Staging PostgreSQL henüz provision edilmedi.
+- İlk PostgreSQL migration staging'e uygulanmış durumda.
+- Better Auth için gerekli session/account/verification tabloları migration'a eklendi.
+- BETTER_AUTH_SECRET ve BETTER_AUTH_URL Render'da runtime secret/config olarak tanımlanmalı.
+- İlk gerçek kullanıcı bootstrap'i henüz yapılmadı.
 
 ## Sonraki Adım
 
-Staging için ayrı bir PostgreSQL veritabanı oluşturmak, DATABASE_URL değerini yalnızca Render Environment Variables'a eklemek, ilk migration'ı uygulamak ve /api/health üzerinden bağlantıyı doğrulamak.
+Render'a Better Auth runtime değişkenlerini eklemek, auth migration'ını staging'e uygulamak ve korumalı `/api/auth-context` endpoint'inin oturum yokken 401 döndürdüğünü doğrulamak. Sonrasında ilk Office/Admin kullanıcısı bootstrap edilecek.
 
 **Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
