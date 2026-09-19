@@ -28,14 +28,19 @@ if (!manifest) {
   );
 }
 
+const manifestText = JSON.stringify(manifest);
 const routeKeys = Object.keys(manifest);
-const missingRoutes = requiredRoutes.filter((route) => {
-  return routeKeys.some((key) => key === route || key === `${route}/`);
-});
+const missingRoutes = requiredRoutes.filter(
+  (route) => !manifestText.includes(route),
+);
 
 if (missingRoutes.length > 0) {
   console.error("Registered App Router routes:");
   console.error(routeKeys.join("\n"));
+  console.error(
+    "Manifest JSON:",
+    manifestText,
+  );
   throw new Error(
     `Production build verification failed. Missing routes: ${missingRoutes.join(", ")}`,
   );
