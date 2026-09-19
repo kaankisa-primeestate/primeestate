@@ -49,6 +49,10 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Production App Router route manifest verification
 - [x] Web lint + typecheck + production build quality gate
 - [x] Foundation audit and decision log added
+- [x] Auth user tenant fields formalized
+- [x] Secure first Organization/Office/Admin bootstrap script added
+- [x] Manual bootstrap workflow added
+- [x] CI lint + typecheck + production build remains green after bootstrap changes
 
 ## Bu Aşamanın Amacı
 
@@ -75,7 +79,7 @@ Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı ve kimlik doğrulama t
 
 ## Sonraki Adım
 
-Önce production build artefact'larının route'ları gerçekten içerdiğini kalite kapısından geçirmek; ardından Render runtime route serving'i doğrulamak. Sonrasında ilk Office/Admin kullanıcısı bootstrap edilecek ve gerçek authorization enforcement katmanı kurulacak.
+Production route serving doğrulandı. Şimdi ilk Organization/Office/Admin kaydı oluşturulacak; ardından authorization enforcement katmanı API/query seviyesinde kurulacak.
 
 **Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
