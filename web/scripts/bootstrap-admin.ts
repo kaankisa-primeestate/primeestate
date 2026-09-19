@@ -1,5 +1,3 @@
-import { hashPassword } from "better-auth/crypto";
-
 import { auth } from "../src/lib/auth";
 import { prisma } from "../src/lib/prisma";
 
@@ -88,7 +86,7 @@ await context.internalAdapter.linkAccount({
   accountId: user.id,
   providerId: "credential",
   userId: user.id,
-  password: await hashPassword(password),
+  password: await context.password.hash(password, context),
 });
 
 await prisma.auditLog.create({
