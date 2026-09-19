@@ -33,7 +33,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.PRIMEESTATE_STAGING_DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.PRIMEESTATE_BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: ${{ secrets.PRIMEESTATE_BETTER_AUTH_URL }}
+          # Bootstrap uses the known public application URL; the runtime secret remains configured in Render.
+          BETTER_AUTH_URL: https://primeestate-v9e0.onrender.com
           BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
           BOOTSTRAP_ADMIN_NAME: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_NAME }}
           BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
