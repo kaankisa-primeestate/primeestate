@@ -4,7 +4,7 @@
 Foundation V1 · PostgreSQL + Authentication + Production Build Hardening
 
 ## Durum
-🚧 Step 4B · Authentication + production route/build hardening
+🚧 Step 4B · CI quality gate + production route verification
 
 ## Ürün Vizyonu
 
@@ -47,12 +47,13 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Production build pinned to Webpack
 - [x] Clean production build before each build
 - [x] Production App Router route manifest verification
-- [x] Web lint + typecheck + production build quality gate
+- [x] Web lint + typecheck + production build quality gate configured
 - [x] Foundation audit and decision log added
+- [x] React/ESLint foundation errors fixed in commit 9576cfc
 
 ## Bu Aşamanın Amacı
 
-Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek persistence katmanını oluşturmak.
+Ekranları gerçek PostgreSQL verisine bağlamadan önce üretim build zincirini ve route serving katmanını kanıtlamak.
 
 **Temel akış:**
 
@@ -62,20 +63,25 @@ Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek p
 
 ## Mevcut Durum
 
-Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı ve kimlik doğrulama temeli hazırlandı.
-
 - Prisma schema mevcut.
-- Prisma Client üretimi build/postinstall akışına bağlandı.
+- Prisma Client üretimi build/postinstall akışına bağlı.
 - /api/health gerçek database bağlantısını test edecek şekilde hazır.
 - DATABASE_URL GitHub'a yazılmıyor.
 - İlk PostgreSQL migration staging'e uygulanmış durumda.
-- Better Auth için gerekli session/account/verification tabloları migration'a eklendi.
-- BETTER_AUTH_SECRET ve BETTER_AUTH_URL Render'da runtime secret/config olarak tanımlanmalı.
+- Better Auth için gerekli session/account/verification tabloları staging migration'ına eklendi.
+- BETTER_AUTH_SECRET ve BETTER_AUTH_URL Render runtime config olarak tanımlı.
 - İlk gerçek kullanıcı bootstrap'i henüz yapılmadı.
+- CI quality gate'in son lint düzeltmesi sonrası yeni doğrulaması bekleniyor.
+- package.json ile package-lock.json arasında eski bir lockfile descriptor uyumsuzluğu tespit edildi; gerçek bağımlılık grafiğiyle senkronize edilmeden bu aşama tamamlanmış sayılmayacak.
+- Production runtime route serving, build artefact doğrulamasından sonra Render üzerinde ayrıca doğrulanacak.
 
 ## Sonraki Adım
 
-Önce production build artefact'larının route'ları gerçekten içerdiğini kalite kapısından geçirmek; ardından Render runtime route serving'i doğrulamak. Sonrasında ilk Office/Admin kullanıcısı bootstrap edilecek ve gerçek authorization enforcement katmanı kurulacak.
+1. CI lint → typecheck → production build zincirini yeşile geçirmek.
+2. package-lock.json'u package.json ile gerçek bağımlılık grafiği üzerinden senkronize etmek.
+3. Production App Router manifestinde /api/health, /api/auth-context ve Better Auth catch-all route'larını doğrulamak.
+4. Render runtime'da 404 yerine beklenen HTTP/JSON cevaplarını doğrulamak.
+5. Sonrasında ilk Office/Admin bootstrap ve gerçek authorization enforcement katmanına geçmek.
 
 **Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
