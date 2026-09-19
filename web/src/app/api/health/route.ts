@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -16,14 +17,15 @@ export async function GET() {
 
   try {
     const { prisma } = await import("@/lib/prisma");
-
     await prisma.$queryRaw`SELECT 1`;
 
     return NextResponse.json({
       status: "ok",
       database: "connected",
     });
-  } catch {
+  } catch (error) {
+    console.error("Health check database error:", error);
+
     return NextResponse.json(
       {
         status: "error",
