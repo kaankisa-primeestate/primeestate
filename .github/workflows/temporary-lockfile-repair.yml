@@ -1,12 +1,12 @@
 name: Temporary Lockfile Repair
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - maintenance-lockfile
 
 permissions:
   contents: write
