@@ -9,7 +9,6 @@ const requiredRoutes = [
 
 const manifestCandidates = [
   ".next/server/app-paths-manifest.json",
-  ".next/server/app-paths-manifest.json",
 ];
 
 let manifestPath = null;
