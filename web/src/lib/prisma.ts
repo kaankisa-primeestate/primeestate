@@ -5,12 +5,12 @@ const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient;
 };
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
+const BUILD_PLACEHOLDER_DATABASE_URL =
+  "postgresql://placeholder:placeholder@localhost:5432/primeestate?schema=public";
 
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not configured.");
-  }
+function createPrismaClient() {
+  const connectionString =
+    process.env.DATABASE_URL ?? BUILD_PLACEHOLDER_DATABASE_URL;
 
   const adapter = new PrismaPg({ connectionString });
 
