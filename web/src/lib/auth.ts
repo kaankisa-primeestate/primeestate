@@ -3,11 +3,16 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 
 import { prisma } from "@/lib/prisma";
 
-const secret = process.env.BETTER_AUTH_SECRET;
+const buildPhase = process.env.NEXT_PHASE === "phase-production-build";
+const configuredSecret = process.env.BETTER_AUTH_SECRET;
 
-if (!secret) {
+if (!configuredSecret && !buildPhase) {
   throw new Error("BETTER_AUTH_SECRET is not configured.");
 }
+
+const secret =
+  configuredSecret ??
+  "primeestate-build-placeholder-do-not-use-at-runtime";
 
 export const auth = betterAuth({
   secret,
