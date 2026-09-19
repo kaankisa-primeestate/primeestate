@@ -1,0 +1,44 @@
+name: Bootstrap PrimeEstate Admin
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Bootstrap first organization, office and admin
+        env:
+          DATABASE_URL: ${{ secrets.PRIMEESTATE_STAGING_DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.PRIMEESTATE_BETTER_AUTH_SECRET }}
+          BETTER_AUTH_URL: ${{ secrets.PRIMEESTATE_BETTER_AUTH_URL }}
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
+          BOOTSTRAP_ADMIN_NAME: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_NAME }}
+          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
+          BOOTSTRAP_ORGANIZATION_NAME: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ORGANIZATION_NAME }}
+          BOOTSTRAP_ORGANIZATION_SLUG: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ORGANIZATION_SLUG }}
+          BOOTSTRAP_OFFICE_NAME: ${{ secrets.PRIMEESTATE_BOOTSTRAP_OFFICE_NAME }}
+          BOOTSTRAP_OFFICE_SLUG: ${{ secrets.PRIMEESTATE_BOOTSTRAP_OFFICE_SLUG }}
+        run: npx --yes tsx@4.20.6 scripts/bootstrap-admin.ts
