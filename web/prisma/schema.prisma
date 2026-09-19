@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  OFFICE_ADMIN
+  TEAM_LEADER
+  AGENT
+  VIEWER
+  AUDITOR
+}
+
+enum CustomerRoleType {
+  ALICI
+  KIRACI
+  MAL_SAHIBI
+  SATICI
+  YATIRIMCI
+  LEAD
+  GECMIS_MUSTERI
+}
+
+enum DemandType {
+  SATIN_ALMA
+  KIRALAMA
+}
+
+enum PropertyType {
+  DAIRE
+  VILLA
+  ARSA
+  IS_YERI
+  BINA
+  DEVRE_MULK
+}
+
+enum ListingPurpose {
+  SATILIK
+  KIRALIK
+}
+
+enum ListingStatus {
+  AKTIF
+  REZERVE
+  PASIF
+  SATILDI
+  KIRALANDI
+}
+
+enum ActivityType {
+  ARAMA
+  WHATSAPP
+  EMAIL
+  NOT
+  GOSTERIM
+  TEKLIF
+}
+
+enum TaskStatus {
+  BEKLIYOR
+  TAMAMLANDI
+  GECIKTI
+}
+
+enum TaskPriority {
+  YUKSEK
+  NORMAL
+  DUSUK
+}
+
+enum ShowingStatus {
+  PLANLANDI
+  GERCEKLESTI
+  IPTAL
+}
+
+enum OfferStatus {
+  TASLAK
+  SUNULDU
+  KARSILIKLI_TEKLIF
+  KABUL
+  REDDEDILDI
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  offices   Office[]
+  users     User[]
+  customers Customer[]
+  properties Property[]
+  listings  Listing[]
+  auditLogs AuditLog[]
+
+  @@index([slug])
+}
+
+model Office {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  slug           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  teams        Team[]
+  users        User[]
+  customers    Customer[]
+  properties   Property[]
+  listings     Listing[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  officeId  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  office Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  users  User[]
+
+  @@index([officeId])
+}
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String
+  officeId       String
+  teamId         String?
+  email          String
+  name           String
+  role           UserRole @default(AGENT)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  ownedCustomers Customer[] @relation("CustomerOwner")
+  activities     Activity[]
+  tasks          Task[]
+  listings       Listing[] @relation("ListingConsultant")
+  properties     Property[] @relation("PropertyConsultant")
+  auditLogs      AuditLog[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId, officeId])
+  @@index([officeId, teamId])
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  organizationId String
+  officeId       String
+  ownerUserId    String
+  name           String
+  phone          String?
+  email          String?
+  location       String?
+  source         String?
+  relationshipScore Int @default(0)
+  lastContactAt  DateTime?
+  nextAction     String?
+  nextActionAt   DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  owner        User         @relation("CustomerOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+
+  roles        CustomerRole[]
+  demands      Demand[]
+  activities   Activity[]
+  tasks        Task[]
+  showings     Showing[]
+  offers       Offer[]
+
+  @@index([organizationId, officeId])
+  @@index([ownerUserId])
+  @@index([phone])
+  @@index([email])
+}
+
+model CustomerRole {
+  id         String           @id @default(uuid())
+  customerId String
+  role       CustomerRoleType
+  createdAt  DateTime         @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, role])
+}
+
+model Demand {
+  id           String     @id @default(uuid())
+  customerId   String
+  title        String
+  type         DemandType
+  propertyType PropertyType
+  locations    Json
+  budgetMin    Decimal?   @db.Decimal(18, 2)
+  budgetMax    Decimal?   @db.Decimal(18, 2)
+  currency     String     @default("TRY")
+  minSize      Decimal?   @db.Decimal(12, 2)
+  maxSize      Decimal?   @db.Decimal(12, 2)
+  rooms        String?
+  urgency      TaskPriority @default(NORMAL)
+  preferences  Json?
+  notes        String?
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  matches  Match[]
+
+  @@index([customerId, active])
+  @@index([type, propertyType])
+}
+
+model Property {
+  id             String       @id @default(uuid())
+  organizationId String
+  officeId       String
+  consultantUserId String?
+  propertyType   PropertyType
+  title          String
+  city           String
+  district       String
+  neighborhood   String
+  address        String?
+  latitude       Decimal?     @db.Decimal(10, 7)
+  longitude      Decimal?     @db.Decimal(10, 7)
+  sizeM2         Decimal?     @db.Decimal(12, 2)
+  rooms          String?
+  floor          String?
+  ownerName      String?
+  ownerCustomerId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  consultant   User?        @relation("PropertyConsultant", fields: [consultantUserId], references: [id], onDelete: SetNull)
+  listings     Listing[]
+  matches      Match[]
+
+  @@index([organizationId, officeId])
+  @@index([district, neighborhood])
+}
+
+model Listing {
+  id             String        @id @default(uuid())
+  propertyId     String
+  organizationId String
+  officeId       String
+  consultantUserId String?
+  code           String
+  title          String
+  purpose        ListingPurpose
+  status         ListingStatus @default(AKTIF)
+  price          Decimal       @db.Decimal(18, 2)
+  currency       String        @default("TRY")
+  tags           Json?
+  highlights     Json?
+  featured       Boolean       @default(false)
+  listedAt       DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  consultant   User?    @relation("ListingConsultant", fields: [consultantUserId], references: [id], onDelete: SetNull)
+  matches      Match[]
+  activities   Activity[]
+  showings     Showing[]
+  offers       Offer[]
+
+  @@unique([officeId, code])
+  @@index([organizationId, officeId, status])
+  @@index([purpose, status])
+}
+
+model Match {
+  id         String   @id @default(uuid())
+  demandId   String
+  propertyId String
+  listingId  String?
+  score      Int
+  breakdown  Json
+  reasons    Json
+  mismatches Json?
+  createdAt  DateTime @default(now())
+
+  demand   Demand   @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listing  Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@unique([demandId, propertyId])
+  @@index([demandId, score])
+  @@index([propertyId])
+}
+
+model Activity {
+  id          String       @id @default(uuid())
+  customerId  String
+  listingId   String?
+  ownerUserId String
+  type        ActivityType
+  occurredAt  DateTime     @default(now())
+  summary     String
+  outcome     String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listing  Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  owner    User     @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+
+  @@index([customerId, occurredAt])
+  @@index([ownerUserId, occurredAt])
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  customerId  String?
+  ownerUserId String
+  title       String
+  dueAt       DateTime
+  priority    TaskPriority @default(NORMAL)
+  status      TaskStatus   @default(BEKLIYOR)
+  source      String?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  owner    User      @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+
+  @@index([ownerUserId, status, dueAt])
+  @@index([customerId, dueAt])
+}
+
+model Showing {
+  id          String        @id @default(uuid())
+  customerId  String
+  listingId   String
+  dateTime    DateTime
+  status      ShowingStatus  @default(PLANLANDI)
+  attendees   Int            @default(1)
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, dateTime])
+  @@index([listingId, dateTime])
+}
+
+model Offer {
+  id          String      @id @default(uuid())
+  customerId  String
+  listingId   String
+  amount      Decimal     @db.Decimal(18, 2)
+  currency    String      @default("TRY")
+  status      OfferStatus @default(TASLAK)
+  offeredAt   DateTime    @default(now())
+  nextAction  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, offeredAt])
+  @@index([listingId, status])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
