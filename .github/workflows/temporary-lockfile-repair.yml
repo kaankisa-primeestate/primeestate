@@ -28,7 +28,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Regenerate lockfile
-        run: npm install --package-lock-only --ignore-scripts
+        run: npm install --package-lock-only --ignore-scripts --force
+      - name: Show lockfile root
+        run: node -e "const p=require('./package-lock.json'); console.log(JSON.stringify(p.packages[''],null,2))"
       - name: Commit lockfile
         run: |
           if git diff --quiet -- web/package-lock.json; then
