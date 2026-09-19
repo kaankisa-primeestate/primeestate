@@ -80,13 +80,13 @@ const user = await context.internalAdapter.createUser({
   teamId: null,
   role: "ORG_ADMIN",
   active: true,
-});
+}, { method: "bootstrap" });
 
 await context.internalAdapter.linkAccount({
   accountId: user.id,
   providerId: "credential",
   userId: user.id,
-  password: await context.password.hash(password, context),
+  password: await context.password.hash(password),
 });
 
 await prisma.auditLog.create({
