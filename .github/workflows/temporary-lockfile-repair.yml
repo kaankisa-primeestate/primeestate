@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - maintenance-lockfile
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -24,6 +27,7 @@ jobs:
       - name: Regenerate lockfile
         run: npm install --package-lock-only
       - name: Commit lockfile
+        if: github.event_name == 'push'
         run: |
           if git diff --quiet -- web/package-lock.json; then
             echo "Lockfile already synchronized."
