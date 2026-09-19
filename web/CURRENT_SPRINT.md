@@ -4,7 +4,7 @@
 Foundation V1 · PostgreSQL Data Model
 
 ## Durum
-🚧 Step 2 · Data model complete, database connection pending
+🚧 Step 3 · Database provisioning + staging migration pending
 
 ## Ürün Vizyonu
 
@@ -34,24 +34,38 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Offer workspace with amount, status and next action
 - [x] Eşleşme → Aktivite → Görev → Gösterim → Teklif zinciri
 - [x] Mobile-first responsive Sales Ops workspace
+- [x] PostgreSQL Prisma schema
+- [x] Prisma 7 PostgreSQL dependencies and ESM foundation
+- [x] Prisma Client singleton
+- [x] Database health endpoint: /api/health
+- [x] Database connection is kept out of source control
 
 ## Bu Aşamanın Amacı
 
-Eşleştirme sonucunu yalnızca bir öneri olarak bırakmamak; danışmanın gerçek operasyonunu aynı müşteri–portföy bağlamı üzerinde ilerletmek.
+Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek persistence katmanını oluşturmak.
 
 **Temel akış:**
 
-> Müşteri → Talep → Eşleşme → Aktivite → Görev → Gösterim → Teklif → Kapanış
+> Müşteri → Talep → Eşleşme → Portföy → Aktivite → Görev → Gösterim → Teklif → Kapanış
 
 **Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
 
+## Mevcut Durum
+
+Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı hazırlandı.
+
+- Prisma schema mevcut.
+- Prisma Client üretimi build/postinstall akışına bağlandı.
+- /api/health gerçek database bağlantısını test edecek şekilde hazır.
+- DATABASE_URL GitHub'a yazılmıyor.
+- Gerçek migration henüz çalıştırılmadı.
+- Staging PostgreSQL henüz provision edilmedi.
+
 ## Sonraki Adım
 
-PostgreSQL bağlantısını staging ortamında sağlamak, ilk migration'ı uygulamak ve gerçek Customer/Property/Listing/Demand kayıtlarını API üzerinden persist etmek. Ardından auth/RBAC + tenant izolasyonuna geçilecek.
+Staging için ayrı bir PostgreSQL veritabanı oluşturmak, DATABASE_URL değerini yalnızca Render Environment Variables'a eklemek, ilk migration'ı uygulamak ve /api/health üzerinden bağlantıyı doğrulamak.
 
-## Teknik Not
-
-Step 2 kapsamında PostgreSQL hedef şeması, Prisma yapılandırması ve veri modeli dokümantasyonu eklendi. Canlı/staging DATABASE_URL henüz repo içinde tutulmuyor ve migration production'a uygulanmadı. Gerçek persistence bir sonraki adımda staging veritabanı ile doğrulanacak.
+**Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
 ## Kural
 
