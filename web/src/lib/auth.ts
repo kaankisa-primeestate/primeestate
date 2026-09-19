@@ -33,6 +33,39 @@ export const auth = betterAuth({
       name: "name",
       image: "image",
     },
+    additionalFields: {
+      organizationId: {
+        type: "string",
+        required: true,
+        input: false,
+        returned: false,
+      },
+      officeId: {
+        type: "string",
+        required: true,
+        input: false,
+        returned: false,
+      },
+      teamId: {
+        type: "string",
+        required: false,
+        input: false,
+        returned: false,
+      },
+      role: {
+        type: "string",
+        required: true,
+        input: false,
+        returned: true,
+      },
+      active: {
+        type: "boolean",
+        required: true,
+        defaultValue: true,
+        input: false,
+        returned: false,
+      },
+    },
   },
   session: {
     modelName: "session",
