@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Foundation V1 · PostgreSQL + Authentication
+Foundation V1 · PostgreSQL + Authentication + Production Build Hardening
 
 ## Durum
-🚧 Step 4 · Authentication + tenant context
+🚧 Step 4B · Authentication + production route/build hardening
 
 ## Ürün Vizyonu
 
@@ -44,6 +44,11 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Protected tenant-aware user context helper added
 - [x] Auth API mounted at /api/auth/[...all]
 - [x] Protected context probe added at /api/auth-context
+- [x] Production build pinned to Webpack
+- [x] Clean production build before each build
+- [x] Production App Router route manifest verification
+- [x] Web lint + typecheck + production build quality gate
+- [x] Foundation audit and decision log added
 
 ## Bu Aşamanın Amacı
 
@@ -70,7 +75,7 @@ Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı ve kimlik doğrulama t
 
 ## Sonraki Adım
 
-Render'a Better Auth runtime değişkenlerini eklemek, auth migration'ını staging'e uygulamak ve korumalı `/api/auth-context` endpoint'inin oturum yokken 401 döndürdüğünü doğrulamak. Sonrasında ilk Office/Admin kullanıcısı bootstrap edilecek.
+Önce production build artefact'larının route'ları gerçekten içerdiğini kalite kapısından geçirmek; ardından Render runtime route serving'i doğrulamak. Sonrasında ilk Office/Admin kullanıcısı bootstrap edilecek ve gerçek authorization enforcement katmanı kurulacak.
 
 **Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
