@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Foundation V1 · PostgreSQL Data Model
+Foundation V1 · Authentication + Tenant Context
 
 ## Durum
-🚧 Step 3 · Database provisioning + staging migration pending
+🟡 Auth foundation hazırlanıyor · staging database hazır
 
 ## Ürün Vizyonu
 
@@ -38,32 +38,54 @@ Prime, emlak danışmanının ikinci beynidir.
 - [x] Prisma 7 PostgreSQL dependencies and ESM foundation
 - [x] Prisma Client singleton
 - [x] Database health endpoint: /api/health
-- [x] Database connection is kept out of source control
+- [x] Staging PostgreSQL provision edildi
+- [x] İlk Prisma migration staging'e uygulandı ve doğrulandı
+- [x] GitHub Actions staging migration workflow başarıyla çalıştı
+- [x] Better Auth entegrasyonunun ilk veri modeli ve API route'u hazırlandı
+- [x] Domain User ↔ AuthUser bağlantısı için ayrı kimlik katmanı tanımlandı
 
 ## Bu Aşamanın Amacı
 
-Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek persistence katmanını oluşturmak.
+Ekranları gerçek PostgreSQL verisine bağlamak ve güvenli tenant/rol kapsamını oluşturmak.
 
 **Temel akış:**
 
-> Müşteri → Talep → Eşleşme → Portföy → Aktivite → Görev → Gösterim → Teklif → Kapanış
+> Giriş → Auth Session → Domain User → Organization / Office → Yetki → Müşteri API → Gerçek Müşteri Ekranı
 
 **Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
 
 ## Mevcut Durum
 
-Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı hazırlandı.
+Staging PostgreSQL hazır ve ilk migration uygulanmış durumda.
 
-- Prisma schema mevcut.
-- Prisma Client üretimi build/postinstall akışına bağlandı.
-- /api/health gerçek database bağlantısını test edecek şekilde hazır.
-- DATABASE_URL GitHub'a yazılmıyor.
-- Gerçek migration henüz çalıştırılmadı.
-- Staging PostgreSQL henüz provision edilmedi.
+Bu branch üzerinde:
+
+- Better Auth bağımlılığı eklendi.
+- AuthUser / AuthSession / AuthAccount / AuthVerification modelleri eklendi.
+- Domain User ile AuthUser arasında güvenli bağlantı alanı eklendi.
+- Better Auth API route'u eklendi.
+- Login / ilk ofis oluşturma ekranının ilk V1'i eklendi.
+- Auth migration SQL'i hazırlandı.
+- BETTER_AUTH_SECRET ve BETTER_AUTH_URL için environment dokümantasyonu eklendi.
+
+**Henüz tamamlanmayanlar:**
+
+- Auth migration'ın staging'e uygulanması
+- Render'da Better Auth environment değişkenlerinin tanımlanması
+- Login/signup uçtan uca testi
+- Session'dan domain User + tenant context çıkarılması
+- Backend authorization / tenant scope
+- Gerçek Customer API
+- Seed customer verisinin kaldırılması
+- Müşteriler ekranının gerçek PostgreSQL'e bağlanması
 
 ## Sonraki Adım
 
-Staging için ayrı bir PostgreSQL veritabanı oluşturmak, DATABASE_URL değerini yalnızca Render Environment Variables'a eklemek, ilk migration'ı uygulamak ve /api/health üzerinden bağlantıyı doğrulamak.
+Önce bu auth foundation branch'i build/type/schema açısından doğrulanacak.
+
+Ardından migration staging'e uygulanacak ve gerçek login/signup akışı test edilecek.
+
+Auth ve tenant scope doğrulanmadan müşteri API'sine geçilmeyecek.
 
 **Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
 
