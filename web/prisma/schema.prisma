@@ -114,7 +114,6 @@ model Office {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  authUser      AuthUser?    @relation(fields: [authUserId], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   teams        Team[]
   users        User[]
@@ -152,6 +151,7 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  authUser      AuthUser?    @relation(fields: [authUserId], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
   team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
