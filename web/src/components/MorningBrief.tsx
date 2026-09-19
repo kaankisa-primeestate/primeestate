@@ -7,9 +7,7 @@ export default function MorningBrief() {
 
   return (
     <Card className="p-6">
-
       <div className="flex items-start justify-between">
-
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
             🌅 Morning Brief
@@ -27,13 +25,11 @@ export default function MorningBrief() {
         <div className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
           İlişki Skoru 94
         </div>
-
       </div>
 
       <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-
         <h3 className="text-sm font-semibold text-amber-900">
-          💡 Prime'ın Yorumu
+          💡 Prime’ın Yorumu
         </h3>
 
         <p className="mt-3 text-sm leading-6 text-amber-800">
@@ -41,11 +37,9 @@ export default function MorningBrief() {
           görüşmesi yapman ilişkinin sıcak kalmasına yardımcı olacaktır.
           Yaklaşık 5 dakikalık bir görüşme yeterli görünüyor.
         </p>
-
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Son Görüşme
@@ -60,11 +54,9 @@ export default function MorningBrief() {
           href="/relationship/1"
           className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
-          → Workspace'i Aç
+          → Workspace’i Aç
         </Link>
-
       </div>
-
     </Card>
   );
 }
