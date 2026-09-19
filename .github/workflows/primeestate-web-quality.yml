@@ -1,0 +1,60 @@
+name: PrimeEstate Web Quality
+
+on:
+  push:
+    paths:
+      - "web/**"
+      - ".github/workflows/primeestate-web-quality.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/primeestate-web-quality.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  web-quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Synchronize npm lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Commit lockfile synchronization on main
+        if: github.event_name == "push" && github.ref == "refs/heads/main"
+        working-directory: .
+        run: |
+          if git diff --quiet -- web/package-lock.json; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/package-lock.json
+          git commit -m "chore(deps): synchronize web lockfile [skip ci]"
+          git push
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build
