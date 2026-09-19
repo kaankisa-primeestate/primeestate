@@ -1,10 +1,10 @@
 # 🏡 PRIME01
 
 ## Sprint
-Sales Ops V1
+Foundation V1 · PostgreSQL Data Model
 
 ## Durum
-🚧 Development complete · Review pending
+🚧 Step 2 · Data model complete, database connection pending
 
 ## Ürün Vizyonu
 
@@ -47,11 +47,11 @@ Eşleştirme sonucunu yalnızca bir öneri olarak bırakmamak; danışmanın ger
 
 ## Sonraki Adım
 
-Foundation V1: gerçek persistence + PostgreSQL veri modeli + API katmanı + auth/RBAC + tenant izolasyonu. Ardından Sales Ops ekranındaki seed verileri gerçek kayıtlara bağlanacak.
+PostgreSQL bağlantısını staging ortamında sağlamak, ilk migration'ı uygulamak ve gerçek Customer/Property/Listing/Demand kayıtlarını API üzerinden persist etmek. Ardından auth/RBAC + tenant izolasyonuna geçilecek.
 
 ## Teknik Not
 
-Bu sprintte Sales Ops domain katmanı tipli seed veri ve responsive workspace olarak hazırlandı. Görev tamamlandı durumu gibi etkileşimler ekran önizlemesidir; henüz kalıcı değildir. Gerçek persistence, auth/RBAC ve API bağlantısı sonraki foundation aşamasında eklenecek. V1 ekranı bunlar varmış gibi göstermiyor.
+Step 2 kapsamında PostgreSQL hedef şeması, Prisma yapılandırması ve veri modeli dokümantasyonu eklendi. Canlı/staging DATABASE_URL henüz repo içinde tutulmuyor ve migration production'a uygulanmadı. Gerçek persistence bir sonraki adımda staging veritabanı ile doğrulanacak.
 
 ## Kural
 
