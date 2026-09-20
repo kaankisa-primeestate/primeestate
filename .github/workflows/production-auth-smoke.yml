@@ -1,6 +1,9 @@
 name: PrimeEstate Production Auth HTTP Smoke Test
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -25,6 +28,44 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Wait for Render to deploy this commit
+        env:
+          AUTH_SMOKE_BASE_URL: https://primeestate-v9e0.onrender.com
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          node <<'NODE'
+          const baseUrl = process.env.AUTH_SMOKE_BASE_URL.replace(/\/$/, "");
+          const expected = process.env.EXPECTED_COMMIT;
+          const deadline = Date.now() + 10 * 60 * 1000;
+
+          while (Date.now() < deadline) {
+            try {
+              const response = await fetch(`${baseUrl}/api/deployment-check`, {
+                headers: { Accept: "application/json" },
+              });
+              const body = await response.json().catch(() => null);
+              const commit = body?.renderGitCommit ?? null;
+
+              console.log(JSON.stringify({
+                status: response.status,
+                liveCommit: commit,
+                expectedCommit: expected,
+              }));
+
+              if (response.ok && commit === expected) {
+                process.exit(0);
+              }
+            } catch (error) {
+              console.log(`deployment-check unavailable: ${error instanceof Error ? error.message : String(error)}`);
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 15000));
+          }
+
+          console.error(`Render did not expose expected commit ${expected} within 10 minutes.`);
+          process.exit(1);
+          NODE
 
       - name: Test production login, session and customer authorization
         env:
