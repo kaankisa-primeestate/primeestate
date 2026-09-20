@@ -15,7 +15,6 @@ export async function GET(request: Request) {
     where: {
       organizationId: context.organizationId,
       officeId: context.officeId,
-      ...(context.role === "AGENT" ? { consultantUserId: context.userId } : {}),
       ...(q ? {
         OR: [
           { code: { contains: q, mode: "insensitive" } },
