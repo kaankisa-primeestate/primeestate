@@ -21,6 +21,35 @@ function Pill({ children, tone = "bg-slate-100 text-slate-600" }: { children: Re
 export default function SalesPage() {
   const [tab, setTab] = useState<Tab>("Bugün");
   const [taskState, setTaskState] = useState<Record<number, TaskStatus>>({});
+  const [tasks, setTasks] = useState(salesOps.tasks);
+  const [showings, setShowings] = useState(salesOps.showings);
+  const [opsLoading, setOpsLoading] = useState(true);
+  const [opsError, setOpsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadOps() {
+      try {
+        const [taskResponse, showingResponse] = await Promise.all([
+          fetch("/api/tasks", { cache: "no-store" }),
+          fetch("/api/showings", { cache: "no-store" }),
+        ]);
+        const [taskPayload, showingPayload] = await Promise.all([taskResponse.json(), showingResponse.json()]);
+        if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Görevler alınamadı.");
+        if (!showingResponse.ok) throw new Error(showingPayload.message ?? "Gösterimler alınamadı.");
+        if (!cancelled) {
+          setTasks(taskPayload.tasks ?? []);
+          setShowings(showingPayload.showings ?? []);
+        }
+      } catch (error) {
+        if (!cancelled) setOpsError(error instanceof Error ? error.message : "İş akışı verileri alınamadı.");
+      } finally {
+        if (!cancelled) setOpsLoading(false);
+      }
+    }
+    void loadOps();
+    return () => { cancelled = true; };
+  }, []);
   const [activities, setActivities] = useState<Array<{
     id: string;
     type: string;
@@ -53,9 +82,9 @@ export default function SalesPage() {
     void loadActivities();
     return () => { cancelled = true; };
   }, []);
-  const tasks = useMemo(() => salesOps.tasks.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [taskState]);
-  const pendingTasks = tasks.filter((t) => t.status !== "Tamamlandı").length;
-  const plannedShowings = salesOps.showings.filter((s) => s.status === "Planlandı").length;
+  const taskRows = useMemo(() => taskRows.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [tasks, taskState]);
+  const pendingTasks = taskRows.filter((t) => t.status !== "Tamamlandı").length;
+  const plannedShowings = showings.filter((s) => s.status === "Planlandı").length;
   const openOffers = salesOps.offers.filter((o) => !["Kabul", "Reddedildi"].includes(o.status)).length;
   const todayActivityCount = activities.filter((activity) => {
     const date = new Date(activity.occurredAt);
