@@ -96,7 +96,47 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    void loadUsers();
+    let cancelled = false;
+
+    async function initializeUsers() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch("/api/users", { cache: "no-store" });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Kullanıcılar yüklenemedi.");
+        }
+
+        if (cancelled) return;
+
+        setUsers(data.users ?? []);
+        setOffices(data.offices ?? []);
+        setTeams(data.teams ?? []);
+        setCurrentRole(data.currentUser?.role ?? "");
+        setCurrentUserId(data.currentUser?.id ?? "");
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Kullanıcılar yüklenemedi.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void initializeUsers();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const availableRoles = useMemo(() => {
