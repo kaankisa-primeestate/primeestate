@@ -34,13 +34,7 @@ async function main() {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    select: {
-      id: true,
-      active: true,
-      role: true,
-      organizationId: true,
-      officeId: true,
-    },
+    select: { id: true, active: true, role: true, organizationId: true, officeId: true },
   });
 
   if (!user) {
@@ -56,14 +50,8 @@ async function main() {
   result.user.officePresent = Boolean(user.officeId);
 
   const credential = await prisma.account.findFirst({
-    where: {
-      userId: user.id,
-      providerId: "credential",
-    },
-    select: {
-      id: true,
-      password: true,
-    },
+    where: { userId: user.id, providerId: "credential" },
+    select: { id: true, password: true },
   });
 
   if (credential) {
@@ -71,21 +59,17 @@ async function main() {
     result.credential.passwordHashPresent = Boolean(credential.password);
 
     if (password && credential.password) {
-      result.credential.passwordVerified = await (
-        await auth.$context
-      ).password.verify(password, credential.password);
+      const context = await auth.$context;
+      result.credential.passwordVerified = await context.password.verify({
+        password,
+        hash: credential.password,
+      });
     }
   }
 
-  result.sessions.total = await prisma.session.count({
-    where: { userId: user.id },
-  });
-
+  result.sessions.total = await prisma.session.count({ where: { userId: user.id } });
   result.sessions.active = await prisma.session.count({
-    where: {
-      userId: user.id,
-      expiresAt: { gt: new Date() },
-    },
+    where: { userId: user.id, expiresAt: { gt: new Date() } },
   });
 
   console.log(JSON.stringify(result, null, 2));
