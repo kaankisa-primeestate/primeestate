@@ -308,6 +308,7 @@ model Listing {
   activities   Activity[]
   showings     Showing[]
   offers       Offer[]
+  sales        Sale[]
 
   @@unique([officeId, code])
   @@index([organizationId, officeId, status])
