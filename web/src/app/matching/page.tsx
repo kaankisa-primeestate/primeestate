@@ -94,7 +94,30 @@ export default function MatchingPage() {
     } finally { setRunning(false); }
   };
 
-  useEffect(() => { if (demand?.id) void runMatching(demand.id); }, [demand?.id]);
+  useEffect(() => {
+    if (!demand?.id) return;
+    let cancelled = false;
+    const loadMatches = async () => {
+      setRunning(true);
+      setError("");
+      try {
+        const response = await fetch("/api/matching", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ demandId: demand.id }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? "Eşleştirme çalıştırılamadı.");
+        if (!cancelled) setMatches(data.matches ?? []);
+      } catch (cause: unknown) {
+        if (!cancelled) setError(cause instanceof Error ? cause.message : "Eşleştirme çalıştırılamadı.");
+      } finally {
+        if (!cancelled) setRunning(false);
+      }
+    };
+    void loadMatches();
+    return () => { cancelled = true; };
+  }, [demand?.id]);
 
   const stats = useMemo(() => ({
     strong: matches.filter((match) => match.score >= 75).length,
