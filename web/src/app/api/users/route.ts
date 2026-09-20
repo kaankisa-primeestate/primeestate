@@ -34,16 +34,6 @@ function canManageRole(
   return false;
 }
 
-function canManageUser(
-  actorRole: ManagedRole,
-  actorUserId: string,
-  targetUserId: string,
-) {
-  if (!MANAGER_ROLES.has(actorRole)) return false;
-  if (actorUserId === targetUserId) return true;
-  return true;
-}
-
 function userScope(
   context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
 ) {
