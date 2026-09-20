@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
     where: { id, organizationId: context.organizationId, officeId: context.officeId },
-    include: { consultant: { select: { id: true, teamId: true } } },
+    include: { property: true, consultant: { select: { id: true, teamId: true } } },
   });
   if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
 
