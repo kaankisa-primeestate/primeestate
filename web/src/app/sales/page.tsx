@@ -82,7 +82,7 @@ export default function SalesPage() {
     void loadActivities();
     return () => { cancelled = true; };
   }, []);
-  const taskRows = useMemo(() => taskRows.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [tasks, taskState]);
+  const taskRows = useMemo(() => tasks.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [tasks, taskState]);
   const pendingTasks = taskRows.filter((t) => t.status !== "Tamamlandı").length;
   const plannedShowings = showings.filter((s) => s.status === "Planlandı").length;
   const openOffers = salesOps.offers.filter((o) => !["Kabul", "Reddedildi"].includes(o.status)).length;
