@@ -5,6 +5,19 @@ import Sidebar from "@/components/Sidebar";
 import { salesOps } from "@/data/salesOps";
 import type { ActivityType, OfferStatus, ShowingStatus, TaskStatus } from "@/types/SalesOps";
 
+type ApiOffer = {
+  id: string;
+  amount: string | number;
+  currency: string;
+  status: string;
+  offeredAt: string;
+  nextAction: string | null;
+  customer: { id: string; name: string };
+  listing: { id: string; code: string; title: string; price?: string | number; currency?: string };
+};
+type ApiCustomer = { id: string; name: string };
+type ApiListing = { id: string; code: string; title: string; price: string | number; currency: string; status: string };
+
 const tabs = ["Bugün", "Aktiviteler", "Görevler", "Gösterimler", "Teklifler"] as const;
 type Tab = (typeof tabs)[number];
 
@@ -23,6 +36,13 @@ export default function SalesPage() {
   const [taskState, setTaskState] = useState<Record<number, TaskStatus>>({});
   const [tasks, setTasks] = useState(salesOps.tasks);
   const [showings, setShowings] = useState(salesOps.showings);
+  const [offers, setOffers] = useState<ApiOffer[]>([]);
+  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
+  const [listings, setListings] = useState<ApiListing[]>([]);
+  const [offerFormOpen, setOfferFormOpen] = useState(false);
+  const [offerForm, setOfferForm] = useState({ customerId: "", listingId: "", amount: "", nextAction: "" });
+  const [offerSaving, setOfferSaving] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
   const [opsLoading, setOpsLoading] = useState(true);
   const [opsError, setOpsError] = useState<string | null>(null);
 
@@ -30,16 +50,27 @@ export default function SalesPage() {
     let cancelled = false;
     async function loadOps() {
       try {
-        const [taskResponse, showingResponse] = await Promise.all([
+        const responses = await Promise.all([
           fetch("/api/tasks", { cache: "no-store" }),
           fetch("/api/showings", { cache: "no-store" }),
+          fetch("/api/offers", { cache: "no-store" }),
+          fetch("/api/customers", { cache: "no-store" }),
+          fetch("/api/listings?status=AKTIF", { cache: "no-store" }),
         ]);
-        const [taskPayload, showingPayload] = await Promise.all([taskResponse.json(), showingResponse.json()]);
+        const payloads = await Promise.all(responses.map((response) => response.json()));
+        const [taskResponse, showingResponse, offerResponse, customerResponse, listingResponse] = responses;
+        const [taskPayload, showingPayload, offerPayload, customerPayload, listingPayload] = payloads;
         if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Görevler alınamadı.");
         if (!showingResponse.ok) throw new Error(showingPayload.message ?? "Gösterimler alınamadı.");
+        if (!offerResponse.ok) throw new Error(offerPayload.message ?? "Teklifler alınamadı.");
+        if (!customerResponse.ok) throw new Error(customerPayload.message ?? "Müşteriler alınamadı.");
+        if (!listingResponse.ok) throw new Error(listingPayload.message ?? "Portföyler alınamadı.");
         if (!cancelled) {
           setTasks(taskPayload.tasks ?? []);
           setShowings(showingPayload.showings ?? []);
+          setOffers(offerPayload.offers ?? []);
+          setCustomers(customerPayload.customers ?? []);
+          setListings(listingPayload.listings ?? []);
         }
       } catch (error) {
         if (!cancelled) setOpsError(error instanceof Error ? error.message : "İş akışı verileri alınamadı.");
@@ -85,7 +116,45 @@ export default function SalesPage() {
   const taskRows = useMemo(() => tasks.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [tasks, taskState]);
   const pendingTasks = taskRows.filter((t) => t.status !== "Tamamlandı").length;
   const plannedShowings = showings.filter((s) => s.status === "Planlandı").length;
-  const openOffers = salesOps.offers.filter((o) => !["Kabul", "Reddedildi"].includes(o.status)).length;
+  const openOffers = offers.filter((o) => !["KABUL", "REDDEDILDI"].includes(o.status)).length;
+
+  async function createOffer(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setOfferSaving(true);
+    setOfferError(null);
+    try {
+      const response = await fetch("/api/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: offerForm.customerId,
+          listingId: offerForm.listingId,
+          amount: Number(offerForm.amount),
+          nextAction: offerForm.nextAction,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message ?? "Teklif oluşturulamadı.");
+      setOffers((current) => [payload.offer, ...current]);
+      setOfferForm({ customerId: "", listingId: "", amount: "", nextAction: "" });
+      setOfferFormOpen(false);
+    } catch (error) {
+      setOfferError(error instanceof Error ? error.message : "Teklif oluşturulamadı.");
+    } finally {
+      setOfferSaving(false);
+    }
+  }
+
+  async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
+    const response = await fetch(`/api/offers/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.message ?? "Teklif güncellenemedi.");
+    setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
+  }
   const todayActivityCount = activities.filter((activity) => {
     const date = new Date(activity.occurredAt);
     const now = new Date();
@@ -135,7 +204,65 @@ export default function SalesPage() {
 
         {tab === "Gösterimler" && <section className="mt-5 grid gap-4 md:grid-cols-2">{salesOps.showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status]}>{item.status}</Pill><span className="text-xs font-semibold text-slate-400">{item.date} · {item.time}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customerName}</h2><p className="mt-1 text-sm text-slate-600">{item.portfolioTitle}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Bağlantı</p><p className="mt-1 text-sm font-semibold text-slate-800">PR-{String(2400 + item.portfolioId).slice(-4)}</p></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}<button type="button" className="mt-5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Gösterim detayına git</button></article>)}</section>}
 
-        {tab === "Teklifler" && <section className="mt-5 space-y-4">{salesOps.offers.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={offerTone[item.status]}>{item.status}</Pill><span className="text-xs text-slate-400">{item.date}</span></div><h2 className="mt-2 text-lg font-semibold text-slate-950">{item.customerName} → {item.portfolioTitle}</h2><p className="mt-1 text-sm text-slate-500">Teklif tutarı</p><p className="mt-1 text-2xl font-semibold text-slate-950">{item.amountLabel}</p></div><div className="rounded-2xl bg-slate-50 p-4 lg:min-w-56"><p className="text-xs text-slate-400">Sonraki aksiyon</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.nextAction}</p><button type="button" className="mt-3 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Aksiyonu aç</button></div></div></article>)}</section>}
+        {tab === "Teklifler" && <section className="mt-5 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Gerçek veri</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Teklifler</h2></div>
+            <button type="button" onClick={() => { setOfferFormOpen((open) => !open); setOfferError(null); }} className="rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">+ Yeni teklif</button>
+          </div>
+
+          {offerFormOpen && <form onSubmit={createOffer} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-semibold text-slate-700">Müşteri
+                <select required value={offerForm.customerId} onChange={(e) => setOfferForm((f) => ({ ...f, customerId: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-900">
+                  <option value="">Müşteri seçin</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Portföy
+                <select required value={offerForm.listingId} onChange={(e) => setOfferForm((f) => ({ ...f, listingId: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-900">
+                  <option value="">Portföy seçin</option>{listings.map((listing) => <option key={listing.id} value={listing.id}>{listing.code} · {listing.title}</option>)}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Teklif tutarı
+                <input required min="1" step="0.01" type="number" value={offerForm.amount} onChange={(e) => setOfferForm((f) => ({ ...f, amount: e.target.value }))} placeholder="Örn. 12.500.000" className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal text-slate-900" />
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Sonraki aksiyon
+                <input value={offerForm.nextAction} onChange={(e) => setOfferForm((f) => ({ ...f, nextAction: e.target.value }))} placeholder="Örn. Mal sahibi geri dönüşü" className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal text-slate-900" />
+              </label>
+            </div>
+            {offerError && <p className="mt-3 text-sm text-rose-600">{offerError}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setOfferFormOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button>
+              <button disabled={offerSaving} type="submit" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{offerSaving ? "Kaydediliyor…" : "Teklifi kaydet"}</button>
+            </div>
+          </form>}
+
+          {opsError && <p className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{opsError}</p>}
+          {opsLoading && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">İş akışı verileri yükleniyor…</p>}
+          {!opsLoading && !offers.length && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Henüz kayıtlı teklif yok.</p>}
+
+          {!opsLoading && offers.map((item) => {
+            const statusLabel: Record<string, OfferStatus> = { TASLAK: "Taslak", SUNULDU: "Sunuldu", KARSILIKLI_TEKLIF: "Karşı teklif", KABUL: "Kabul", REDDEDILDI: "Reddedildi" };
+            const label = statusLabel[item.status] ?? item.status;
+            const nextStatus: Record<string, string> = { TASLAK: "SUNULDU", SUNULDU: "KARSILIKLI_TEKLIF", KARSILIKLI_TEKLIF: "KABUL" };
+            return <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2"><Pill tone={offerTone[label]}>{label}</Pill><span className="text-xs text-slate-400">{new Date(item.offeredAt).toLocaleString("tr-TR")}</span></div>
+                  <h2 className="mt-2 text-lg font-semibold text-slate-950">{item.customer.name} → {item.listing.title}</h2>
+                  <p className="mt-1 text-sm text-slate-500">Teklif tutarı</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-950">{new Intl.NumberFormat("tr-TR", { style: "currency", currency: item.currency }).format(Number(item.amount))}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4 lg:min-w-64">
+                  <p className="text-xs text-slate-400">Sonraki aksiyon</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-800">{item.nextAction ?? "Aksiyon tanımlanmamış"}</p>
+                  <select value={item.status} onChange={(e) => void updateOffer(item.id, { status: e.target.value }).catch((error) => setOfferError(error instanceof Error ? error.message : "Teklif güncellenemedi."))} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                    <option value="TASLAK">Taslak</option><option value="SUNULDU">Sunuldu</option><option value="KARSILIKLI_TEKLIF">Karşı teklif</option><option value="KABUL">Kabul</option><option value="REDDEDILDI">Reddedildi</option>
+                  </select>
+                </div>
+              </div>
+            </article>;
+          })}
+        </section>}
       </div>
     </main>
   </div>;
