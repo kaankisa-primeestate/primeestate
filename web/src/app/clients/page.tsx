@@ -103,9 +103,11 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDemandCreate, setShowDemandCreate] = useState(false);
   const [demandSaving, setDemandSaving] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   async function loadCustomers() {
     setLoading(true); setError("");
@@ -150,6 +152,27 @@ export default function ClientsPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Müşteri oluşturulamadı.");
     } finally { setSaving(false); }
+  }
+
+  async function updateCustomer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!selected) return;
+    setEditSaving(true); setError("");
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    try {
+      const res = await fetch("/api/customers/" + selected.id, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.get("name"), phone: form.get("phone"), email: form.get("email"),
+          location: form.get("location"), source: form.get("source"), notes: form.get("notes"),
+          roles: form.getAll("roles").filter((x): x is string => typeof x === "string"),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Müşteri güncellenemedi.");
+      setShowEdit(false); formElement.reset(); await loadCustomers(); setSelectedId(data.customer.id);
+    } catch (e) { setError(e instanceof Error ? e.message : "Müşteri güncellenemedi."); }
+    finally { setEditSaving(false); }
   }
 
   async function createDemand(event: FormEvent<HTMLFormElement>) {
@@ -202,7 +225,7 @@ export default function ClientsPage() {
         {selected ? <section className="min-w-0">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-start gap-4"><div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">{initials(selected.name)}</div><div>
             <div className="flex flex-wrap items-center gap-2"><h2 className="text-2xl font-semibold tracking-tight text-slate-950">{selected.name}</h2>{selected.roles.map((x) => <RoleChip key={x.role}>{roleMap[x.role] ?? x.role}</RoleChip>)}</div>
-            <p className="mt-1 text-sm text-slate-500">{selected.location || "Konum belirtilmemiş"} · {selected.phone || "Telefon yok"}</p><p className="mt-1 text-sm text-slate-400">{selected.email || "E-posta yok"}</p>
+            <p className="mt-1 text-sm text-slate-500">{selected.location || "Konum belirtilmemiş"} · {selected.phone || "Telefon yok"}</p><p className="mt-1 text-sm text-slate-400">{selected.email || "E-posta yok"}</p></div><div className="ml-auto shrink-0"><button type="button" onClick={() => setShowEdit(true)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Düzenle</button></div>
           </div></div>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">İlişki skoru</p><div className="mt-2"><Score value={selected.relationshipScore} /></div></div>
@@ -258,6 +281,18 @@ export default function ClientsPage() {
         </form>
       </div>
     </div>}
+    {showEdit && selected && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"><div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-6">
+      <div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">CRM</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Müşteriyi Düzenle</h2></div><button type="button" onClick={() => setShowEdit(false)} className="text-xl text-slate-400">×</button></div>
+      <form onSubmit={updateCustomer} className="mt-6 space-y-4">
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Ad Soyad *</span><input name="name" required defaultValue={selected.name} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="block"><span className="text-sm font-semibold text-slate-700">Telefon</span><input name="phone" defaultValue={selected.phone ?? ""} type="tel" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">E-posta</span><input name="email" defaultValue={selected.email ?? ""} type="email" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label></div>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Konum</span><input name="location" defaultValue={selected.location ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Kaynak</span><input name="source" defaultValue={selected.source ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <fieldset><legend className="text-sm font-semibold text-slate-700">Roller</legend><div className="mt-2 grid grid-cols-2 gap-2">{roleFilters.slice(1).map((item) => { const value = roleApiMap[item]; return <label key={item} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm"><input type="checkbox" name="roles" value={value} defaultChecked={selected.roles.some((x) => x.role === value)} />{item}</label>; })}</div></fieldset>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Not</span><textarea name="notes" defaultValue={selected.notes ?? ""} rows={3} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <div className="flex gap-3"><button type="button" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button type="submit" disabled={editSaving} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{editSaving ? "Kaydediliyor…" : "Değişiklikleri Kaydet"}</button></div>
+      </form>
+    </div></div>}
     {showCreate && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"><div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-6">
       <div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">CRM</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Yeni Müşteri</h2></div><button type="button" onClick={() => setShowCreate(false)} className="text-xl text-slate-400">×</button></div>
       <form onSubmit={createCustomer} className="mt-6 space-y-4">
