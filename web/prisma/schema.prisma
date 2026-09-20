@@ -205,6 +205,7 @@ model Customer {
   showings     Showing[]
   offers       Offer[]
   sales        Sale[]
+  images       ListingImage[]
 
   @@index([organizationId, officeId])
   @@index([ownerUserId])
@@ -309,10 +310,24 @@ model Listing {
   showings     Showing[]
   offers       Offer[]
   sales        Sale[]
+  images       ListingImage[]
 
   @@unique([officeId, code])
   @@index([organizationId, officeId, status])
   @@index([purpose, status])
+}
+
+model ListingImage {
+  id        String   @id @default(uuid())
+  listingId String
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, sortOrder])
 }
 
 model Match {
