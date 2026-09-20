@@ -9,6 +9,7 @@ const menu = [
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
+  { name: "Kullanıcılar & Ekip", href: "/users", icon: "👥" },
 ];
 
 export default function Sidebar() {
