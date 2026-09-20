@@ -238,7 +238,7 @@ export default function ClientsPage() {
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">İlişki skoru</p><div className="mt-2"><Score value={selected.relationshipScore} /></div></div>
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Son iletişim</p><p className="mt-2 text-sm font-semibold text-slate-800">{displayDate(selected.lastContactAt)}</p></div>
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Sonraki aksiyon</p><p className="mt-2 text-sm font-semibold text-slate-800">{selected.nextAction || "Aksiyon tanımlanmamış"}</p><p className="mt-0.5 text-xs text-slate-500">{displayDate(selected.nextActionAt)}</p></div>
-          </div></div>
+          </div>
 
           <div className="mt-5 flex items-center justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Talep profilleri</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Aktif Talepler <span className="text-slate-400">{selected.demands.length}</span></h2></div><button type="button" onClick={() => setShowDemandCreate(true)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">+ Yeni Talep</button></div>
           <div className="mt-4 space-y-4">{selected.demands.length ? selected.demands.map((demand) => <article key={demand.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
