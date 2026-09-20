@@ -144,7 +144,9 @@ export default function ClientsPage() {
       if (!res.ok) throw new Error(data.message || "Müşteriler yüklenemedi.");
       const next: ApiCustomer[] = data.customers ?? [];
       setCustomers(next);
-      setSelectedId((current) => current && next.some((x) => x.id === current) ? current : next[0]?.id ?? null);
+      const nextSelectedId = selectedId && next.some((x) => x.id === selectedId) ? selectedId : next[0]?.id ?? null;
+      setSelectedId(nextSelectedId);
+      if (nextSelectedId) void loadCustomerOps(nextSelectedId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Müşteriler yüklenemedi.");
     } finally { setLoading(false); }
@@ -176,11 +178,6 @@ export default function ClientsPage() {
     } finally { setActivityLoading(false); setTaskLoading(false); }
   }
 
-  useEffect(() => {
-    if (!selected?.id) return;
-    const customerId = selected.id;
-    void Promise.resolve().then(() => loadCustomerOps(customerId));
-  }, [selected?.id]);
 
   async function createActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!selected) return;
@@ -317,7 +314,7 @@ export default function ClientsPage() {
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-4">
           <div className="relative"><span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Müşteri ara..." className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-3 text-sm outline-none focus:border-slate-400 focus:bg-white" /></div>
           <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">{roleFilters.map((item) => <button key={item} type="button" onClick={() => setRole(item)} className={"whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold " + (role === item ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}>{item}</button>)}</div>
-        </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={setSelectedId} />}</section>
+        </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={(id) => { setSelectedId(id); void loadCustomerOps(id); }} />}</section>
 
         {selected ? <section className="min-w-0">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
