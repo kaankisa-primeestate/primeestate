@@ -259,7 +259,7 @@ export default function SalesPage() {
             const location = item.listing.property ? ` · ${item.listing.property.district}, ${item.listing.property.neighborhood}` : "";
             return <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[label]}>{label}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customer.name}</h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code}{location}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><p className="mt-1 text-sm font-semibold text-slate-800">{label}</p></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>;
           })}</div>}
-        </section>
+        </section>}
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
