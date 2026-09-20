@@ -86,10 +86,12 @@ export const auth = betterAuth({
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendPasswordResetEmail({
+      void sendPasswordResetEmail({
         to: user.email,
         url,
         userName: user.name,
+      }).catch((error) => {
+        console.error("PrimeEstate password reset email failed.", error);
       });
     },
   },
