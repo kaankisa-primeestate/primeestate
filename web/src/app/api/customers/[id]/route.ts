@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 
-function canAccessOwner(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>,>, ownerUserId: string) {
+function canAccessOwner(
+  context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
+  ownerUserId: string,
+) {
   if (["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"].includes(context.role)) return true;
   if (context.role === "TEAM_LEADER") return true;
   return ownerUserId === context.userId;
