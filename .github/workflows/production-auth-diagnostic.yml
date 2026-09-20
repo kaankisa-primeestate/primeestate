@@ -1,4 +1,4 @@
-name: Reset PrimeEstate Bootstrap Password
+name: PrimeEstate Production Auth Diagnostic
 
 on:
   workflow_dispatch:
@@ -7,14 +7,16 @@ permissions:
   contents: read
 
 jobs:
-  reset-password:
+  diagnose:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -23,11 +25,11 @@ jobs:
         run: npm install
       - name: Generate Prisma Client
         run: npx prisma generate
-      - name: Reset and verify bootstrap password
+      - name: Inspect production auth records
         env:
-          DATABASE_URL: ${{ secrets.PRIMEESTATE_STAGING_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.PRIMEESTATE_PRODUCTION_DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.PRIMEESTATE_BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: https://primeestate-v9e0.onrender.com
-          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
-          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
-        run: npx --yes tsx@4.20.6 scripts/reset-bootstrap-password.ts
+          AUTH_DIAGNOSTIC_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
+          AUTH_DIAGNOSTIC_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
+        run: npx --yes tsx@4.20.6 scripts/diagnose-auth.ts
