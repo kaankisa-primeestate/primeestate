@@ -94,12 +94,40 @@ Bu işte:
 - match/showing/offer sayıları
 - ofis ortak portföy havuzu
 
-**Not:** PR #9'un CI/merge durumu bu dosyaya yazılırken yeniden doğrulanmalıdır. Tahmin edilmemelidir.
+**Güncel doğrulama:** PR #9, 20.09.2026 tarihinde CI başarılı olduktan sonra merge edildi. Merge commit: `3b486045e96dd16472d24e5a65f8ba306f0683ed`.
 
-## 6. Sıradaki iş
-Portfolio Real Data V1 tamamlandıktan sonra:
+## 6. Şu anki aktif iş — Matching Engine V1
 
-**Matching Engine V1**
+Branch:
+`crm/matching-engine-v1`
+
+PR:
+#10 — CRM V1: deterministic matching engine
+
+Durum: **Açık / Draft / CI çalışıyor**
+
+İlk dikey dilim gerçek tenant-scoped Customer + Demand + Listing verisini kullanacak şekilde geliştirildi.
+
+Tamamlanan bu dilimde:
+- deterministic 0–100 skor
+- kategori %20
+- lokasyon %25
+- bütçe %20
+- m² %10
+- temel özellikler %15
+- tercihler %5
+- uygunluk %5
+- `mustNotHave` için güçlü negatif ceza
+- eşleşme nedenleri ve karşılanmayan kriterler
+- `Match` kayıtlarının persist edilmesi
+- matching workspace'in mock veriden gerçek API'ye bağlanması
+
+CI yeşil olmadan PR #10 merge edilmeyecek.
+
+## 7. Sonraki iş
+Matching Engine V1 tamamlandıktan sonra:
+
+**Sales Operations — gerçek veri bağlantısı**
 
 İlk versiyon deterministic/rule-based olacaktır.
 
@@ -124,7 +152,7 @@ Portfolio Real Data V1 tamamlandıktan sonra:
 
 AI ilk aşamada skorlamayı yapmayacak. Deterministik motor kurulduktan sonra AI açıklama/özet/öneri katmanı olarak eklenecek.
 
-## 7. Çalışma disiplini
+## 8. Çalışma disiplini
 Her geliştirme:
 1. Mevcut main/branch/PR/CI durumu doğrulanır.
 2. Tek bir küçük dikey dilim seçilir.
@@ -137,7 +165,7 @@ Her geliştirme:
 9. Merge sonrası main doğrulanır.
 10. Bu dosya güncellenir.
 
-## 8. Kırmızı çizgiler
+## 9. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
 - Secret/connection string kullanıcıdan istenmez.
 - Tahmin edilen durum gerçek durum gibi sunulmaz.
@@ -147,7 +175,7 @@ Her geliştirme:
 - Çalışan özellikler gereksiz yere kırılmaz.
 - AI kritik alanları izinsiz değiştiremez.
 
-## 9. Yeni oturum başlangıç komutu
+## 10. Yeni oturum başlangıç komutu
 
 ```
 PrimeEstate'i devral. Önce CURRENT_STATE.md dosyasını ve GitHub'daki güncel main, branch, PR ve CI durumunu kontrol et. Bu kayıttaki bilgileri tahmin olarak değil, GitHub'dan doğrulanmış gerçek durumla karşılaştır. Fark varsa belirt. Son tamamlanmamış işten devam et. Canlı remax-CRM reposuna dokunma. Tek bir doğrulanabilir dikey dilim üzerinde çalış; CI yeşil olmadan merge etme. Oturum sonunda CURRENT_STATE.md dosyasını güncelle.
