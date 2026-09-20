@@ -287,6 +287,7 @@ export default function SalesPage() {
                   <select value={item.status} onChange={(e) => void updateOffer(item.id, { status: e.target.value }).catch((error) => setOfferError(error instanceof Error ? error.message : "Teklif güncellenemedi."))} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                     <option value="TASLAK">Taslak</option><option value="SUNULDU">Sunuldu</option><option value="KARSILIKLI_TEKLIF">Karşı teklif</option><option value="KABUL">Kabul</option><option value="REDDEDILDI">Reddedildi</option>
                   </select>
+                  {item.status === "KABUL" && <button type="button" onClick={() => void convertOfferToSale(item).catch((error) => setOfferError(error instanceof Error ? error.message : "Satış oluşturulamadı."))} className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Satışa dönüştür</button>}
                 </div>
               </div>
             </article>;
