@@ -205,7 +205,6 @@ model Customer {
   showings     Showing[]
   offers       Offer[]
   sales        Sale[]
-  images       ListingImage[]
 
   @@index([organizationId, officeId])
   @@index([ownerUserId])
