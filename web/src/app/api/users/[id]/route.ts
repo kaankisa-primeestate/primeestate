@@ -90,7 +90,7 @@ export async function PATCH(
       await auth.api.requestPasswordReset({
         body: {
           email: existing.email,
-          redirectTo: `${process.env.BETTER_AUTH_URL ?? ""}/reset-password`,
+          redirectTo: new URL("/reset-password", request.url).toString(),
         },
       });
     } catch (error) {
