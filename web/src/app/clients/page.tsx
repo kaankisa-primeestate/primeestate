@@ -133,7 +133,8 @@ export default function ClientsPage() {
 
   async function createCustomer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       const res = await fetch("/api/customers", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -145,7 +146,7 @@ export default function ClientsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Müşteri oluşturulamadı.");
-      setShowCreate(false); event.currentTarget.reset(); await loadCustomers(); setSelectedId(data.customer.id);
+      setShowCreate(false); formElement.reset(); await loadCustomers(); setSelectedId(data.customer.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Müşteri oluşturulamadı.");
     } finally { setSaving(false); }
@@ -156,7 +157,8 @@ export default function ClientsPage() {
     if (!selected) return;
     setDemandSaving(true);
     setError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const locations = String(form.get("locations") || "").split(",").map((value) => value.trim()).filter(Boolean);
     try {
       const res = await fetch("/api/customers/" + selected.id + "/demands", {
@@ -172,7 +174,7 @@ export default function ClientsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Talep oluşturulamadı.");
       setShowDemandCreate(false);
-      event.currentTarget.reset();
+      formElement.reset();
       await loadCustomers();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Talep oluşturulamadı.");
