@@ -282,7 +282,7 @@ export async function POST(request: Request) {
     await auth.api.requestPasswordReset({
       body: {
         email,
-        redirectTo: `${process.env.BETTER_AUTH_URL ?? ""}/reset-password`,
+        redirectTo: new URL("/reset-password", request.url).toString(),
       },
     });
     resetEmailSent = true;
@@ -303,8 +303,8 @@ export async function POST(request: Request) {
       },
       resetEmailSent,
       message: resetEmailSent
-        ? "Kullanıcı oluşturuldu ve şifre belirleme bağlantısı gönderildi."
-        : "Kullanıcı oluşturuldu ancak şifre belirleme e-postası gönderilemedi. E-posta ayarlarını kontrol edin ve kullanıcı kartından tekrar gönderin.",
+        ? "Kullanıcı oluşturuldu ve şifre belirleme işlemi başlatıldı."
+        : "Kullanıcı oluşturuldu ancak şifre belirleme e-postası başlatılamadı. E-posta ayarlarını kontrol edin ve kullanıcı kartından tekrar deneyin.",
     },
     { status: 201 },
   );
