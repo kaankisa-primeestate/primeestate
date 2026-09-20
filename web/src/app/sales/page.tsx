@@ -17,6 +17,7 @@ type ApiOffer = {
 };
 type ApiCustomer = { id: string; name: string };
 type ApiListing = { id: string; code: string; title: string; price: string | number; currency: string; status: string };
+type ApiShowing = { id: string; dateTime: string; status: string; attendees: number; note: string | null; customer: { id: string; name: string }; listing: { id: string; code: string; title: string; property?: { district: string; neighborhood: string } } };
 
 const tabs = ["Bugün", "Aktiviteler", "Görevler", "Gösterimler", "Teklifler"] as const;
 type Tab = (typeof tabs)[number];
@@ -35,8 +36,12 @@ export default function SalesPage() {
   const [tab, setTab] = useState<Tab>("Bugün");
   const [taskState, setTaskState] = useState<Record<number, TaskStatus>>({});
   const [tasks, setTasks] = useState(salesOps.tasks);
-  const [showings, setShowings] = useState(salesOps.showings);
+  const [showings, setShowings] = useState<ApiShowing[]>([]);
   const [offers, setOffers] = useState<ApiOffer[]>([]);
+  const [showingFormOpen, setShowingFormOpen] = useState(false);
+  const [showingForm, setShowingForm] = useState({ customerId: "", listingId: "", dateTime: "", attendees: "1", note: "" });
+  const [showingSaving, setShowingSaving] = useState(false);
+  const [showingError, setShowingError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   const [listings, setListings] = useState<ApiListing[]>([]);
   const [offerFormOpen, setOfferFormOpen] = useState(false);
@@ -118,6 +123,25 @@ export default function SalesPage() {
   const plannedShowings = showings.filter((s) => s.status === "Planlandı").length;
   const openOffers = offers.filter((o) => !["KABUL", "REDDEDILDI"].includes(o.status)).length;
 
+  async function createShowing(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setShowingSaving(true);
+    setShowingError(null);
+    try {
+      const response = await fetch("/api/showings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerId: showingForm.customerId, listingId: showingForm.listingId, dateTime: showingForm.dateTime, attendees: Number(showingForm.attendees), note: showingForm.note }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message ?? "Gösterim oluşturulamadı.");
+      const refreshed = await fetch("/api/showings", { cache: "no-store" });
+      const refreshedPayload = await refreshed.json();
+      if (!refreshed.ok) throw new Error(refreshedPayload.message ?? "Gösterimler yenilenemedi.");
+      setShowings(refreshedPayload.showings ?? []);
+      setShowingForm({ customerId: "", listingId: "", dateTime: "", attendees: "1", note: "" });
+      setShowingFormOpen(false);
+    } catch (error) {
+      setShowingError(error instanceof Error ? error.message : "Gösterim oluşturulamadı.");
+    } finally { setShowingSaving(false); }
+  }
+
   async function createOffer(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setOfferSaving(true);
@@ -183,7 +207,7 @@ export default function SalesPage() {
 
         {tab === "Bugün" && <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Bugünün çalışma sırası</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Önce bunlar</h2></div><Pill>Önceliklendirilmiş</Pill></div><div className="mt-5 space-y-3">{tasks.filter((t) => t.status !== "Tamamlandı").slice(0, 4).map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div><button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">Tamamla</button></div>)}</div></section>
-          <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">V1 seed verisi kullanır. Kalıcı kayıt, yetki ve API bağlantısı foundation aşamasında bu domainlere bağlanacaktır.</p></section>
+          <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">Aktivite, görev, gösterim ve teklif kayıtları yetki kontrollü API üzerinden gerçek veriye bağlanır.</p></section>
         </div>}
 
         {tab === "Aktiviteler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Timeline</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Son aktiviteler</h2></div><button type="button" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Aktivite</button></div><div className="mt-5 divide-y divide-slate-100">
@@ -202,7 +226,40 @@ export default function SalesPage() {
 
         {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><button type="button" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</button></div><div className="mt-5 space-y-3">{tasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status}</Pill><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div>{task.status !== "Tamamlandı" && <button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
 
-        {tab === "Gösterimler" && <section className="mt-5 grid gap-4 md:grid-cols-2">{salesOps.showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status]}>{item.status}</Pill><span className="text-xs font-semibold text-slate-400">{item.date} · {item.time}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customerName}</h2><p className="mt-1 text-sm text-slate-600">{item.portfolioTitle}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Bağlantı</p><p className="mt-1 text-sm font-semibold text-slate-800">PR-{String(2400 + item.portfolioId).slice(-4)}</p></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}<button type="button" className="mt-5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Gösterim detayına git</button></article>)}</section>}
+        {tab === "Gösterimler" && <section className="mt-5 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Gerçek veri</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Gösterimler</h2></div>
+            <button type="button" onClick={() => { setShowingFormOpen((open) => !open); setShowingError(null); }} className="rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">+ Yeni gösterim</button>
+          </div>
+          {showingFormOpen && <form onSubmit={createShowing} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-semibold text-slate-700">Müşteri
+                <select required value={showingForm.customerId} onChange={(e) => setShowingForm((f) => ({ ...f, customerId: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-900"><option value="">Müşteri seçin</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select>
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Portföy
+                <select required value={showingForm.listingId} onChange={(e) => setShowingForm((f) => ({ ...f, listingId: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-900"><option value="">Portföy seçin</option>{listings.map((listing) => <option key={listing.id} value={listing.id}>{listing.code} · {listing.title}</option>)}</select>
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Tarih ve saat
+                <input required type="datetime-local" value={showingForm.dateTime} onChange={(e) => setShowingForm((f) => ({ ...f, dateTime: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal text-slate-900" />
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Katılımcı
+                <input required min="1" step="1" type="number" value={showingForm.attendees} onChange={(e) => setShowingForm((f) => ({ ...f, attendees: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal text-slate-900" />
+              </label>
+            </div>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Not
+              <textarea value={showingForm.note} onChange={(e) => setShowingForm((f) => ({ ...f, note: e.target.value }))} rows={3} placeholder="Örn. Müşteri eşiyle gelecek." className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal text-slate-900" />
+            </label>
+            {showingError && <p className="mt-3 text-sm text-rose-600">{showingError}</p>}
+            <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setShowingFormOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={showingSaving} type="submit" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{showingSaving ? "Kaydediliyor…" : "Gösterimi kaydet"}</button></div>
+          </form>}
+          {opsLoading && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Gösterimler yükleniyor…</p>}
+          {!opsLoading && !showings.length && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Henüz planlanmış gösterim yok.</p>}
+          {!opsLoading && <div className="grid gap-4 md:grid-cols-2">{showings.map((item) => {
+            const label: ShowingStatus = item.status === "GERCEKLESTI" ? "Gerçekleşti" : item.status === "IPTAL" ? "İptal" : "Planlandı";
+            const location = item.listing.property ? ` · ${item.listing.property.district}, ${item.listing.property.neighborhood}` : "";
+            return <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[label]}>{label}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customer.name}</h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code}{location}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><p className="mt-1 text-sm font-semibold text-slate-800">{label}</p></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>;
+          })}</div>}
+        </section>
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
