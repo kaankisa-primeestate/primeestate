@@ -223,10 +223,17 @@ export default function ClientsPage() {
         </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={setSelectedId} />}</section>
 
         {selected ? <section className="min-w-0">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-start gap-4"><div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">{initials(selected.name)}</div><div>
-            <div className="flex flex-wrap items-center gap-2"><h2 className="text-2xl font-semibold tracking-tight text-slate-950">{selected.name}</h2>{selected.roles.map((x) => <RoleChip key={x.role}>{roleMap[x.role] ?? x.role}</RoleChip>)}</div>
-            <p className="mt-1 text-sm text-slate-500">{selected.location || "Konum belirtilmemiş"} · {selected.phone || "Telefon yok"}</p><p className="mt-1 text-sm text-slate-400">{selected.email || "E-posta yok"}</p></div><div className="ml-auto shrink-0"><button type="button" onClick={() => setShowEdit(true)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Düzenle</button></div>
-          </div></div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">{initials(selected.name)}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2"><h2 className="text-2xl font-semibold tracking-tight text-slate-950">{selected.name}</h2>{selected.roles.map((x) => <RoleChip key={x.role}>{roleMap[x.role] ?? x.role}</RoleChip>)}</div>
+                <p className="mt-1 text-sm text-slate-500">{selected.location || "Konum belirtilmemiş"} · {selected.phone || "Telefon yok"}</p>
+                <p className="mt-1 text-sm text-slate-400">{selected.email || "E-posta yok"}</p>
+              </div>
+              <button type="button" onClick={() => setShowEdit(true)} className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Düzenle</button>
+            </div>
+          </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">İlişki skoru</p><div className="mt-2"><Score value={selected.relationshipScore} /></div></div>
             <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Son iletişim</p><p className="mt-2 text-sm font-semibold text-slate-800">{displayDate(selected.lastContactAt)}</p></div>
