@@ -21,6 +21,22 @@ type ApiDemand = {
   updatedAt: string;
 };
 
+type ApiActivity = {
+  id: string;
+  type: string;
+  occurredAt: string;
+  summary: string;
+  outcome: string | null;
+  owner: { id: string; name: string; email: string };
+};
+type ApiTask = {
+  id: string;
+  title: string;
+  dueAt: string;
+  priority: string;
+  status: string;
+  owner: { id: string; name: string; email: string };
+};
 type ApiCustomer = {
   id: string;
   name: string;
@@ -108,6 +124,14 @@ export default function ClientsPage() {
   const [showDemandCreate, setShowDemandCreate] = useState(false);
   const [demandSaving, setDemandSaving] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
+  const [activities, setActivities] = useState<ApiActivity[]>([]);
+  const [tasks, setTasks] = useState<ApiTask[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [taskLoading, setTaskLoading] = useState(false);
+  const [showActivityCreate, setShowActivityCreate] = useState(false);
+  const [showTaskCreate, setShowTaskCreate] = useState(false);
+  const [activitySaving, setActivitySaving] = useState(false);
+  const [taskSaving, setTaskSaving] = useState(false);
 
   async function loadCustomers() {
     setLoading(true); setError("");
@@ -120,7 +144,9 @@ export default function ClientsPage() {
       if (!res.ok) throw new Error(data.message || "Müşteriler yüklenemedi.");
       const next: ApiCustomer[] = data.customers ?? [];
       setCustomers(next);
-      setSelectedId((current) => current && next.some((x) => x.id === current) ? current : next[0]?.id ?? null);
+      const nextSelectedId = selectedId && next.some((x) => x.id === selectedId) ? selectedId : next[0]?.id ?? null;
+      setSelectedId(nextSelectedId);
+      if (nextSelectedId) void loadCustomerOps(nextSelectedId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Müşteriler yüklenemedi.");
     } finally { setLoading(false); }
@@ -132,6 +158,74 @@ export default function ClientsPage() {
   }, [query, role]);
 
   const selected = useMemo(() => customers.find((x) => x.id === selectedId) ?? customers[0] ?? null, [customers, selectedId]);
+
+  async function loadCustomerOps(customerId: string) {
+    setActivityLoading(true); setTaskLoading(true);
+    try {
+      const [activityRes, taskRes] = await Promise.all([
+        fetch("/api/activities?customerId=" + encodeURIComponent(customerId), { cache: "no-store" }),
+        fetch("/api/tasks?customerId=" + encodeURIComponent(customerId), { cache: "no-store" }),
+      ]);
+      const activityData = await activityRes.json();
+      const taskData = await taskRes.json();
+      if (!activityRes.ok) throw new Error(activityData.message || "Aktiviteler yüklenemedi.");
+      if (!taskRes.ok) throw new Error(taskData.message || "Görevler yüklenemedi.");
+      setActivities(activityData.activities ?? []);
+      setTasks(taskData.tasks ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Aktivite ve görevler yüklenemedi.");
+      setActivities([]); setTasks([]);
+    } finally { setActivityLoading(false); setTaskLoading(false); }
+  }
+
+
+  async function createActivity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!selected) return;
+    setActivitySaving(true); setError("");
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    try {
+      const res = await fetch("/api/activities", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: selected.id,
+          type: form.get("type"),
+          summary: form.get("summary"),
+          outcome: form.get("outcome"),
+          occurredAt: form.get("occurredAt") ? new Date(String(form.get("occurredAt"))).toISOString() : new Date().toISOString(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Aktivite kaydedilemedi.");
+      setShowActivityCreate(false); formElement.reset();
+      await loadCustomerOps(selected.id); await loadCustomers();
+    } catch (e) { setError(e instanceof Error ? e.message : "Aktivite kaydedilemedi."); }
+    finally { setActivitySaving(false); }
+  }
+
+  async function createTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!selected) return;
+    setTaskSaving(true); setError("");
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: selected.id,
+          title: form.get("title"),
+          dueAt: form.get("dueAt") ? new Date(String(form.get("dueAt"))).toISOString() : "",
+          priority: form.get("priority"),
+          source: "CUSTOMER_DETAIL",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Görev oluşturulamadı.");
+      setShowTaskCreate(false); formElement.reset();
+      await loadCustomerOps(selected.id);
+    } catch (e) { setError(e instanceof Error ? e.message : "Görev oluşturulamadı."); }
+    finally { setTaskSaving(false); }
+  }
 
   async function createCustomer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError("");
@@ -220,7 +314,7 @@ export default function ClientsPage() {
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-4">
           <div className="relative"><span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Müşteri ara..." className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-3 text-sm outline-none focus:border-slate-400 focus:bg-white" /></div>
           <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">{roleFilters.map((item) => <button key={item} type="button" onClick={() => setRole(item)} className={"whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold " + (role === item ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}>{item}</button>)}</div>
-        </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={setSelectedId} />}</section>
+        </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={(id) => { setSelectedId(id); void loadCustomerOps(id); }} />}</section>
 
         {selected ? <section className="min-w-0">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -254,12 +348,55 @@ export default function ClientsPage() {
             {demand.notes && <p className="mt-4 border-t border-slate-100 pt-4 text-sm leading-6 text-slate-600">{demand.notes}</p>}
           </article>) : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">Bu müşterinin henüz aktif talebi yok.</div>}</div>
 
+          <div className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">İletişim geçmişi</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Aktiviteler</h2></div>
+                <button type="button" onClick={() => setShowActivityCreate(true)} className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Aktivite</button>
+              </div>
+              <div className="mt-4 space-y-3">
+                {activityLoading ? <p className="text-sm text-slate-500">Aktiviteler yükleniyor…</p> : activities.length ? activities.map((activity) => <div key={activity.id} className="rounded-xl bg-slate-50 p-3.5">
+                  <div className="flex items-start justify-between gap-3"><div><span className="text-xs font-bold text-slate-500">{activity.type}</span><p className="mt-1 text-sm font-semibold text-slate-900">{activity.summary}</p>{activity.outcome && <p className="mt-1 text-xs text-slate-500">{activity.outcome}</p>}</div><span className="shrink-0 text-xs text-slate-400">{displayDate(activity.occurredAt)}</span></div>
+                </div>) : <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">Henüz aktivite yok.</div>}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görevler</h2></div>
+                <button type="button" onClick={() => setShowTaskCreate(true)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">+ Görev</button>
+              </div>
+              <div className="mt-4 space-y-3">
+                {taskLoading ? <p className="text-sm text-slate-500">Görevler yükleniyor…</p> : tasks.length ? tasks.map((task) => <div key={task.id} className="rounded-xl bg-slate-50 p-3.5">
+                  <div className="flex items-start gap-3"><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{displayDate(task.dueAt)}</p></div><span className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-slate-500">{task.priority}</span></div>
+                </div>) : <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">Henüz görev yok.</div>}
+              </div>
+            </div>
+          </div>
+
           <div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kaynak</p><p className="mt-2 font-semibold text-slate-900">{selected.source || "Belirtilmemiş"}</p><p className="mt-1 text-sm text-slate-500">Sorumlu danışman: {selected.owner.name}</p></div>
             <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime’ın önerisi · V1</p><p className="mt-2 text-sm leading-6 text-slate-200">Bu ekran artık seed veri yerine yetkili gerçek müşteri verisini kullanıyor.</p></div></div>
         </section> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">{loading ? "Müşteriler yükleniyor…" : "Görüntülenecek müşteri bulunamadı."}</div>}
       </div>
     </div></main>
 
+    {showActivityCreate && selected && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"><div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-6">
+      <div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">CRM · {selected.name}</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Yeni Aktivite</h2></div><button type="button" onClick={() => setShowActivityCreate(false)} className="text-xl text-slate-400">×</button></div>
+      <form onSubmit={createActivity} className="mt-6 space-y-4">
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Aktivite tipi</span><select name="type" defaultValue="ARAMA" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option value="ARAMA">Arama</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">E-posta</option><option value="NOT">Not</option><option value="GOSTERIM">Gösterim</option><option value="TEKLIF">Teklif</option></select></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Özet *</span><textarea name="summary" required rows={3} placeholder="Müşteri ile yapılan görüşmenin kısa özeti…" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Sonuç / sonraki adım</span><input name="outcome" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Tarih ve saat</span><input name="occurredAt" type="datetime-local" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <div className="flex gap-3"><button type="button" onClick={() => setShowActivityCreate(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button type="submit" disabled={activitySaving} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{activitySaving ? "Kaydediliyor…" : "Aktiviteyi Kaydet"}</button></div>
+      </form>
+    </div></div>}
+    {showTaskCreate && selected && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"><div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-6">
+      <div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">CRM · {selected.name}</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Yeni Görev</h2></div><button type="button" onClick={() => setShowTaskCreate(false)} className="text-xl text-slate-400">×</button></div>
+      <form onSubmit={createTask} className="mt-6 space-y-4">
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Görev *</span><input name="title" required placeholder="Örn. Cuma günü müşteriyi ara" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="block"><span className="text-sm font-semibold text-slate-700">Son tarih *</span><input name="dueAt" required type="datetime-local" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">Öncelik</span><select name="priority" defaultValue="NORMAL" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option value="YUKSEK">Yüksek</option><option value="NORMAL">Normal</option><option value="DUSUK">Düşük</option></select></label></div>
+        <div className="flex gap-3"><button type="button" onClick={() => setShowTaskCreate(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button type="submit" disabled={taskSaving} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{taskSaving ? "Kaydediliyor…" : "Görevi Kaydet"}</button></div>
+      </form>
+    </div></div>}
     {showDemandCreate && selected && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6">
       <div className="max-h-[94vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6">
         <div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">CRM · ${selected.name}</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Yeni Talep</h2></div><button type="button" onClick={() => setShowDemandCreate(false)} className="text-xl text-slate-400">×</button></div>
