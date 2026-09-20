@@ -17,8 +17,10 @@ type ApiOffer = {
 };
 type ApiCustomer = { id: string; name: string };
 type ApiListing = { id: string; code: string; title: string; price: string | number; currency: string; status: string };
+type ApiShowing = { id: string; dateTime: string; status: string; attendees: number; note: string | null; customer: { id: string; name: string }; listing: { id: string; code: string; title: string; property?: { city: string; district: string; neighborhood: string } } };
+type ApiSale = { id: string; amount: string | number; currency: string; status: string; createdAt: string; closedAt: string | null; note: string | null; customer: { id: string; name: string }; listing: { id: string; code: string; title: string; price?: string | number; currency?: string }; offer: { id: string; status: string } };
 
-const tabs = ["Bugün", "Aktiviteler", "Görevler", "Gösterimler", "Teklifler"] as const;
+const tabs = ["Bugün", "Aktiviteler", "Görevler", "Gösterimler", "Teklifler", "Satışlar"] as const;
 type Tab = (typeof tabs)[number];
 
 const activityIcon: Record<ActivityType, string> = { Arama: "☎", WhatsApp: "◈", "E-posta": "✉", Not: "▤", Gösterim: "⌂", Teklif: "₺" };
@@ -35,7 +37,8 @@ export default function SalesPage() {
   const [tab, setTab] = useState<Tab>("Bugün");
   const [taskState, setTaskState] = useState<Record<number, TaskStatus>>({});
   const [tasks, setTasks] = useState(salesOps.tasks);
-  const [showings, setShowings] = useState(salesOps.showings);
+  const [showings, setShowings] = useState<ApiShowing[]>([]);
+  const [sales, setSales] = useState<ApiSale[]>([]);
   const [offers, setOffers] = useState<ApiOffer[]>([]);
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   const [listings, setListings] = useState<ApiListing[]>([]);
@@ -56,21 +59,24 @@ export default function SalesPage() {
           fetch("/api/offers", { cache: "no-store" }),
           fetch("/api/customers", { cache: "no-store" }),
           fetch("/api/listings?status=AKTIF", { cache: "no-store" }),
+          fetch("/api/sales", { cache: "no-store" }),
         ]);
         const payloads = await Promise.all(responses.map((response) => response.json()));
-        const [taskResponse, showingResponse, offerResponse, customerResponse, listingResponse] = responses;
-        const [taskPayload, showingPayload, offerPayload, customerPayload, listingPayload] = payloads;
+        const [taskResponse, showingResponse, offerResponse, customerResponse, listingResponse, saleResponse] = responses;
+        const [taskPayload, showingPayload, offerPayload, customerPayload, listingPayload, salePayload] = payloads;
         if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Görevler alınamadı.");
         if (!showingResponse.ok) throw new Error(showingPayload.message ?? "Gösterimler alınamadı.");
         if (!offerResponse.ok) throw new Error(offerPayload.message ?? "Teklifler alınamadı.");
         if (!customerResponse.ok) throw new Error(customerPayload.message ?? "Müşteriler alınamadı.");
         if (!listingResponse.ok) throw new Error(listingPayload.message ?? "Portföyler alınamadı.");
+        if (!saleResponse.ok) throw new Error(salePayload.message ?? "Satışlar alınamadı.");
         if (!cancelled) {
           setTasks(taskPayload.tasks ?? []);
           setShowings(showingPayload.showings ?? []);
           setOffers(offerPayload.offers ?? []);
           setCustomers(customerPayload.customers ?? []);
           setListings(listingPayload.listings ?? []);
+          setSales(salePayload.sales ?? []);
         }
       } catch (error) {
         if (!cancelled) setOpsError(error instanceof Error ? error.message : "İş akışı verileri alınamadı.");
@@ -145,6 +151,29 @@ export default function SalesPage() {
     }
   }
 
+  async function convertOfferToSale(offer: ApiOffer) {
+    if (offer.status !== "KABUL") return;
+    const response = await fetch("/api/sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ offerId: offer.id }) });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.message ?? "Satış oluşturulamadı.");
+    setSales((current) => [payload.sale, ...current]);
+    setTab("Satışlar");
+  }
+
+  async function updateSale(id: string, status: string) {
+    const response = await fetch("/api/sales/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.message ?? "Satış güncellenemedi.");
+    setSales((current) => current.map((sale) => sale.id === id ? payload.sale : sale));
+  }
+
+  async function updateShowing(id: string, status: string) {
+    const response = await fetch("/api/showings/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
+    setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
+  }
+
   async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
     const response = await fetch(`/api/offers/${id}`, {
       method: "PATCH",
@@ -183,7 +212,7 @@ export default function SalesPage() {
 
         {tab === "Bugün" && <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Bugünün çalışma sırası</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Önce bunlar</h2></div><Pill>Önceliklendirilmiş</Pill></div><div className="mt-5 space-y-3">{tasks.filter((t) => t.status !== "Tamamlandı").slice(0, 4).map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div><button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">Tamamla</button></div>)}</div></section>
-          <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">V1 seed verisi kullanır. Kalıcı kayıt, yetki ve API bağlantısı foundation aşamasında bu domainlere bağlanacaktır.</p></section>
+          <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">Müşteri, portföy, gösterim, teklif ve satış kayıtları yetki kapsamı içinde gerçek veriden ilerler.</p></section>
         </div>}
 
         {tab === "Aktiviteler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Timeline</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Son aktiviteler</h2></div><button type="button" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Aktivite</button></div><div className="mt-5 divide-y divide-slate-100">
@@ -202,7 +231,7 @@ export default function SalesPage() {
 
         {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><button type="button" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</button></div><div className="mt-5 space-y-3">{tasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status}</Pill><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div>{task.status !== "Tamamlandı" && <button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
 
-        {tab === "Gösterimler" && <section className="mt-5 grid gap-4 md:grid-cols-2">{salesOps.showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status]}>{item.status}</Pill><span className="text-xs font-semibold text-slate-400">{item.date} · {item.time}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customerName}</h2><p className="mt-1 text-sm text-slate-600">{item.portfolioTitle}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Bağlantı</p><p className="mt-1 text-sm font-semibold text-slate-800">PR-{String(2400 + item.portfolioId).slice(-4)}</p></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}<button type="button" className="mt-5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Gösterim detayına git</button></article>)}</section>}
+        {tab === "Gösterimler" && <section className="mt-5 grid gap-4 md:grid-cols-2">{showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"]}>{item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customer.name}</h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code} · {item.listing.property?.district ?? "—"} / {item.listing.property?.neighborhood ?? "—"}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><select value={item.status} onChange={(e) => void updateShowing(item.id, e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</section>}
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -263,6 +292,8 @@ export default function SalesPage() {
             </article>;
           })}
         </section>}
+
+        {tab === "Satışlar" && <section className="mt-5 space-y-4"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kapanış</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Satışlar</h2><p className="mt-1 text-sm text-slate-500">Kabul edilen teklif, burada gerçek satış kaydına dönüşür.</p></div>{!sales.length ? <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-400">Henüz satış kaydı yok.</div> : sales.map((sale) => <article key={sale.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col gap-4 lg:flex-row lg:items-center"><div className="flex-1"><Pill tone={sale.status === "TAMAMLANDI" ? "bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-blue-700"}>{sale.status === "TAMAMLANDI" ? "Tamamlandı" : sale.status === "IPTAL" ? "İptal" : "Açık"}</Pill><h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2><p className="mt-1 text-2xl font-semibold text-slate-950">{new Intl.NumberFormat("tr-TR", { style: "currency", currency: sale.currency }).format(Number(sale.amount))}</p><p className="mt-1 text-xs text-slate-400">{sale.listing.code} · Teklif {sale.offer.id}</p></div><select value={sale.status} onChange={(e) => void updateSale(sale.id, e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"><option value="ACIK">Açık</option><option value="TAMAMLANDI">Tamamlandı</option><option value="IPTAL">İptal</option></select></div></article>)}</section>}
       </div>
     </main>
   </div>;
