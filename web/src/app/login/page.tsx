@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -98,6 +99,15 @@ export default function LoginPage() {
               </div>
             ) : null}
 
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-semibold text-slate-700 hover:text-slate-950"
+              >
+                Şifremi unuttum
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -105,6 +115,11 @@ export default function LoginPage() {
             >
               {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </button>
+
+            <p className="text-center text-xs leading-5 text-slate-400">
+              Giriş bilgileriniz doğru değilse e-posta adresinizi kontrol edin
+              veya şifrenizi yenileyin.
+            </p>
           </form>
         </section>
       </div>
