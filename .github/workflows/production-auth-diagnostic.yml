@@ -29,7 +29,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.PRIMEESTATE_PRODUCTION_DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.PRIMEESTATE_BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: https://primeestate-v9e0.onrender.com
+          BETTER_AUTH_URL: https://primeestate-v9eo.onrender.com
           AUTH_DIAGNOSTIC_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
           AUTH_DIAGNOSTIC_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
         run: npx --yes tsx@4.20.6 scripts/diagnose-auth.ts

@@ -28,6 +28,8 @@ export async function GET() {
     renderGitBranch: process.env.RENDER_GIT_BRANCH ?? null,
     renderGitCommit: process.env.RENDER_GIT_COMMIT ?? null,
     renderServiceName: process.env.RENDER_SERVICE_NAME ?? null,
+    renderExternalUrl: process.env.RENDER_EXTERNAL_URL ?? null,
+    betterAuthUrl: process.env.BETTER_AUTH_URL ?? null,
     buildId: await readBuildId(),
   });
 }

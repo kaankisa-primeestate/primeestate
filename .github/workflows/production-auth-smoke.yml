@@ -31,7 +31,7 @@ jobs:
 
       - name: Wait for Render to deploy this commit
         env:
-          AUTH_SMOKE_BASE_URL: https://primeestate-v9e0.onrender.com
+          AUTH_SMOKE_BASE_URL: https://primeestate-v9eo.onrender.com
           EXPECTED_COMMIT: ${{ github.sha }}
         run: |
           node <<'NODE'
@@ -69,7 +69,7 @@ jobs:
 
       - name: Test production login, session and customer authorization
         env:
-          AUTH_SMOKE_BASE_URL: https://primeestate-v9e0.onrender.com
+          AUTH_SMOKE_BASE_URL: https://primeestate-v9eo.onrender.com
           AUTH_SMOKE_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
           AUTH_SMOKE_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
         run: node scripts/production-auth-smoke.mjs
