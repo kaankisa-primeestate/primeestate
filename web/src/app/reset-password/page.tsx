@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token"), [searchParams]);
@@ -133,5 +133,25 @@ export default function ResetPasswordPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-4 py-10">
+          <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center">
+            <section className="w-full rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+              <p className="text-sm font-semibold text-slate-500">
+                Şifre yenileme sayfası yükleniyor...
+              </p>
+            </section>
+          </div>
+        </main>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
