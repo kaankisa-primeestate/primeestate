@@ -2,41 +2,45 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage("");
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/sign-in/email", {
+      const response = await fetch("/api/auth/request-password-reset", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        }),
       });
 
+      const body = await response.json().catch(() => null);
+
       if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.message ?? "E-posta veya şifre hatalı.");
+        throw new Error(
+          body?.message ?? "Şifre yenileme e-postası gönderilemedi.",
+        );
       }
 
-      router.replace("/dashboard");
-      router.refresh();
+      setMessage(
+        "Eğer bu e-posta ile kayıtlı bir PrimeEstate hesabı varsa, şifre yenileme bağlantısını içeren bir e-posta gönderildi.",
+      );
     } catch (submitError) {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Giriş sırasında bir hata oluştu.",
+          : "Şifre yenileme sırasında bir hata oluştu.",
       );
     } finally {
       setLoading(false);
@@ -52,10 +56,11 @@ export default function LoginPage() {
               PrimeEstate
             </p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
-              Hoş geldiniz
+              Şifrenizi mi unuttunuz?
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              PrimeEstate hesabınızla çalışma alanınıza giriş yapın.
+              Hesabınızın e-posta adresini girin. Şifrenizi yenilemeniz için
+              güvenli bir bağlantı gönderelim.
             </p>
           </div>
 
@@ -75,20 +80,14 @@ export default function LoginPage() {
               />
             </label>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">
-                Şifre
-              </span>
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                placeholder="••••••••"
-              />
-            </label>
+            {message ? (
+              <div
+                role="status"
+                className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+              >
+                {message}
+              </div>
+            ) : null}
 
             {error ? (
               <div
@@ -99,27 +98,20 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-            <div className="text-right">
-              <Link
-                href="/forgot-password"
-                className="text-sm font-semibold text-slate-700 hover:text-slate-950"
-              >
-                Şifremi unuttum
-              </Link>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
               className="w-full rounded-2xl bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {loading ? "Gönderiliyor..." : "Şifre Yenileme Bağlantısı Gönder"}
             </button>
 
-            <p className="text-center text-xs leading-5 text-slate-400">
-              Giriş bilgileriniz doğru değilse e-posta adresinizi kontrol edin
-              veya şifrenizi yenileyin.
-            </p>
+            <Link
+              href="/login"
+              className="block text-center text-sm font-semibold text-slate-700 hover:text-slate-950"
+            >
+              Giriş ekranına dön
+            </Link>
           </form>
         </section>
       </div>
