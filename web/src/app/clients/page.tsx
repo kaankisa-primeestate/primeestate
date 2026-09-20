@@ -177,7 +177,9 @@ export default function ClientsPage() {
   }
 
   useEffect(() => {
-    if (selected?.id) void loadCustomerOps(selected.id);
+    if (!selected?.id) return;
+    const customerId = selected.id;
+    void Promise.resolve().then(() => loadCustomerOps(customerId));
   }, [selected?.id]);
 
   async function createActivity(event: FormEvent<HTMLFormElement>) {
