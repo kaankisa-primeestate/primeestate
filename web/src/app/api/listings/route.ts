@@ -36,6 +36,7 @@ export async function GET(request: Request) {
       } },
       consultant: { select: { id: true, name: true, email: true } },
       _count: { select: { matches: true, showings: true, offers: true } },
+      images: { orderBy: { sortOrder: "asc" } },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
   if (sizeM2 !== null && (!Number.isFinite(sizeM2) || sizeM2 <= 0)) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
   if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
 
-  const code = `PR-MUA9GEEU`;
+  const code = `PR-${Date.now().toString(36).toUpperCase()}`;
 
   const created = await prisma.$transaction(async (tx) => {
     const property = await tx.property.create({
