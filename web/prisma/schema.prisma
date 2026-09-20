@@ -89,6 +89,12 @@ enum OfferStatus {
   REDDEDILDI
 }
 
+enum SaleStatus {
+  ACIK
+  TAMAMLANDI
+  IPTAL
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -198,6 +204,7 @@ model Customer {
   tasks        Task[]
   showings     Showing[]
   offers       Offer[]
+  sales        Sale[]
 
   @@index([organizationId, officeId])
   @@index([ownerUserId])
@@ -399,8 +406,31 @@ model Offer {
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sale     Sale?
 
   @@index([customerId, offeredAt])
+  @@index([listingId, status])
+}
+
+
+model Sale {
+  id         String     @id @default(uuid())
+  customerId String
+  listingId  String
+  offerId    String     @unique
+  amount     Decimal    @db.Decimal(18, 2)
+  currency   String     @default("TRY")
+  status     SaleStatus @default(ACIK)
+  closedAt   DateTime?
+  note       String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId, status])
   @@index([listingId, status])
 }
 
