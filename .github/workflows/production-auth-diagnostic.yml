@@ -1,0 +1,35 @@
+name: PrimeEstate Production Auth Diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      - name: Inspect production auth records
+        env:
+          DATABASE_URL: ${{ secrets.PRIMEESTATE_PRODUCTION_DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.PRIMEESTATE_BETTER_AUTH_SECRET }}
+          BETTER_AUTH_URL: https://primeestate-v9e0.onrender.com
+          AUTH_DIAGNOSTIC_EMAIL: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_EMAIL }}
+          AUTH_DIAGNOSTIC_PASSWORD: ${{ secrets.PRIMEESTATE_BOOTSTRAP_ADMIN_PASSWORD }}
+        run: npx --yes tsx@4.20.6 scripts/diagnose-auth.ts
