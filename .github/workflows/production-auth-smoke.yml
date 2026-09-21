@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: production-auth-smoke-main
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -46,24 +50,44 @@ jobs:
               });
               const body = await response.json().catch(() => null);
               const commit = body?.renderGitCommit ?? null;
+              const branch = body?.renderGitBranch ?? null;
+              const render = body?.render ?? null;
+              const service = body?.renderServiceName ?? null;
 
               console.log(JSON.stringify({
                 status: response.status,
+                render,
+                service,
+                branch,
                 liveCommit: commit,
                 expectedCommit: expected,
               }));
+
+              if (response.ok && render === true && commit === null) {
+                console.error(
+                  "Render is responding, but RENDER_GIT_COMMIT is not exposed. " +
+                  "The deployment cannot be verified safely; configure the Render service " +
+                  "to expose its Git commit metadata before rerunning this smoke test.",
+                );
+                process.exit(1);
+              }
 
               if (response.ok && commit === expected) {
                 process.exit(0);
               }
             } catch (error) {
-              console.log(`deployment-check unavailable: ${error instanceof Error ? error.message : String(error)}`);
+              console.log(
+                `deployment-check unavailable: ${error instanceof Error ? error.message : String(error)}`,
+              );
             }
 
             await new Promise((resolve) => setTimeout(resolve, 15000));
           }
 
-          console.error(`Render did not expose expected commit ${expected} within 10 minutes.`);
+          console.error(
+            `Render did not expose expected commit ${expected} within 10 minutes. ` +
+            "The smoke test was not executed against an unverified deployment.",
+          );
           process.exit(1);
           NODE
 
