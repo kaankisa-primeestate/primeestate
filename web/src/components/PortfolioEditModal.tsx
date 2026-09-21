@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 type Listing = {
   id: string;
@@ -17,9 +17,6 @@ type Listing = {
   };
 };
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
-
 async function readJson(response: Response) {
   const text = await response.text();
   if (!text) return null;
@@ -28,12 +25,8 @@ async function readJson(response: Response) {
 
 export default function PortfolioEditModal({ item, onClose, onSaved }: { item: Listing; onClose: () => void; onSaved: () => Promise<void> }) {
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
-  const galleryInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,81 +55,6 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
       await onSaved();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Fotoğraf eklenemedi."); }
     finally { setSaving(false); }
-  }
-
-  async function uploadFile(file: File) {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) {
-      throw new Error("Fotoğraf yükleme ayarı eksik. Cloudinary Cloud Name ve Upload Preset Render ortamına eklenmeli.");
-    }
-    if (!ALLOWED_TYPES.has(file.type)) {
-      throw new Error(file.name + ": JPG, PNG, WEBP veya HEIC/HEIF fotoğraf seçin.");
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(file.name + ": Fotoğraf 15 MB'dan küçük olmalı.");
-    }
-
-    const form = new FormData();
-    form.append("file", file);
-    form.append("upload_preset", uploadPreset);
-
-    const response = await fetch("https://api.cloudinary.com/v1_1/" + encodeURIComponent(cloudName) + "/image/upload", {
-      method: "POST",
-      body: form,
-    });
-    const payload = await readJson(response);
-    if (!response.ok || typeof payload?.secure_url !== "string") {
-      const errorMessage = typeof payload?.error === "object" && payload.error && "message" in payload.error && typeof payload.error.message === "string"
-        ? payload.error.message
-        : "Cloudinary fotoğraf yüklemesi başarısız.";
-      throw new Error(errorMessage);
-    }
-
-    const saveResponse = await fetch("/api/listings/" + item.id + "/images", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: payload.secure_url, alt: item.title }),
-    });
-    const savePayload = await readJson(saveResponse);
-    if (!saveResponse.ok) {
-      throw new Error(typeof savePayload?.message === "string" ? savePayload.message : "Fotoğraf portföye kaydedilemedi.");
-    }
-  }
-
-  async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = "";
-    if (!files.length) return;
-
-    const remaining = Math.max(0, 30 - item.images.length);
-    if (remaining === 0) {
-      setMessage("Bir portföy için en fazla 30 fotoğraf eklenebilir.");
-      return;
-    }
-    const selected = files.slice(0, remaining);
-    if (files.length > remaining) {
-      setMessage("30 fotoğraf sınırı nedeniyle yalnızca ilk " + remaining + " fotoğraf seçildi.");
-    } else {
-      setMessage("");
-    }
-
-    setUploading(true);
-    setSaving(true);
-    try {
-      for (let index = 0; index < selected.length; index += 1) {
-        setUploadProgress((index + 1) + " / " + selected.length + " fotoğraf yükleniyor…");
-        await uploadFile(selected[index]);
-      }
-      setUploadProgress("");
-      await onSaved();
-    } catch (error) {
-      setUploadProgress("");
-      setMessage(error instanceof Error ? error.message : "Fotoğraf yüklenemedi.");
-    } finally {
-      setUploading(false);
-      setSaving(false);
-    }
   }
 
   async function removeImage(imageId: string) {
@@ -175,27 +93,22 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Fotoğraf yönetimi</p>
-            <p className="mt-1 text-sm text-slate-500">Telefondan galeriden seçin veya kamerayla doğrudan çekin.</p>
+            <p className="mt-1 text-sm text-slate-500">Fotoğraf yükleme altyapısı sonraki aşamada bağlanacak.</p>
           </div>
           <span className="text-xs font-semibold text-slate-400">{item.images.length} / 30 fotoğraf</span>
         </div>
 
-        <input ref={galleryInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={handleFiles} className="hidden" />
-        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={handleFiles} className="hidden" />
-
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <button type="button" disabled={saving} onClick={()=>galleryInputRef.current?.click()} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 disabled:opacity-50">🖼️ Galeriden Seç</button>
-          <button type="button" disabled={saving} onClick={()=>cameraInputRef.current?.click()} className="rounded-xl bg-slate-900 px-3 py-3 text-sm font-semibold text-white disabled:opacity-50">📷 Kamera</button>
-          <button type="button" disabled={saving} onClick={()=>void addImage()} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 disabled:opacity-50">🔗 URL ile Ekle</button>
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">🖼️ Galeriden Seç · Yakında</button>
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">📷 Kamera · Yakında</button>
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">☁️ Bulut yükleme · Yakında</button>
         </div>
 
         <div className="mt-3 flex gap-2">
           <input value={imageUrl} onChange={e=>setImageUrl(e.target.value)} placeholder="Harici fotoğraf URL'si (isteğe bağlı)" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-3 text-sm"/>
           <button type="button" disabled={saving || !imageUrl.trim()} onClick={()=>void addImage()} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Ekle</button>
         </div>
-
-        {uploading && <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-600">{uploadProgress}</div>}
-        <p className="mt-3 text-xs leading-5 text-slate-400">Dosya yükleme Cloudinary üzerinden doğrudan yapılır; PrimeEstate yalnızca güvenli fotoğraf adresini kaydeder. Her fotoğraf en fazla 15 MB olabilir.</p>
+        <p className="mt-3 text-xs leading-5 text-slate-400">URL ile ekleme mevcut. Galeri, kamera ve bulut depolama bağlantısı ayrı bir altyapı adımı olarak ele alınacak.</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {item.images.map(image=><div key={image.id} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"><img src={image.url} alt={image.alt || item.title} className="h-full w-full object-cover"/><button type="button" disabled={saving} onClick={()=>void removeImage(image.id)} className="absolute right-2 top-2 rounded-lg bg-slate-950/75 px-2 py-1 text-xs font-semibold text-white">Sil</button></div>)}
