@@ -72,14 +72,14 @@ Yeni özellik geliştirme **geçici olarak donduruldu**.
 ### Bilinçli olarak ertelenen
 Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şimdilik uygulanmayacak.
 
-Phase 6'nın kalan aktif alanı critical-test required-check kapsamıdır; ardından Phase 7 Critical E2E business chain başlar.
+Phase 6'nın kalan aktif alanı `Critical Tests` check'inin main branch protection/ruleset üzerinde gerçekten required olarak tanımlanmasıdır; ardından Phase 7 Critical E2E business chain başlar.
 
 ### Aktif phase
 **Phase 6 — Integration / Tenant Isolation / Business Invariant Tests**
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`0dc3f3309223fdaca1b97dcac202b21e4809cfe2`
+`ba5b2b2a9eaece6592166916d91611d38f801c26`
 
 - PR #68 — Foundation Phase 5: protect page routes and admin access — merged.
 - PR #69 — Foundation: sync state after Phase 5 route protection — merged.
@@ -88,6 +88,7 @@ Son doğrulanmış main commit:
 - PR #73 — Phase 6: integrate protected API route tests — merged.
 - PR #75 — Phase 6: expand payment and installment invariants — merged.
 - PR #76 — Phase 6: integrate manager scope route tests — merged.
+- PR #78 — CI: add dedicated critical test check — merged.
 
 PR #71 CI doğrulaması:
 - Web Quality: success
@@ -110,7 +111,8 @@ PR #69'da görülen production smoke timeout'u gerçek bir CI tetikleme problemi
 Render canlı sürümünün son kullanıcı tarafından doğrulanan commiti `51001ae` idi. Docs/CI-only merge'ler Render'a gereksiz deployment yaptırmıyor.
 
 ## 5. Runtime / production notu
-Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
+Production Auth Smoke workflow deployment commit doğrulamasını koruyor.
+`Critical Tests` workflow'u tam `npm test` paketini temiz PostgreSQL üzerinde çalıştırıyor ve son doğrulanan PR #78 run'ı green oldu. Repository branch protection/ruleset yönetimi bu oturumdaki GitHub integration yetkileriyle değiştirilemedi. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
 
 ## 6. Foundation çalışma sırası
 1. Phase 0 — tamamlandı
@@ -123,10 +125,11 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 8. Phase 6 — database-backed tenant/invariant integration slice tamamlandı
 9. Phase 6 — actual API route integration + initial authorization matrix integration tamamlandı
 10. Phase 6 — geniş business invariant + Office/Admin scope integration tamamlandı
-11. **Phase 6 — critical-test required-check kapsamı aktif**
-12. Phase 7 — Critical E2E business chain
-13. Phase 8 — Codebase cleanup & documentation
-14. Phase 9 — Release gate
+11. Phase 6 — dedicated `Critical Tests` CI check oluşturuldu ve green
+12. **Phase 6 — branch protection/ruleset required-check ayarı aktif bekleniyor**
+13. Phase 7 — Critical E2E business chain
+14. Phase 8 — Codebase cleanup & documentation
+15. Phase 9 — Release gate
 
 > Phase 4'ün kalan kısmı kullanıcı kararıyla şimdilik atlandı. Yeni ürün özelliği geliştirmeye geçmeden önce Phase 6'nın kritik entegrasyon/test kapsamı tamamlanacaktır.
 
