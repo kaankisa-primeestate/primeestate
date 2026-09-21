@@ -23,6 +23,8 @@ type TestUser = {
 };
 
 type Fixture = {
+  orgAdmin: TestUser;
+  officeAdmin: TestUser;
   agent1: TestUser;
   agent2: TestUser;
   teamLeader: TestUser;
