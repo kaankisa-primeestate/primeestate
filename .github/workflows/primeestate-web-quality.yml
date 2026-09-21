@@ -29,7 +29,7 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/primeestate_ci?schema=public
-      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/primeestate_ci?schema=shadow
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/primeestate_shadow?schema=public
     defaults:
       run:
         working-directory: web
@@ -47,6 +47,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Create Prisma shadow database
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d primeestate_ci -c "CREATE DATABASE primeestate_shadow;"
 
       - name: Migration parity
         run: npm run db:migration:check
