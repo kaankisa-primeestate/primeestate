@@ -2,29 +2,19 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-const OFFER_STATUSES = new Set(["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"]);
-
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { customerReadScope, hasCapability } from "@/lib/authorization";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
+  if (!hasCapability(context, "operations:write")) return NextResponse.json({ message: "Teklif düzenleme yetkiniz yok." }, { status: 403 });
+
   const { id } = await params;
   const offer = await prisma.offer.findFirst({
     where: {
       id,
-      customer: {
-        organizationId: context.organizationId,
-        officeId: context.officeId,
-        ...customerScope(context),
-      },
+      customer: customerReadScope(context),
     },
     select: { id: true },
   });
