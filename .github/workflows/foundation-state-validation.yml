@@ -1,0 +1,22 @@
+name: Foundation State Validation
+
+on:
+  pull_request:
+    paths:
+      - "CURRENT_STATE.md"
+      - "FOUNDATION_RECOVERY_PLAN.md"
+      - ".github/workflows/foundation-state-validation.yml"
+
+jobs:
+  foundation-state:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate foundation documents
+        run: |
+          test -s CURRENT_STATE.md
+          test -s FOUNDATION_RECOVERY_PLAN.md
+          grep -q "Phase 1 — Database / migration integrity" FOUNDATION_RECOVERY_PLAN.md
+          grep -q "399a6cd2fc08cde4b28a79d304e61f611fa393a0" FOUNDATION_RECOVERY_PLAN.md
