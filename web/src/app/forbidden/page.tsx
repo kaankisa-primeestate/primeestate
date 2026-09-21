@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ForbiddenPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
@@ -11,12 +13,12 @@ export default function ForbiddenPage() {
         <p className="mt-3 text-sm leading-6 text-slate-500">
           Bu çalışma alanına erişmek için hesabınızın gerekli yönetim yetkisine sahip olması gerekir.
         </p>
-        <a
+        <Link
           href="/"
           className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
         >
-          Dashboard'a Dön
-        </a>
+          Dashboard&apos;a Dön
+        </Link>
       </section>
     </main>
   );
