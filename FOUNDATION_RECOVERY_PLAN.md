@@ -10,7 +10,8 @@
 - [x] Never modify kaankisa-primeestate/remax-CRM.
 - [x] One phase at a time; no phase is skipped.
 - [x] Phase 0 completed through implementation -> automated validation review -> PR -> merge -> main verification -> state update.\n- [x] Phase 1 completed with implementation -> automated validation -> PR -> green CI -> merge -> production migration -> runtime smoke -> state reconciliation.
-- [ ] Every subsequent phase must have: implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
+- [x] Phase 3 completed with implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
+- [x] Phase 4 started with implementation -> automated validation -> PR -> green CI -> merge; response helper foundation is now on main.
 - [ ] Production database is never reset as a shortcut.
 - [ ] No new feature work until all P0-P8 gates are green.
 
@@ -46,10 +47,10 @@ Goal: invalid business relationships become difficult or impossible to persist.
 
 ## Phase 3 — Authorization foundation
 Goal: one centralized policy model used by every protected API.
-- [ ] Centralize role capabilities.
-- [ ] Centralize organization/office/team/ownership scope.
-- [ ] Define read/create/update/delete/manage permissions.
-- [ ] Explicitly restrict VIEWER and AUDITOR write operations.
+- [x] Centralize role capabilities.
+- [x] Centralize organization/office/team/ownership scope.
+- [x] Define read/create/update/delete/manage permissions.
+- [x] Explicitly restrict VIEWER and AUDITOR write operations.
 - [ ] Test Agent isolation.
 - [ ] Test Team Leader scope.
 - [ ] Test Office/Admin scope.
@@ -58,7 +59,7 @@ Goal: one centralized policy model used by every protected API.
 
 ## Phase 4 — API contract & error handling
 Goal: every API returns predictable JSON and consistent status codes.
-- [ ] Create shared API response helpers.
+- [x] Create shared API response helpers.
 - [ ] Standardize success/error envelopes.
 - [ ] Standardize validation, auth, not-found, conflict, and database errors.
 - [ ] Replace unsafe direct response.json() assumptions in client code.
@@ -124,4 +125,4 @@ Goal: foundation is formally accepted before new feature work.
 - [ ] Foundation declared ready for new feature development.
 
 ## Next action
-Phase 2 is active. The current branch additionally hardens User → Office → Organization and User → Team → Office foreign-key consistency with guarded migration checks. After CI, review migration behavior before merge. Do not start feature development in parallel.
+Phase 4 is active. Continue standardizing validation, not-found, conflict, and database error envelopes on critical APIs, then add contract tests. Do not start feature development in parallel.
