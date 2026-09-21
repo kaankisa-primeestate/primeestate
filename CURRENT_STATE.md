@@ -5,12 +5,9 @@
 ## 1. Proje
 PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Operating System / SaaS platformudur.
 
-**Ana prensip:** TEK VERİ, ÇOK FONKSİYON
-
 - Ana geliştirme repo: `kaankisa-primeestate/primeestate`
 - Canlı/referans repo: `kaankisa-primeestate/remax-CRM`
 - `remax-CRM` canlı sistemdir; değiştirilmez.
-- PrimeEstate ana geliştirme tabanıdır.
 
 ## 2. Mimari
 - Next.js + React + TypeScript
@@ -21,67 +18,67 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - API seviyesinde tenant + role scope
 - AI provider bağımsız mimari
 
-## 3. Foundation Recovery durumu — Phase 4 aktif
+## 3. Foundation Recovery durumu
 
-Yeni özellik geliştirme **geçici olarak donduruldu**. Önce teknik temel P0-P9 aşamalarında sertleştirilecek.
+Yeni özellik geliştirme hâlâ dondurulmuştur.
 
-Master checklist:
-`FOUNDATION_RECOVERY_PLAN.md`
+### Tamamlanan
+- Phase 0 — Inventory & freeze
+- Phase 1 — Database / migration integrity
+- Phase 2 — Data model integrity
+- Phase 3 — Authorization foundation
+- Phase 4 — API response helper foundation + kritik auth/validation/not-found error normalization
+- Phase 6 — İlk test altyapısı dilimi:
+  - `npm test` komutu
+  - Node built-in test runner
+  - Authorization role matrix
+  - Customer ownership/team scope
+  - Office listing scope
+  - Read-only write denial testleri
+  - Web Quality CI içinde test adımı
 
-Audit sonucu öne çıkan kritik riskler:
-- Production DB migration state ile uygulama/schema parity'si ayrıca doğrulanmalı.
-- `/api/sales` production'da 500 veriyor; dashboard V10 artık gerçek endpoint/status bilgisini gösteriyor.
-- API response/error standardı merkezi değil.
-- Authorization policy endpoint'lere dağılmış durumda; VIEWER/AUDITOR davranışları ayrıca sertleştirilmeli.
-- UI route seviyesinde merkezi auth guard bulunmuyor.
-- Otomatik test/E2E kapsamı kritik iş akışının gerisinde.
-- İki matching engine bulunuyor; tek business engine'e indirilecek.
-- Finansal state transition ve ledger bütünlüğü sertleştirilecek.
-- Dokümantasyon kodla yeniden senkronize edilecek.
+### Bilinçli olarak ertelenen
+Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şu aşamada uygulanmayacak.
+
+Phase 6'nın kalan kapsamı (integration, tenant isolation, business invariant, migration testleri) Phase 5 sonrasına bırakıldı.
+
+### Aktif phase
+**Phase 5 — Runtime & Route Protection**
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`7346a6a297c577dbadc8e0c67703efb0ddb83c40`
+`01cf5c99e8308c134875e1aeb6c707f6824813dc`
 
-Phase 3 authorization foundation PR #53–#58 tamamlandı. Phase 4 PR #59 ve #60 tamamlandı; ortak API response helper'ları main'e alındı.
+PR #66 — Foundation Phase 6: establish test foundation — merged.
 
-PR #48 Phase 1 database/migration integrity merge edildi: `927d6d12508979d22aebc6395678dcf578074fb5`.
-PR #49 production runtime smoke genişletmesi merge edildi: `bbde12a3891a509a8aea15446b0f2410158915a7`.
-Production migration #2 başarıyla çalıştı ve production smoke #31 başarıyla geçti; `/api/sales`, `/api/payments` ve `/api/payment-plans` authenticated smoke kapsamında doğrulandı.
+PR #66 Web Quality:
+- Run #444: success
+- Test step: success
+- Lint: success
+- Typecheck: success
+- Production build: success
 
-**Aktif phase: Phase 4 — API contract & error handling.**
+PR #64 sonrası main:
+- Web Quality #435: success
+- Production Auth Smoke #45: success
 
-PR #50 merged. Phase 2 ikinci hardening paketi `foundation/phase2-data-integrity-v2` branch'inde: User → Office → Organization ve User → Team → Office ilişkileri için guarded foreign-key bütünlüğü hazırlanıyor. Migration mevcut tutarsız kayıtları sessizce düzeltmez; tespit edilirse migration'ı durdurur.
-
-
-PR #46 — **Fix dashboard API response handling**
-- CI #269: **success**
-- PR #46: **merged**
-- Merge commit: `399a6cd2fc08cde4b28a79d304e61f611fa393a0`
-
-PR #47 ile foundation recovery baseline merge edildi.\n\nPR #46 ile Dashboard:
-- boş/non-JSON response'larda güvenli parse yapıyor,
-- tek endpoint arızasının tüm dashboard'u düşürmesini engelliyor,
-- problemli endpoint/status bilgisini gösteriyor.
-
-## 5. Mevcut runtime bulgusu
-Önceki `/api/sales` HTTP 500 problemi production migration parity eksikliğinden kaynaklanıyordu ve Phase 1 kapsamında giderildi.
-Production smoke #31 başarıyla geçti. Dashboard/Finance UI görsel doğrulaması ayrıca yapılabilir; API runtime tarafında kritik finans endpointleri smoke testten geçti.
+## 5. Runtime / production notu
+Production Auth Smoke workflow, deployment commit doğrulamasını koruyacak şekilde çalışıyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
 
 ## 6. Foundation çalışma sırası
+1. Phase 0 — tamamlandı
+2. Phase 1 — tamamlandı
+3. Phase 2 — tamamlandı
+4. Phase 3 — tamamlandı
+5. Phase 4 — kritik temel tamamlandı; kalan contract hardening ertelendi
+6. Phase 6 — ilk test foundation slice tamamlandı
+7. **Phase 5 — aktif**
+8. Phase 6 — kalan test kapsamı
+9. Phase 7 — Critical E2E business chain
+10. Phase 8 — Codebase cleanup & documentation
+11. Phase 9 — Release gate
 
-1. Phase 0 — Inventory & freeze — tamamlandı
-2. Phase 1 — Database / migration integrity — tamamlandı
-3. Phase 2 — Data model integrity — tamamlandı
-4. Phase 3 — Authorization foundation — tamamlandı
-5. Phase 4 — API contract & error handling — aktif
-6. Phase 5 — Runtime & route protection
-7. Phase 6 — Test foundation
-8. Phase 7 — Critical E2E business chain
-9. Phase 8 — Codebase cleanup & documentation
-10. Phase 9 — Release gate
-
-**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 4 aktif; authorization hata sözleşmesi ve ortak API response helper'ları main'e alındı.
+> Kullanıcı kararıyla Phase 4'ün kalan kısmı şimdilik atlandı; test altyapısının ilk dilimi kuruldu ve şimdi Phase 5'e geçiliyor.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
@@ -97,17 +94,17 @@ Production smoke #31 başarıyla geçti. Dashboard/Finance UI görsel doğrulama
 
 ## 8. Çalışma disiplini
 1. main/branch/PR/CI doğrulanır.
-2. O anki phase'in tek hedefi seçilir.
+2. O anki hedef phase seçilir.
 3. Ayrı branch açılır.
 4. Kodlanır.
 5. Otomatik doğrulamalar çalıştırılır.
 6. PR açılır.
 7. CI yeşil olmadan merge edilmez.
 8. Merge sonrası main tekrar doğrulanır.
-9. Bu dosya ve `FOUNDATION_RECOVERY_PLAN.md` güncellenir.
-10. Sonraki phase'e geçilir.
+9. CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md güncellenir.
+10. Sonraki hedefe geçilir.
 
 ## 9. Yeni oturum başlangıç komutu
 ```
-PrimeEstate'i devral. Önce CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını, GitHub'daki güncel main/branch/PR/CI durumunu kontrol et. Hangi foundation phase'inde olduğumuzu doğrula. Tamamlanan aşamaları tekrar yapma; bir sonraki tamamlanmamış aşamadan devam et. Canlı remax-CRM reposuna dokunma. Her aşamada implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update zincirini uygula.
+PrimeEstate'i devral. Önce CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını, GitHub'daki güncel main/branch/PR/CI durumunu kontrol et. Phase 5 runtime & route protection'dan devam et. Canlı remax-CRM reposuna dokunma.
 ```
