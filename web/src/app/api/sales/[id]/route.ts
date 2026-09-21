@@ -10,7 +10,8 @@ function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserCon
   return { ownerUserId: context.userId };
 }
 
-const STATUSES = new Set<Prisma.SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
+type SaleStatus = "ACIK" | "TAMAMLANDI" | "IPTAL";
+const STATUSES = new Set<SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
 
 function parseRate(value: unknown, label: string) {
   if (value === null || value === undefined || value === "") return null;
@@ -35,8 +36,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   let body: { status?: unknown; note?: unknown; commissionRate?: unknown; officeShareRate?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
 
-  const status = typeof body.status === "string" && STATUSES.has(body.status as Prisma.SaleStatus)
-    ? body.status as Prisma.SaleStatus
+  const status = typeof body.status === "string" && STATUSES.has(body.status as SaleStatus)
+    ? body.status as SaleStatus
     : undefined;
   if (body.status !== undefined && !status) return NextResponse.json({ message: "Geçersiz satış durumu." }, { status: 400 });
 
