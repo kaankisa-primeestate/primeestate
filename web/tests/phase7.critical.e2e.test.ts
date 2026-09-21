@@ -4,6 +4,26 @@ import { spawn, type ChildProcess } from "node:child_process";
 import net from "node:net";
 import { test, before, after } from "node:test";
 
+async function stopServer(child: ChildProcess | null) {
+  if (!child?.pid) return;
+  if (process.platform === "win32") {
+    child.kill();
+  } else {
+    try { process.kill(-child.pid, "SIGTERM"); } catch {}
+  }
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(() => {
+      if (process.platform !== "win32" && child.pid) {
+        try { process.kill(-child.pid, "SIGKILL"); } catch {}
+      } else {
+        child.kill("SIGKILL");
+      }
+      resolve();
+    }, 5000);
+    child.once("exit", () => { clearTimeout(timer); resolve(); });
+  });
+}
+
 process.env.BETTER_AUTH_SECRET ??= "phase7-e2e-test-secret-0123456789-abcdef";
 process.env.BETTER_AUTH_URL ??= "http://127.0.0.1:4318";
 
@@ -145,6 +165,7 @@ before(async () => {
         NEXT_TELEMETRY_DISABLED: "1",
       },
       stdio: ["ignore", "pipe", "pipe"],
+      detached: process.platform !== "win32",
     },
   );
 
