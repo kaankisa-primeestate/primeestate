@@ -2,18 +2,13 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
 
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "tasks", "read");
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   const status = searchParams.get("status")?.trim();
@@ -22,8 +17,8 @@ export async function GET(request: Request) {
       ...(customerId ? { customerId } : {}),
       ...(status ? { status: status as never } : {}),
       OR: [
-        { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
-        { customerId: null, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(MANAGER_ROLES.has(context.role) ? {} : { id: context.userId }) } },
+        { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
+        { customerId: null, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(isManagerRole(context.role) ? {} : { id: context.userId }) } },
       ],
     },
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, owner: { select: { id: true, name: true, email: true } } },
@@ -36,6 +31,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "tasks", "create");
   let body: { customerId?: unknown; title?: unknown; dueAt?: unknown; priority?: unknown; source?: unknown; ownerUserId?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const title = typeof body.title === "string" ? body.title.trim() : "";
