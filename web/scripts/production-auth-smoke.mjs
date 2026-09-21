@@ -43,6 +43,18 @@ async function main() {
       ok: false,
       authenticated: false,
     },
+    sales: {
+      status: null,
+      ok: false,
+    },
+    payments: {
+      status: null,
+      ok: false,
+    },
+    paymentPlans: {
+      status: null,
+      ok: false,
+    },
   };
 
   const commonHeaders = {
@@ -111,6 +123,19 @@ async function main() {
   result.customers.ok = customersResponse.ok;
   result.customers.authenticated = customersResponse.status !== 401;
 
+  const [salesResponse, paymentsResponse, paymentPlansResponse] = await Promise.all([
+    fetch(`${baseUrl}/api/sales`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
+    fetch(`${baseUrl}/api/payments`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
+    fetch(`${baseUrl}/api/payment-plans`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
+  ]);
+
+  result.sales.status = salesResponse.status;
+  result.sales.ok = salesResponse.ok;
+  result.payments.status = paymentsResponse.status;
+  result.payments.ok = paymentsResponse.ok;
+  result.paymentPlans.status = paymentPlansResponse.status;
+  result.paymentPlans.ok = paymentPlansResponse.ok;
+
   console.log(JSON.stringify(result, null, 2));
 
   if (!result.session.present) {
@@ -120,6 +145,11 @@ async function main() {
 
   if (!result.customers.authenticated) {
     process.exitCode = 5;
+    return;
+  }
+
+  if (!result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) {
+    process.exitCode = 6;
   }
 }
 
