@@ -13,9 +13,30 @@ type Sale = { id: string; status: string };
 
 async function g<T>(u: string): Promise<T> {
   const r = await fetch(u, { cache: "no-store" });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.message ?? "Veri alınamadı.");
-  return d;
+  const text = await r.text();
+  let d: unknown = null;
+
+  if (text.trim()) {
+    try {
+      d = JSON.parse(text);
+    } catch {
+      throw new Error(`Dashboard API yanıtı geçersiz: ${u} (${r.status})`);
+    }
+  }
+
+  if (!r.ok) {
+    const message =
+      d && typeof d === "object" && "message" in d && typeof d.message === "string"
+        ? d.message
+        : `API ${r.status} yanıtı`;
+    throw new Error(`${message} — ${u}`);
+  }
+
+  if (!d || typeof d !== "object") {
+    throw new Error(`Dashboard API boş yanıt döndürdü: ${u}`);
+  }
+
+  return d as T;
 }
 
 const dt = (v: string) => new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(v));
@@ -36,29 +57,38 @@ export default function DashboardLive() {
   async function load() {
     setBusy(true);
     setErr("");
-    try {
-      const [x, y, z, q, w, n, m] = await Promise.all([
-        g<{ customers: C[] }>("/api/customers"),
-        g<{ tasks: T[] }>("/api/tasks?limit=50"),
-        g<{ listings: L[] }>("/api/listings?status=AKTIF"),
-        g<{ activities: A[] }>("/api/activities?limit=20"),
-        g<{ showings: S[] }>("/api/showings"),
-        g<{ offers: O[] }>("/api/offers"),
-        g<{ sales: Sale[] }>("/api/sales"),
-      ]);
-      setC(x.customers);
-      setT(y.tasks);
-      setL(z.listings);
-      setA(q.activities);
-      setS(w.showings);
-      setO(n.offers);
-      setSale(m.sales);
-      setLastUpdated(new Date());
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Dashboard yüklenemedi.");
-    } finally {
-      setBusy(false);
+    const requests = [
+      g<{ customers: C[] }>("/api/customers"),
+      g<{ tasks: T[] }>("/api/tasks?limit=50"),
+      g<{ listings: L[] }>("/api/listings?status=AKTIF"),
+      g<{ activities: A[] }>("/api/activities?limit=20"),
+      g<{ showings: S[] }>("/api/showings"),
+      g<{ offers: O[] }>("/api/offers"),
+      g<{ sales: Sale[] }>("/api/sales"),
+    ] as const;
+
+    const results = await Promise.allSettled(requests);
+    const [x, y, z, q, w, n, m] = results;
+    const failed = results
+      .map((result, index) => (result.status === "rejected" ? { index, reason: result.reason } : null))
+      .filter((item): item is { index: number; reason: unknown } => item !== null);
+
+    setC(x.status === "fulfilled" ? x.value.customers : []);
+    setT(y.status === "fulfilled" ? y.value.tasks : []);
+    setL(z.status === "fulfilled" ? z.value.listings : []);
+    setA(q.status === "fulfilled" ? q.value.activities : []);
+    setS(w.status === "fulfilled" ? w.value.showings : []);
+    setO(n.status === "fulfilled" ? n.value.offers : []);
+    setSale(m.status === "fulfilled" ? m.value.sales : []);
+    setLastUpdated(new Date());
+
+    if (failed.length) {
+      const first = failed[0].reason;
+      setErr(first instanceof Error
+        ? `Dashboard verilerinin bir kısmı alınamadı. ${first.message}`
+        : "Dashboard verilerinin bir kısmı alınamadı. Sayfa otomatik olarak tekrar denenecek.");
     }
+    setBusy(false);
   }
 
   useEffect(() => {
