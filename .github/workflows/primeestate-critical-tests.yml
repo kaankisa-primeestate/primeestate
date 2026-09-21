@@ -1,0 +1,56 @@
+name: PrimeEstate Critical Tests
+
+on:
+  pull_request:
+    paths:
+      - "web/**"
+      - "prisma/**"
+      - "CURRENT_STATE.md"
+      - "FOUNDATION_RECOVERY_PLAN.md"
+      - ".github/workflows/primeestate-critical-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  critical-tests:
+    name: Critical Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: primeestate_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d primeestate_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/primeestate_ci?schema=public
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/primeestate_shadow?schema=public
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run critical test suite
+        run: npm test
