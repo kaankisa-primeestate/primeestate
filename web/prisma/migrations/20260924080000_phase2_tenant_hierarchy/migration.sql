@@ -1,31 +1,13 @@
 /*
-  Phase 2 data integrity:
-  - Preserve the existing Sale/PaymentInstallment safeguards.
+  Phase 2 tenant hierarchy integrity:
   - Enforce User -> Office -> Organization consistency.
   - Enforce User -> Team -> Office consistency.
-  - Existing inconsistent rows block the migration; no data is rewritten or deleted.
+  - Existing inconsistent rows block the migration.
+  - No data is rewritten or deleted.
 */
 
 DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM "PaymentInstallment" pi
-    JOIN "PaymentPlan" pp ON pp.id = pi."planId"
-    WHERE pi."saleId" <> pp."saleId"
-  ) THEN
-    RAISE EXCEPTION 'Cannot remove PaymentInstallment.saleId: inconsistent plan/sale relationships exist';
-  END IF;
-
-  IF EXISTS (
-    SELECT 1
-    FROM "Sale"
-    GROUP BY "listingId"
-    HAVING COUNT(*) > 1
-  ) THEN
-    RAISE EXCEPTION 'Cannot enforce one Sale per Listing: duplicate Sale rows exist for at least one listing';
-  END IF;
-
   IF EXISTS (
     SELECT 1
     FROM "User" u
@@ -46,19 +28,20 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TABLE "PaymentInstallment"
-DROP CONSTRAINT "PaymentInstallment_saleId_fkey";
+CREATE UNIQUE INDEX "Office_id_organizationId_key"
+  ON "Office"("id", "organizationId");
 
-DROP INDEX "PaymentInstallment_saleId_dueAt_status_idx";
+CREATE UNIQUE INDEX "Team_id_officeId_key"
+  ON "Team"("id", "officeId");
 
-ALTER TABLE "PaymentInstallment"
-DROP COLUMN "saleId";
+CREATE UNIQUE INDEX "User_id_organizationId_officeId_key"
+  ON "User"("id", "organizationId", "officeId");
 
-CREATE UNIQUE INDEX "Sale_listingId_key" ON "Sale"("listingId");
+ALTER TABLE "User"
+DROP CONSTRAINT "User_officeId_fkey";
 
-CREATE UNIQUE INDEX "Office_id_organizationId_key" ON "Office"("id", "organizationId");
-CREATE UNIQUE INDEX "Team_id_officeId_key" ON "Team"("id", "officeId");
-CREATE UNIQUE INDEX "User_id_organizationId_officeId_key" ON "User"("id", "organizationId", "officeId");
+ALTER TABLE "User"
+DROP CONSTRAINT "User_teamId_fkey";
 
 ALTER TABLE "User"
 ADD CONSTRAINT "User_officeId_organizationId_fkey"
