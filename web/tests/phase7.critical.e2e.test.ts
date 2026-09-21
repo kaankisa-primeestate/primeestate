@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
+import { writeFile } from "node:fs/promises";
 import net from "node:net";
 import { test, before, after } from "node:test";
 
@@ -340,6 +341,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const salePayload = await json<{
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
+  await writeFile("/tmp/phase7-current-values.json", JSON.stringify({ salePayload, offerPayload, listingPayload, equalOffer: salePayload.sale.offerId === offerPayload.offer.id, equalListing: salePayload.sale.listingId === listingPayload.listing.id }, null, 2));
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   // The Sale -> Listing invariant is enforced directly by the Phase 6 database test.
   // This HTTP-chain test verifies the accepted Offer -> Sale linkage and the downstream financial chain.
