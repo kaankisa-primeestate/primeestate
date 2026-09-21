@@ -1,9 +1,29 @@
-import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
-import { writeFile } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
 import net from "node:net";
 import { test, before, after } from "node:test";
+
+// Phase 7 runs through tsx's Node test loader. Use a local assertion adapter so
+// business-chain checks rely on plain JS comparisons rather than the loader's
+// assertion instrumentation/source mapping.
+const assert = {
+  equal<T>(actual: T, expected: T, message?: string) {
+    if (actual !== expected) {
+      throw new Error(message ?? `Expected values to be strictly equal: ${String(actual)} !== ${String(expected)}`);
+    }
+  },
+  ok(value: unknown, message?: string) {
+    if (!value) {
+      throw new Error(message ?? "Expected a truthy value.");
+    }
+  },
+  deepEqual<T, U>(actual: T, expected: U, message?: string) {
+    if (!isDeepStrictEqual(actual, expected)) {
+      throw new Error(message ?? "Expected values to be deeply equal.");
+    }
+  },
+};
 
 async function stopServer(child: ChildProcess | null) {
   if (!child?.pid) return;
@@ -341,7 +361,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const salePayload = await json<{
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
-  await writeFile("/tmp/phase7-current-values.json", JSON.stringify({ salePayload, offerPayload, listingPayload, equalOffer: salePayload.sale.offerId === offerPayload.offer.id, equalListing: salePayload.sale.listingId === listingPayload.listing.id }, null, 2));
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   // The Sale -> Listing invariant is enforced directly by the Phase 6 database test.
   // This HTTP-chain test verifies the accepted Offer -> Sale linkage and the downstream financial chain.
