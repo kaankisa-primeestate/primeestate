@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, officeListingScope } from "@/lib/authz";
@@ -9,10 +10,10 @@ const STATUSES = ["AKTIF", "REZERVE", "PASIF", "SATILDI", "KIRALANDI"] as const;
 
 export async function GET(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
 
   try {
-    if (!can(context.role, "listings", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "listings", "read")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -52,10 +53,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
 
   try {
-    if (!can(context.role, "listings", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "listings", "create")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });
   }
