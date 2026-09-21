@@ -38,7 +38,7 @@ Yeni özellik geliştirme **geçici olarak donduruldu**.
   - unauthenticated → /login
   - authenticated-but-unauthorized → /forbidden
   - route matcher / production build doğrulaması
-- Phase 6 — ilk test altyapısı dilimi:
+- Phase 6 — ilk test foundation slice:
   - `npm test`
   - Node built-in test runner
   - authorization role matrix
@@ -47,27 +47,43 @@ Yeni özellik geliştirme **geçici olarak donduruldu**.
   - read-only write denial
   - route access matrix
   - Web Quality CI test adımı
+- Phase 6 — database-backed integration slice:
+  - agent customer ownership isolation
+  - cross-office / cross-organization isolation
+  - shared office listing visibility
+  - accepted Offer ↔ Sale linkage
+  - Sale ↔ Listing uniqueness invariant
+  - CI test database migration deployment before integration tests
+- CI — docs-only main merges no longer trigger production deployment smoke
 
 ### Bilinçli olarak ertelenen
 Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şimdilik uygulanmayacak.
 
-Phase 6'nın kalan integration, tenant isolation ve business invariant testleri aktif sonraki çalışma alanıdır.
+Phase 6'nın kritik API route integration, authorization matrix integration, daha geniş business invariant ve required-check kapsamı aktif sonraki çalışma alanıdır.
 
 ### Aktif phase
 **Phase 6 — Integration / Tenant Isolation / Business Invariant Tests**
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`51001ae67e7ae355f522b972a2136906a46eb9ae`
+`b55e8d43fbddf4406010661abe0c59abb6094bc5`
 
-PR #68 — Foundation Phase 5: protect page routes and admin access — merged.
+- PR #68 — Foundation Phase 5: protect page routes and admin access — merged.
+- PR #69 — Foundation: sync state after Phase 5 route protection — merged.
+- PR #70 — CI: prevent production smoke on docs-only main merges — merged.
+- PR #71 — Phase 6: add tenant isolation and business invariant integration tests — merged.
 
-Main doğrulaması:
-- Web Quality #456: success
-- Production Auth Smoke #48: success
-- Web Quality içinde migration parity, tests, lint, typecheck ve production build: success
+PR #71 CI doğrulaması:
+- Web Quality: success
+- Migration parity: success
+- Phase 6 integration tests: success
+- Lint: success
+- Typecheck: success
+- Production build: success
 
-PR #68 branch'inde önceki kırmızı workflow denemeleri düzeltme sürecine aittir; final yeşil run merge edilmiştir. Tarihsel failed run kayıtları silinmeyecek ve mevcut main için engel kabul edilmeyecektir.
+PR #69'da görülen production smoke timeout'u gerçek bir CI tetikleme problemiydi: docs-only merge Render deployment üretmediği halde smoke testi deployment commiti bekledi. PR #70 ile smoke workflow yalnızca deploy edilebilir `web/**` değişikliklerinde otomatik çalışacak şekilde düzeltildi; manuel `workflow_dispatch` korunuyor.
+
+Render canlı sürümünün son kullanıcı tarafından doğrulanan commiti `51001ae` idi. Docs/CI-only merge'ler Render'a gereksiz deployment yaptırmıyor.
 
 ## 5. Runtime / production notu
 Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
@@ -78,14 +94,15 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 3. Phase 2 — tamamlandı
 4. Phase 3 — tamamlandı
 5. Phase 4 — kritik temel tamamlandı; kalan contract hardening ertelendi
-6. Phase 6 — ilk test foundation slice tamamlandı
-7. Phase 5 — tamamlandı
-8. **Phase 6 — kalan integration / isolation / invariant testleri aktif**
-9. Phase 7 — Critical E2E business chain
-10. Phase 8 — Codebase cleanup & documentation
-11. Phase 9 — Release gate
+6. Phase 5 — tamamlandı
+7. Phase 6 — initial unit/test foundation tamamlandı
+8. Phase 6 — database-backed tenant/invariant integration slice tamamlandı
+9. **Phase 6 — kritik API route integration + authorization matrix integration + geniş invariant kapsamı aktif**
+10. Phase 7 — Critical E2E business chain
+11. Phase 8 — Codebase cleanup & documentation
+12. Phase 9 — Release gate
 
-> Kullanıcı kararıyla Phase 4'ün kalan kısmı şimdilik atlandı; Phase 5 route protection tamamlandı ve şimdi Phase 6'nın kalan test kapsamına geçiliyor.
+> Phase 4'ün kalan kısmı kullanıcı kararıyla şimdilik atlandı. Yeni ürün özelliği geliştirmeye geçmeden önce Phase 6'nın kritik entegrasyon/test kapsamı tamamlanacaktır.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
@@ -113,5 +130,5 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 
 ## 9. Yeni oturum başlangıç komutu
 ```
-PrimeEstate'i devral. Önce CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını, GitHub'daki güncel main/branch/PR/CI durumunu kontrol et. Phase 6 integration/isolation/invariant testlerinden devam et. Canlı remax-CRM reposuna dokunma.
+PrimeEstate'i devral. Önce CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını, GitHub'daki güncel main/branch/PR/CI durumunu kontrol et. Phase 6 kritik API integration / authorization matrix / business invariant testlerinden devam et. Canlı remax-CRM reposuna dokunma.
 ```
