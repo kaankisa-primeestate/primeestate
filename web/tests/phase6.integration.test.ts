@@ -327,3 +327,161 @@ test("Phase 6: sale/listing uniqueness and accepted-offer linkage are enforced b
   });
   assert.deepEqual(linkedSale?.sale, { id: sale.id });
 });
+
+
+test("Phase 6: payment ledger split and payment-plan installment invariants stay internally consistent", async () => {
+  const fixture = await createFixture();
+
+  const property = await prisma.property.create({
+    data: {
+      organizationId: fixture.organization.id,
+      officeId: fixture.officeA.id,
+      consultantUserId: fixture.agent1.id,
+      propertyType: "DAIRE",
+      title: "Financial Invariant Property",
+      city: "Istanbul",
+      district: "Kadikoy",
+      neighborhood: "Bostanci",
+    },
+  });
+
+  const listing = await prisma.listing.create({
+    data: {
+      organizationId: fixture.organization.id,
+      officeId: fixture.officeA.id,
+      propertyId: property.id,
+      consultantUserId: fixture.agent1.id,
+      code: "P6-FIN-001",
+      title: "Financial Invariant Listing",
+      purpose: "SATILIK",
+      price: 100000,
+      currency: "TRY",
+      status: "REZERVE",
+    },
+  });
+
+  const offer = await prisma.offer.create({
+    data: {
+      customerId: fixture.customer1.id,
+      listingId: listing.id,
+      amount: 100000,
+      currency: "TRY",
+      status: "KABUL",
+    },
+  });
+
+  const sale = await prisma.sale.create({
+    data: {
+      customerId: fixture.customer1.id,
+      listingId: listing.id,
+      offerId: offer.id,
+      amount: 100000,
+      currency: "TRY",
+      commissionRate: 3,
+      officeShareRate: 50,
+      grossCommission: 3000,
+      officeShare: 1500,
+      consultantShare: 1500,
+    },
+  });
+
+  const payment = await prisma.payment.create({
+    data: {
+      saleId: sale.id,
+      amount: 100000,
+      currency: "TRY",
+      status: "ODENDI",
+      paidAt: new Date(),
+    },
+  });
+
+  const ledgerEntries = await prisma.ledgerEntry.createManyAndReturn({
+    data: [
+      {
+        saleId: sale.id,
+        paymentId: payment.id,
+        account: "OFFICE",
+        amount: 1500,
+        currency: "TRY",
+        description: "Ofis payı",
+      },
+      {
+        saleId: sale.id,
+        paymentId: payment.id,
+        account: "CONSULTANT",
+        amount: 1500,
+        currency: "TRY",
+        description: "Danışman payı",
+      },
+    ],
+  });
+
+  assert.equal(ledgerEntries.length, 2);
+  assert.deepEqual(
+    new Set(ledgerEntries.map((entry) => entry.account)),
+    new Set(["OFFICE", "CONSULTANT"]),
+  );
+
+  const ledgerTotal = ledgerEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+  assert.equal(ledgerTotal, Number(sale.grossCommission));
+  assert.equal(
+    Number(ledgerEntries.find((entry) => entry.account === "OFFICE")?.amount),
+    Number(sale.officeShare),
+  );
+  assert.equal(
+    Number(ledgerEntries.find((entry) => entry.account === "CONSULTANT")?.amount),
+    Number(sale.consultantShare),
+  );
+
+  const plan = await prisma.paymentPlan.create({
+    data: {
+      saleId: sale.id,
+      title: "3 Taksit",
+      currency: "TRY",
+      installments: {
+        create: [
+          { sequence: 1, amount: 40000, currency: "TRY", dueAt: new Date("2026-10-01T00:00:00Z") },
+          { sequence: 2, amount: 30000, currency: "TRY", dueAt: new Date("2026-11-01T00:00:00Z") },
+          { sequence: 3, amount: 30000, currency: "TRY", dueAt: new Date("2026-12-01T00:00:00Z") },
+        ],
+      },
+    },
+    include: { installments: { orderBy: { sequence: "asc" } } },
+  });
+
+  assert.equal(plan.currency, sale.currency);
+  assert.deepEqual(
+    plan.installments.map((installment) => installment.sequence),
+    [1, 2, 3],
+  );
+  assert.equal(
+    plan.installments.reduce((sum, installment) => sum + Number(installment.amount), 0),
+    Number(sale.amount),
+  );
+  assert.equal(
+    plan.installments.every((installment) => installment.currency === sale.currency),
+    true,
+  );
+
+  await assert.rejects(
+    prisma.paymentPlan.create({
+      data: {
+        saleId: sale.id,
+        title: "Duplicate Plan",
+        currency: "TRY",
+      },
+    }),
+  );
+
+  await assert.rejects(
+    prisma.paymentInstallment.create({
+      data: {
+        planId: plan.id,
+        sequence: 1,
+        amount: 100000,
+        currency: "TRY",
+        dueAt: new Date("2027-01-01T00:00:00Z"),
+      },
+    }),
+  );
+});
