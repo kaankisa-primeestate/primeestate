@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -25,12 +26,12 @@ async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnTy
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "matching", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "matching", "create")) return forbidden();
 
   let body: { demandId?: unknown; limit?: unknown };
   try { body = await request.json(); }
-  catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  catch { return validationError("Geçersiz JSON."); }
 
   const demandId = typeof body.demandId === "string" ? body.demandId : "";
   if (!demandId) return NextResponse.json({ message: "demandId zorunludur." }, { status: 400 });
