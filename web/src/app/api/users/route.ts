@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
@@ -57,7 +58,7 @@ export async function GET() {
     );
   }
 
-  if (!can(context.role, "users", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!can(context.role, "users", "read")) return forbidden();
 
   const users = await prisma.user.findMany({
     where: userScope(context),
@@ -130,7 +131,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!can(context.role, "users", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!can(context.role, "users", "create")) return forbidden();
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
