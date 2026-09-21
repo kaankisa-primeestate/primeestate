@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { can, customerOwnershipScope } from "@/lib/authz";
 
 export async function GET(
   _request: Request,
@@ -11,7 +11,7 @@ export async function GET(
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try {
-    assertCan(context, "customers", "read");
+    if (!can(context.role, "customers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -48,7 +48,7 @@ export async function PATCH(
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try {
-    assertCan(context, "customers", "update");
+    if (!can(context.role, "customers", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Müşteri düzenleme yetkiniz yok." }, { status: 403 });
   }

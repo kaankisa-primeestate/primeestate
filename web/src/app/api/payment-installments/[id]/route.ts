@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { can, customerOwnershipScope } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "installments", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  try { if (!can(context.role, "installments", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   const { id } = await params;
   let body: { status?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }

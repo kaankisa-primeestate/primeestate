@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, isManagerRole, officeListingScope } from "@/lib/authz";
+import { can, isManagerRole, officeListingScope } from "@/lib/authz";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
@@ -10,7 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try {
-    assertCan(context, "listings", "read");
+    if (!can(context.role, "listings", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try {
-    assertCan(context, "listings", "update");
+    if (!can(context.role, "listings", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
   }

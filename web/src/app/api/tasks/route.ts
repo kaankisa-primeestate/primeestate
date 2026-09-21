@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { can, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "tasks", "read");
+  if (!can(context.role, "tasks", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   const status = searchParams.get("status")?.trim();
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "tasks", "create");
+  if (!can(context.role, "tasks", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   let body: { customerId?: unknown; title?: unknown; dueAt?: unknown; priority?: unknown; source?: unknown; ownerUserId?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const title = typeof body.title === "string" ? body.title.trim() : "";
