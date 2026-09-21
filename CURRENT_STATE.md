@@ -54,29 +54,45 @@ Yeni özellik geliştirme **geçici olarak donduruldu**.
   - accepted Offer ↔ Sale linkage
   - Sale ↔ Listing uniqueness invariant
   - CI test database migration deployment before integration tests
+- Phase 6 — actual API route integration slice:
+  - protected customer route unauthenticated → 401
+  - agent customer owner isolation through the real HTTP route
+  - Team Leader team-scoped customer visibility through the real HTTP route
+  - agent cross-owner assignment denied through the real HTTP route
+  - VIEWER write denial across customer/sales/payments/payment-plan routes
+  - Better Auth session login exercised against the running Next.js app
 - CI — docs-only main merges no longer trigger production deployment smoke
 
 ### Bilinçli olarak ertelenen
 Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şimdilik uygulanmayacak.
 
-Phase 6'nın kritik API route integration, authorization matrix integration, daha geniş business invariant ve required-check kapsamı aktif sonraki çalışma alanıdır.
+Phase 6'nın geniş business invariant kapsamı, Office/Admin scope integration ve critical-test required-check kapsamı aktif sonraki çalışma alanıdır.
 
 ### Aktif phase
 **Phase 6 — Integration / Tenant Isolation / Business Invariant Tests**
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`b55e8d43fbddf4406010661abe0c59abb6094bc5`
+`0c64b2f204ea73d8d0cae7c144b1920b1af8b4f3`
 
 - PR #68 — Foundation Phase 5: protect page routes and admin access — merged.
 - PR #69 — Foundation: sync state after Phase 5 route protection — merged.
 - PR #70 — CI: prevent production smoke on docs-only main merges — merged.
 - PR #71 — Phase 6: add tenant isolation and business invariant integration tests — merged.
+- PR #73 — Phase 6: integrate protected API route tests — merged.
 
 PR #71 CI doğrulaması:
 - Web Quality: success
 - Migration parity: success
 - Phase 6 integration tests: success
+- Lint: success
+- Typecheck: success
+- Production build: success
+
+PR #73 CI doğrulaması:
+- Web Quality: success
+- Migration parity: success
+- Phase 6 API integration tests: success
 - Lint: success
 - Typecheck: success
 - Production build: success
@@ -97,10 +113,11 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 6. Phase 5 — tamamlandı
 7. Phase 6 — initial unit/test foundation tamamlandı
 8. Phase 6 — database-backed tenant/invariant integration slice tamamlandı
-9. **Phase 6 — kritik API route integration + authorization matrix integration + geniş invariant kapsamı aktif**
-10. Phase 7 — Critical E2E business chain
-11. Phase 8 — Codebase cleanup & documentation
-12. Phase 9 — Release gate
+9. Phase 6 — actual API route integration + initial authorization matrix integration tamamlandı
+10. **Phase 6 — geniş business invariant + Office/Admin scope + required-check kapsamı aktif**
+11. Phase 7 — Critical E2E business chain
+12. Phase 8 — Codebase cleanup & documentation
+13. Phase 9 — Release gate
 
 > Phase 4'ün kalan kısmı kullanıcı kararıyla şimdilik atlandı. Yeni ürün özelliği geliştirmeye geçmeden önce Phase 6'nın kritik entegrasyon/test kapsamı tamamlanacaktır.
 

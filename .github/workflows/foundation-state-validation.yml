@@ -30,6 +30,6 @@ jobs:
           grep -Fq "**Phase 6 — Integration / Tenant Isolation / Business Invariant Tests**" CURRENT_STATE.md
           grep -Fq "Phase 5 — Runtime & route protection — COMPLETE" FOUNDATION_RECOVERY_PLAN.md
           grep -Fq "Phase 6 — Test foundation — ACTIVE" FOUNDATION_RECOVERY_PLAN.md
-          grep -Fq "Phase 6: critical API route integration / authorization matrix / expanded business invariant tests." FOUNDATION_RECOVERY_PLAN.md
+          grep -Fq "Phase 6: Office/Admin scope integration + Payment ↔ Ledger / PaymentPlan ↔ Installment invariants + critical-test required-check coverage." FOUNDATION_RECOVERY_PLAN.md
 
           echo "Foundation state validation passed."
