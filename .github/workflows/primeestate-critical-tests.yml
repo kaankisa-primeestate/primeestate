@@ -54,3 +54,11 @@ jobs:
 
       - name: Run critical test suite
         run: npm test
+
+      - name: Dump Phase 7 diagnostic on failure
+        if: always()
+        run: |
+          if [ -f /tmp/phase7-sale-diagnostic.json ]; then
+            echo "=== PHASE 7 SALE DIAGNOSTIC ==="
+            cat /tmp/phase7-sale-diagnostic.json
+          fi
