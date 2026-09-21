@@ -180,10 +180,8 @@ before(async () => {
 });
 
 after(async () => {
-  if (server) {
-    server.kill("SIGTERM");
-    server = null;
-  }
+  await stopServer(server);
+  server = null;
   for (const organizationId of createdOrganizations.splice(0)) {
     await prisma.organization.delete({ where: { id: organizationId } }).catch(() => {});
   }
