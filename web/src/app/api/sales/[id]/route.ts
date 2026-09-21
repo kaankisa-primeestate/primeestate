@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { assertCan, customerOwnershipScope } from "@/lib/authz";
 
 type SaleStatus = "ACIK" | "TAMAMLANDI" | "IPTAL";
 const STATUSES = new Set<SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
@@ -31,6 +25,7 @@ function calculateCommission(amount: Prisma.Decimal, commissionRate: Prisma.Deci
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try { assertCan(context, "sales", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   const { id } = await params;
 
   let body: { status?: unknown; note?: unknown; commissionRate?: unknown; officeShareRate?: unknown };
@@ -44,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const updated = await prisma.$transaction(async (tx) => {
       const existing = await tx.sale.findFirst({
-        where: { id, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+        where: { id, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
         include: {
           listing: { select: { id: true, purpose: true, status: true } },
           payments: { where: { status: "ODENDI" }, select: { id: true, amount: true } },
