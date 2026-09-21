@@ -21,7 +21,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - API seviyesinde tenant + role scope
 - AI provider bağımsız mimari
 
-## 3. Foundation Recovery durumu — Phase 2 aktif
+## 3. Foundation Recovery durumu — Phase 4 aktif
 
 Yeni özellik geliştirme **geçici olarak donduruldu**. Önce teknik temel P0-P9 aşamalarında sertleştirilecek.
 
@@ -41,13 +41,15 @@ Audit sonucu öne çıkan kritik riskler:
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`208d7fe5448db75ea3ab4c8c578333c7a1ec2fde`
+`7346a6a297c577dbadc8e0c67703efb0ddb83c40`
+
+Phase 3 authorization foundation PR #53–#58 tamamlandı. Phase 4 PR #59 ve #60 tamamlandı; ortak API response helper'ları main'e alındı.
 
 PR #48 Phase 1 database/migration integrity merge edildi: `927d6d12508979d22aebc6395678dcf578074fb5`.
 PR #49 production runtime smoke genişletmesi merge edildi: `bbde12a3891a509a8aea15446b0f2410158915a7`.
 Production migration #2 başarıyla çalıştı ve production smoke #31 başarıyla geçti; `/api/sales`, `/api/payments` ve `/api/payment-plans` authenticated smoke kapsamında doğrulandı.
 
-**Aktif phase: Phase 2 — Data model integrity.**
+**Aktif phase: Phase 4 — API contract & error handling.**
 
 PR #50 merged. Phase 2 ikinci hardening paketi `foundation/phase2-data-integrity-v2` branch'inde: User → Office → Organization ve User → Team → Office ilişkileri için guarded foreign-key bütünlüğü hazırlanıyor. Migration mevcut tutarsız kayıtları sessizce düzeltmez; tespit edilirse migration'ı durdurur.
 
@@ -68,18 +70,18 @@ Production smoke #31 başarıyla geçti. Dashboard/Finance UI görsel doğrulama
 
 ## 6. Foundation çalışma sırası
 
-1. Phase 0 — Inventory & freeze
+1. Phase 0 — Inventory & freeze — tamamlandı
 2. Phase 1 — Database / migration integrity — tamamlandı
-3. Phase 2 — Data model integrity — aktif
-4. Phase 3 — Authorization foundation
-5. Phase 4 — API contract & error handling
+3. Phase 2 — Data model integrity — tamamlandı
+4. Phase 3 — Authorization foundation — tamamlandı
+5. Phase 4 — API contract & error handling — aktif
 6. Phase 5 — Runtime & route protection
 7. Phase 6 — Test foundation
 8. Phase 7 — Critical E2E business chain
 9. Phase 8 — Codebase cleanup & documentation
 10. Phase 9 — Release gate
 
-**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 2 aktif; tenant/office/team FK hardening CI doğrulamasında.
+**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 4 aktif; authorization hata sözleşmesi ve ortak API response helper'ları main'e alındı.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
