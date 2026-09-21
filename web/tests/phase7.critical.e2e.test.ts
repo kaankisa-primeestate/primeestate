@@ -91,11 +91,18 @@ async function createAgent(suffix: string) {
 }
 
 async function login(email: string, password: string) {
-  const response = await fetch(BASE_URL + "/api/auth/sign-in/email", {
-    method: "POST",
-    headers: { "content-type": "application/json", Origin: BASE_URL },
-    body: JSON.stringify({ email, password, rememberMe: true }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(BASE_URL + "/api/auth/sign-in/email", {
+      method: "POST",
+      headers: { "content-type": "application/json", Origin: BASE_URL },
+      body: JSON.stringify({ email, password, rememberMe: true }),
+    });
+  } catch (error) {
+    throw new Error(
+      `Phase 7 login request failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}\\nNext.js output:\\n${serverOutput.slice(-16000)}`,
+    );
+  }
   assert.equal(response.ok, true, await response.text());
 
   const cookies = response.headers.getSetCookie?.() ?? [];
