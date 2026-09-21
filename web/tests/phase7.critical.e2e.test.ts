@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
+import { writeFile } from "node:fs/promises";
 import net from "node:net";
 import { test, before, after } from "node:test";
 
@@ -344,11 +345,12 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const saleListingId = salePayload.sale.listingId;
   const offerListingId = offerPayload.offer.listing.id;
   if (saleListingId !== offerListingId) {
-    throw new Error(
-      "Sale/offer listing linkage mismatch: sale.listingId=" + saleListingId +
-      " offer.listing.id=" + offerListingId +
-      " expected listing.id=" + listingPayload.listing.id,
-    );
+    await writeFile("/tmp/phase7-mismatch.json", JSON.stringify({
+      saleListingId, offerListingId, expectedListingId: listingPayload.listing.id,
+      salePayload, offerPayload, listingPayload,
+      strictEqual: saleListingId === offerListingId,
+    }, null, 2));
+    throw new Error("Sale/offer listing linkage mismatch");
   }
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
