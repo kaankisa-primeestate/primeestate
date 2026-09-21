@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
+import { hasCapability, userReadScope } from "@/lib/authorization";
 
 const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 const ROLE_VALUES = [
@@ -57,7 +58,7 @@ export async function GET() {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
+  if (!hasCapability(context, "users:read")) {
     return NextResponse.json(
       { message: "Bu alanı görüntüleme yetkiniz yok." },
       { status: 403 },
@@ -65,7 +66,7 @@ export async function GET() {
   }
 
   const users = await prisma.user.findMany({
-    where: userScope(context),
+    where: userReadScope(context),
     orderBy: [{ active: "desc" }, { name: "asc" }],
     select: {
       id: true,
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
+  if (!hasCapability(context, "users:write")) {
     return NextResponse.json(
       { message: "Kullanıcı yönetimi yetkiniz yok." },
       { status: 403 },
