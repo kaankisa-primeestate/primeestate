@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 const MANAGER_ROLES = new Set([
   "SUPER_ADMIN",
@@ -11,7 +12,7 @@ const MANAGER_ROLES = new Set([
 
 function canSeeCustomer(context: Awaited<ReturnType<typeof getUserContext>>, ownerUserId: string) {
   if (!context) return false;
-  if (MANAGER_ROLES.has(context.role)) return true;
+  if (isManagerRole(context.role)) return true;
   return ownerUserId === context.userId;
 }
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   }
 
-  let body: {
+  try {\n    assertCan(context, "customers", "create");\n  } catch {\n    return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });\n  }\n\n  let body: {
     name?: unknown;
     phone?: unknown;
     email?: unknown;
