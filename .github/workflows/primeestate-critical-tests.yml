@@ -54,11 +54,3 @@ jobs:
 
       - name: Run critical test suite
         run: npm test
-
-      - name: Dump Phase 7 mismatch diagnostic
-        if: always()
-        run: |
-          if [ -f /tmp/phase7-mismatch.json ]; then
-            echo "=== PHASE 7 MISMATCH DIAGNOSTIC ==="
-            cat /tmp/phase7-mismatch.json
-          fi
