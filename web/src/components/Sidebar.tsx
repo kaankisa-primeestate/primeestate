@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const menu = [
   { name: "Dashboard", href: "/", icon: "🏠" },
+  { name: "CRM Akış Merkezi", href: "/crm", icon: "🧭" },
   { name: "İlişkiler", href: "/relationships", icon: "🤝" },
   { name: "Portföyler", href: "/portfolio", icon: "🏡" },
   { name: "Eşleştirme", href: "/matching", icon: "🎯" },
@@ -9,6 +10,7 @@ const menu = [
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
+  { name: "Finans", href: "/finance/dashboard", icon: "💰" },
   { name: "Kullanıcılar & Ekip", href: "/users", icon: "👥" },
 ];
 
