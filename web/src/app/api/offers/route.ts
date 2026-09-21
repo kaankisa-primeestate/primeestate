@@ -2,20 +2,14 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { assertCan, customerOwnershipScope, officeListingScope } from "@/lib/authz";
 
 const OFFER_STATUSES = ["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"] as const;
 
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "offers", "read");
 
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
@@ -28,7 +22,7 @@ export async function GET(request: Request) {
       customer: {
         organizationId: context.organizationId,
         officeId: context.officeId,
-        ...customerScope(context),
+        ...customerOwnershipScope(context),
       },
     },
     include: {
@@ -55,6 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "offers", "create");
 
   let body: {
     customerId?: unknown;
@@ -86,7 +81,7 @@ export async function POST(request: Request) {
       id: customerId,
       organizationId: context.organizationId,
       officeId: context.officeId,
-      ...customerScope(context),
+      ...customerOwnershipScope(context),
     },
     select: { id: true },
   });
@@ -95,8 +90,7 @@ export async function POST(request: Request) {
   const listing = await prisma.listing.findFirst({
     where: {
       id: listingId,
-      organizationId: context.organizationId,
-      officeId: context.officeId,
+      ...officeListingScope(context),
       status: { in: ["AKTIF", "REZERVE"] },
     },
     select: { id: true },

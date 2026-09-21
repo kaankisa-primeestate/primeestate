@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, customerOwnershipScope } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "showings", "update");
   const { id } = await params;
   const showing = await prisma.showing.findFirst({
-    where: { id, customer: { organizationId: context.organizationId, officeId: context.officeId, ...(context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN" || context.role === "OFFICE_ADMIN" ? {} : context.role === "TEAM_LEADER" && context.teamId ? { owner: { teamId: context.teamId } } : { ownerUserId: context.userId }) } },
+    where: { id, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     select: { id: true },
   });
   if (!showing) return NextResponse.json({ message: "Gösterim bulunamadı veya yetkiniz yok." }, { status: 404 });
