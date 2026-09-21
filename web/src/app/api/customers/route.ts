@@ -2,18 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set([
-  "SUPER_ADMIN",
-  "ORG_ADMIN",
-  "OFFICE_ADMIN",
-]);
-
-function canSeeCustomer(context: Awaited<ReturnType<typeof getUserContext>>, ownerUserId: string) {
-  if (!context) return false;
-  if (MANAGER_ROLES.has(context.role)) return true;
-  return ownerUserId === context.userId;
-}
+import { customerReadScope, hasCapability, isManagerRole } from "@/lib/authorization";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
@@ -26,18 +15,9 @@ export async function GET(request: Request) {
   const query = searchParams.get("q")?.trim();
   const role = searchParams.get("role")?.trim();
 
-  const ownerScope =
-    context.role === "AGENT"
-      ? { ownerUserId: context.userId }
-      : context.role === "TEAM_LEADER" && context.teamId
-        ? { owner: { teamId: context.teamId } }
-        : {};
-
   const customers = await prisma.customer.findMany({
     where: {
-      organizationId: context.organizationId,
-      officeId: context.officeId,
-      ...ownerScope,
+      ...customerReadScope(context),
       ...(query
         ? {
             OR: [
@@ -70,6 +50,8 @@ export async function POST(request: Request) {
   if (!context) {
     return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   }
+
+  if (!hasCapability(context, "customers:write")) return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });
 
   let body: {
     name?: unknown;
@@ -112,9 +94,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Geçerli bir sorumlu danışman bulunamadı." }, { status: 400 });
   }
 
-  if (!canSeeCustomer(context, requestedOwnerId)) {
-    return NextResponse.json({ message: "Bu danışman adına müşteri oluşturma yetkiniz yok." }, { status: 403 });
-  }
+  const ownerAllowed = isManagerRole(context.role) || (context.role === "TEAM_LEADER" && owner.teamId === context.teamId) || requestedOwnerId === context.userId;
+  if (!ownerAllowed) return NextResponse.json({ message: "Bu danışman adına müşteri oluşturma yetkiniz yok." }, { status: 403 });
 
   const roleValues = Array.isArray(body.roles)
     ? body.roles.filter((value): value is string => typeof value === "string")
