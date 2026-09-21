@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, officeListingScope } from "@/lib/authz";
+import { can, officeListingScope } from "@/lib/authz";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
   try {
-    assertCan(context, "listings", "read");
+    if (!can(context.role, "listings", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
   try {
-    assertCan(context, "listings", "create");
+    if (!can(context.role, "listings", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });
   }
