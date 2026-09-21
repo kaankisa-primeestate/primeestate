@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, isManagerRole } from "@/lib/authz";
+import { can, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const ROLE_VALUES = [
@@ -54,7 +54,7 @@ export async function PATCH(
     );
   }
 
-  assertCan(context, "users", "update");
+  if (!can(context.role, "users", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   const { id } = await params;
   const existing = await prisma.user.findFirst({
