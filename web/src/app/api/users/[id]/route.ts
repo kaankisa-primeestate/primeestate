@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
+import { hasCapability, userWriteScope } from "@/lib/authorization";
 
 const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 const ROLE_VALUES = [
@@ -54,7 +55,7 @@ export async function PATCH(
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
+  if (!hasCapability(context, "users:write")) {
     return NextResponse.json(
       { message: "Kullanıcı yönetimi yetkiniz yok." },
       { status: 403 },
@@ -63,7 +64,7 @@ export async function PATCH(
 
   const { id } = await params;
   const existing = await prisma.user.findFirst({
-    where: { id, ...targetScope(context) },
+    where: { id, ...userWriteScope(context) },
     select: {
       id: true,
       email: true,
