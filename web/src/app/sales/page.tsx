@@ -45,6 +45,7 @@ export default function SalesPage() {
   const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerForm, setOfferForm] = useState({ customerId: "", listingId: "", amount: "", nextAction: "" });
   const [offerSaving, setOfferSaving] = useState(false);
+  const [showingActionError, setShowingActionError] = useState<string | null>(null);
   const [offerError, setOfferError] = useState<string | null>(null);
   const [opsLoading, setOpsLoading] = useState(true);
   const [opsError, setOpsError] = useState<string | null>(null);
@@ -171,7 +172,26 @@ export default function SalesPage() {
     const response = await fetch("/api/showings/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
+    const updatedShowing = showings.find((showing) => showing.id === id);
     setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
+
+    if (status === "GERCEKLESTI" && updatedShowing) {
+      const dueAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const taskResponse = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: updatedShowing.customer.id,
+          title: `Gösterim sonrası takip: ${updatedShowing.listing.title}`,
+          dueAt: dueAt.toISOString(),
+          priority: "YUKSEK",
+          source: "SHOWING_FOLLOW_UP",
+        }),
+      });
+      const taskPayload = await taskResponse.json();
+      if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Takip görevi oluşturulamadı.");
+      setTasks((current) => [taskPayload.task, ...current]);
+    }
   }
 
   async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
@@ -231,7 +251,13 @@ export default function SalesPage() {
 
         {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><button type="button" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</button></div><div className="mt-5 space-y-3">{tasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status}</Pill><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div>{task.status !== "Tamamlandı" && <button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
 
-        {tab === "Gösterimler" && <section className="mt-5 grid gap-4 md:grid-cols-2">{showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"]}>{item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customer.name}</h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code} · {item.listing.property?.district ?? "—"} / {item.listing.property?.neighborhood ?? "—"}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><select value={item.status} onChange={(e) => void updateShowing(item.id, e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</section>}
+        {tab === "Gösterimler" && <section className="mt-5 space-y-4">
+          {showingActionError && <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{showingActionError}</div>}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm"><span className="font-semibold text-slate-900">Akış:</span> Gösterim gerçekleştiğinde PrimeEstate müşteriye bağlı 24 saat sonrası takip görevini otomatik oluşturur.</div>
+          <div className="grid gap-4 md:grid-cols-2">{showings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"]}>{item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950">{item.customer.name}</h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code} · {item.listing.property?.district ?? "—"} / {item.listing.property?.neighborhood ?? "—"}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><select value={item.status} onChange={(e) => {
+                      setShowingActionError(null);
+                      void updateShowing(item.id, e.target.value).catch((error) => setShowingActionError(error instanceof Error ? error.message : "Gösterim güncellenemedi."));
+                    }} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</div></section>}
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
