@@ -58,7 +58,7 @@ export default function RelationshipsPage() {
     setLoading(true); setError("");
     try {
       const [c,a,t]=await Promise.all([
-        fetch("/api/customers?limit=100").then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message??"Müşteriler alınamadı."); return d.customers as Customer[];}),
+        fetch("/api/customers").then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message??"Müşteriler alınamadı."); return d.customers as Customer[];}),
         fetch("/api/activities?limit=20").then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message??"Aktiviteler alınamadı."); return d.activities as Activity[];}),
         fetch("/api/tasks?limit=20").then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message??"Görevler alınamadı."); return d.tasks as Task[];})
       ]);
