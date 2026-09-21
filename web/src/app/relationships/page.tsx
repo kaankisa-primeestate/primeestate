@@ -53,6 +53,10 @@ export default function RelationshipsPage() {
   const [query,setQuery]=useState("");
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
+  const [activityOpen,setActivityOpen]=useState(false);
+  const [taskOpen,setTaskOpen]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [formError,setFormError]=useState("");
 
   async function load() {
     setLoading(true); setError("");
@@ -68,6 +72,26 @@ export default function RelationshipsPage() {
   }
 
   useEffect(()=>{ const timer=window.setTimeout(()=>{ void load(); },0); return ()=>window.clearTimeout(timer); },[]);
+
+  async function createActivity(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!selectedId) return; setSaving(true); setFormError("");
+    const form=new FormData(event.currentTarget);
+    try {
+      const response=await fetch("/api/activities",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerId:selectedId,type:form.get("type"),summary:form.get("summary"),outcome:form.get("outcome"),occurredAt:form.get("occurredAt")})});
+      const data=await response.json(); if(!response.ok) throw new Error(data.message??"Aktivite oluşturulamadı.");
+      setActivityOpen(false); event.currentTarget.reset(); await load();
+    } catch(e){setFormError(e instanceof Error?e.message:"Aktivite oluşturulamadı.");} finally{setSaving(false);}
+  }
+
+  async function createTask(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!selectedId) return; setSaving(true); setFormError("");
+    const form=new FormData(event.currentTarget);
+    try {
+      const response=await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerId:selectedId,title:form.get("title"),dueAt:form.get("dueAt"),priority:form.get("priority")})});
+      const data=await response.json(); if(!response.ok) throw new Error(data.message??"Görev oluşturulamadı.");
+      setTaskOpen(false); event.currentTarget.reset(); await load();
+    } catch(e){setFormError(e instanceof Error?e.message:"Görev oluşturulamadı.");} finally{setSaving(false);}
+  }
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLocaleLowerCase("tr-TR");
@@ -107,10 +131,21 @@ export default function RelationshipsPage() {
 
           {selected?<div className="space-y-5">
             <div className="rounded-3xl bg-slate-950 p-6 text-white">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="flex gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 font-bold">{initials(selected.name)}</div><div><p className="text-xs uppercase tracking-[0.16em] text-slate-400">Müşteri ilişkisi</p><h2 className="mt-1 text-2xl font-semibold">{selected.name}</h2><p className="mt-1 text-sm text-slate-400">{selected.phone||"Telefon yok"} · {selected.email||"E-posta yok"}</p></div></div><div className="rounded-2xl bg-white/10 px-4 py-3"><p className="text-xs text-slate-400">İlişki skoru</p><p className="text-2xl font-semibold">{selected.relationshipScore}</p></div></div>
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="flex gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 font-bold">{initials(selected.name)}</div><div><p className="text-xs uppercase tracking-[0.16em] text-slate-400">Müşteri ilişkisi</p><h2 className="mt-1 text-2xl font-semibold">{selected.name}</h2><p className="mt-1 text-sm text-slate-400">{selected.phone||"Telefon yok"} · {selected.email||"E-posta yok"}</p></div></div><div className="flex flex-wrap gap-2"><button type="button" onClick={()=>{setFormError("");setActivityOpen(true)}} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-900">+ Aktivite</button><button type="button" onClick={()=>{setFormError("");setTaskOpen(true)}} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/20">+ Görev</button><div className="rounded-2xl bg-white/10 px-4 py-3"><p className="text-xs text-slate-400">İlişki skoru</p><p className="text-2xl font-semibold">{selected.relationshipScore}</p></div></div></div>
               <div className="mt-5 flex flex-wrap gap-2">{selected.roles.map(r=><span key={r.role} className="rounded-full bg-white/10 px-3 py-1.5 text-xs">{roleMap[r.role]??r.role}</span>)}</div>
               <div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl bg-white/10 p-3"><p className="text-xs text-slate-400">Son temas</p><p className="mt-1 text-sm font-medium">{date(selected.lastContactAt)}</p></div><div className="rounded-2xl bg-white/10 p-3"><p className="text-xs text-slate-400">Sonraki aksiyon</p><p className="mt-1 text-sm font-medium">{selected.nextAction||"Belirlenmemiş"}</p></div><div className="rounded-2xl bg-white/10 p-3"><p className="text-xs text-slate-400">Sorumlu</p><p className="mt-1 text-sm font-medium">{selected.owner.name}</p></div></div>
             </div>
+
+            {activityOpen&&<div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Yeni kayıt</p><h3 className="mt-1 text-lg font-semibold text-slate-950">Aktivite ekle · {selected.name}</h3></div><button type="button" onClick={()=>setActivityOpen(false)} className="rounded-lg px-2 py-1 text-slate-400">✕</button></div>
+              {formError&&<p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{formError}</p>}
+              <form onSubmit={createActivity} className="mt-4 grid gap-3 sm:grid-cols-2"><select name="type" defaultValue="ARAMA" className="rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="ARAMA">Arama</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">E-posta</option><option value="NOT">Not</option><option value="GOSTERIM">Gösterim</option><option value="TEKLIF">Teklif</option></select><input name="occurredAt" type="datetime-local" className="rounded-xl border border-slate-200 px-3 py-3 text-sm"/><input name="summary" required placeholder="Ne oldu? Kısa özet" className="sm:col-span-2 rounded-xl border border-slate-200 px-3 py-3 text-sm"/><input name="outcome" placeholder="Sonuç / not (opsiyonel)" className="sm:col-span-2 rounded-xl border border-slate-200 px-3 py-3 text-sm"/><div className="sm:col-span-2 flex justify-end gap-2"><button type="button" onClick={()=>setActivityOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">{saving?"Kaydediliyor…":"Aktiviteyi Kaydet"}</button></div></form>
+            </div>}
+            {taskOpen&&<div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Yeni takip</p><h3 className="mt-1 text-lg font-semibold text-slate-950">Görev ekle · {selected.name}</h3></div><button type="button" onClick={()=>setTaskOpen(false)} className="rounded-lg px-2 py-1 text-slate-400">✕</button></div>
+              {formError&&<p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{formError}</p>}
+              <form onSubmit={createTask} className="mt-4 grid gap-3 sm:grid-cols-2"><input name="title" required placeholder="Örn. Müşteriyi tekrar ara" className="sm:col-span-2 rounded-xl border border-slate-200 px-3 py-3 text-sm"/><input name="dueAt" type="datetime-local" required className="rounded-xl border border-slate-200 px-3 py-3 text-sm"/><select name="priority" defaultValue="NORMAL" className="rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="YUKSEK">Yüksek</option><option value="NORMAL">Normal</option><option value="DUSUK">Düşük</option></select><div className="sm:col-span-2 flex justify-end gap-2"><button type="button" onClick={()=>setTaskOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">{saving?"Kaydediliyor…":"Görevi Kaydet"}</button></div></form>
+            </div>}
 
             <div className="grid gap-5 xl:grid-cols-2">
               <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Timeline</p><h3 className="mt-1 text-lg font-semibold text-slate-950">İletişim geçmişi</h3></div><span className="text-xs text-slate-400">{customerActivities.length} kayıt</span></div><div className="mt-4 space-y-3">{customerActivities.map(a=><div key={a.id} className="rounded-2xl bg-slate-50 p-4"><div className="flex justify-between gap-3"><span className="text-xs font-bold text-slate-500">{activityMap[a.type]??a.type}</span><span className="text-xs text-slate-400">{date(a.occurredAt)}</span></div><p className="mt-2 text-sm font-semibold text-slate-900">{a.summary}</p>{a.outcome&&<p className="mt-1 text-xs text-slate-500">{a.outcome}</p>}</div>)}{!customerActivities.length&&<p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">Henüz iletişim kaydı yok.</p>}</div></section>
