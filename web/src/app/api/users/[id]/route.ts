@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { assertCan, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 const ROLE_VALUES = [
   "SUPER_ADMIN",
   "ORG_ADMIN",
@@ -32,7 +31,7 @@ function canManageRole(actorRole: ManagedRole, targetRole: ManagedRole) {
 function targetScope(
   context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
 ) {
-  if (context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN") {
+  if (isManagerRole(context.role)) {
     return { organizationId: context.organizationId };
   }
 
@@ -55,7 +54,7 @@ export async function PATCH(
     );
   }
 
-  assertCan(context, "users", "create");
+  assertCan(context, "users", "update");
 
   const { id } = await params;
   const existing = await prisma.user.findFirst({
