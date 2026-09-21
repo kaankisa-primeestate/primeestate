@@ -11,7 +11,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   const { id } = await params;
-  if (!hasCapability(context, "listings:write")) return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
   const listing = await prisma.listing.findFirst({
     where: { id, ...listingReadScope(context) },
     include: {
@@ -28,6 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "listings:write")) return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
     where: { id, ...listingWriteScope(context) },
