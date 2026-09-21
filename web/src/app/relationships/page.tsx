@@ -67,7 +67,7 @@ export default function RelationshipsPage() {
     finally { setLoading(false); }
   }
 
-  useEffect(()=>{ void load(); },[]);
+  useEffect(()=>{ const timer=window.setTimeout(()=>{ void load(); },0); return ()=>window.clearTimeout(timer); },[]);
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLocaleLowerCase("tr-TR");
