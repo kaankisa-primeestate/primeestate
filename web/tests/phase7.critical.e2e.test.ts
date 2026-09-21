@@ -341,10 +341,21 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
-  if (salePayload.sale.listingId !== offerPayload.offer.listing.id) {
-    console.error("PHASE7_SALE_LINKAGE", JSON.stringify({ saleListingId: salePayload.sale.listingId, offerListingId: offerPayload.offer.listing.id, offerId: offerPayload.offer.id, expectedListingId: listingPayload.listing.id }));
-    throw new Error("Sale listing linkage mismatch.");
-  }
+  assert.equal(
+    JSON.stringify({
+      saleListingId: salePayload.sale.listingId,
+      offerListingId: offerPayload.offer.listing.id,
+      expectedListingId: listingPayload.listing.id,
+      offerId: offerPayload.offer.id,
+    }),
+    JSON.stringify({
+      saleListingId: offerPayload.offer.listing.id,
+      offerListingId: offerPayload.offer.listing.id,
+      expectedListingId: offerPayload.offer.listing.id,
+      offerId: offerPayload.offer.id,
+    }),
+    "Root-cause diagnostic: exact sale/offer/listing identifiers must agree",
+  );
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
 
