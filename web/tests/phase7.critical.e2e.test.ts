@@ -345,21 +345,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const dbOffer = await prisma.offer.findUnique({ where: { id: offerPayload.offer.id }, select: { id: true, listingId: true, sale: { select: { id: true, listingId: true } } } });
   await writeFile("/tmp/phase7-sale-diagnostic.json", JSON.stringify({ listingPayload, offerPayload, salePayload, dbSale, dbOffer }, null, 2));
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
-  assert.equal(
-    JSON.stringify({
-      saleListingId: salePayload.sale.listingId,
-      offerListingId: offerPayload.offer.listing.id,
-      expectedListingId: listingPayload.listing.id,
-      offerId: offerPayload.offer.id,
-    }),
-    JSON.stringify({
-      saleListingId: offerPayload.offer.listing.id,
-      offerListingId: offerPayload.offer.listing.id,
-      expectedListingId: offerPayload.offer.listing.id,
-      offerId: offerPayload.offer.id,
-    }),
-    "Root-cause diagnostic: exact sale/offer/listing identifiers must agree",
-  );
+  const saleListingId = salePayload.sale.listingId;
+  const offerListingId = offerPayload.offer.listing.id;
+  if (saleListingId !== offerListingId) {
+    throw new Error(
+      "Sale/offer listing linkage mismatch: sale.listingId=" + saleListingId +
+      " offer.listing.id=" + offerListingId +
+      " expected listing.id=" + listingPayload.listing.id,
+    );
+  }
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
 
