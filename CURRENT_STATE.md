@@ -48,7 +48,7 @@ PR #46 — **Fix dashboard API response handling**
 - PR #46: **merged**
 - Merge commit: `399a6cd2fc08cde4b28a79d304e61f611fa393a0`
 
-PR #46 ile Dashboard:
+PR #47 ile foundation recovery baseline merge edildi.\n\nPR #46 ile Dashboard:
 - boş/non-JSON response'larda güvenli parse yapıyor,
 - tek endpoint arızasının tüm dashboard'u düşürmesini engelliyor,
 - problemli endpoint/status bilgisini gösteriyor.
@@ -76,7 +76,7 @@ Bu hata frontend parser problemi olarak kapatılmayacak; Phase 1 kapsamında dat
 9. Phase 8 — Codebase cleanup & documentation
 10. Phase 9 — Release gate
 
-**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek.
+**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 1 aktif; production DB migration state henüz doğrulanmadı.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.

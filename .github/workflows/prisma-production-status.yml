@@ -1,10 +1,21 @@
-name: Apply Prisma Production Migration
+name: Check Prisma Production Migration Status
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/prisma/**"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - ".github/workflows/prisma-production-status.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  migrate:
+  migration-status:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,7 +37,7 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Apply production migrations
+      - name: Check production migration status
         env:
           DATABASE_URL: ${{ secrets.PRIMEESTATE_PRODUCTION_DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: npx prisma migrate status

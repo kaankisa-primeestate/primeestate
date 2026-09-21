@@ -9,7 +9,7 @@
 - [x] Freeze feature development until foundation gates pass.
 - [x] Never modify kaankisa-primeestate/remax-CRM.
 - [x] One phase at a time; no phase is skipped.
-- [ ] Every phase must have: implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
+- [x] Phase 0 completed through implementation -> automated validation review -> PR -> merge -> main verification -> state update.\n- [ ] Every subsequent phase must have: implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
 - [ ] Production database is never reset as a shortcut.
 - [ ] No new feature work until all P0-P8 gates are green.
 
