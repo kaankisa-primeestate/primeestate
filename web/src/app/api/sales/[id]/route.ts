@@ -10,7 +10,7 @@ function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserCon
   return { ownerUserId: context.userId };
 }
 
-const STATUSES = new Set(["ACIK", "TAMAMLANDI", "IPTAL"]);
+const STATUSES = new Set<Prisma.SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
 
 function parseRate(value: unknown, label: string) {
   if (value === null || value === undefined || value === "") return null;
@@ -35,7 +35,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   let body: { status?: unknown; note?: unknown; commissionRate?: unknown; officeShareRate?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
 
-  const status = typeof body.status === "string" && STATUSES.has(body.status) ? body.status : undefined;
+  const status = typeof body.status === "string" && STATUSES.has(body.status as Prisma.SaleStatus)
+    ? body.status as Prisma.SaleStatus
+    : undefined;
   if (body.status !== undefined && !status) return NextResponse.json({ message: "Geçersiz satış durumu." }, { status: 400 });
 
   try {
@@ -50,8 +52,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!existing) throw new Error("Satış bulunamadı veya yetkiniz yok.");
 
       if (status && status !== existing.status) {
-        const valid =
-          existing.status === "ACIK" && (status === "TAMAMLANDI" || status === "IPTAL");
+        const valid = existing.status === "ACIK" && (status === "TAMAMLANDI" || status === "IPTAL");
         if (!valid) throw new Error(`Satış ${existing.status} durumundan ${status} durumuna geçirilemez.`);
       }
 
@@ -85,7 +86,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       });
 
       if (closing) {
-        const finalListingStatus = sale.listing.purpose === "SATILIK" ? "SATILDI" : "KIRALANDI";
+        const finalListingStatus = existing.listing.purpose === "SATILIK" ? "SATILDI" : "KIRALANDI";
         await tx.listing.update({ where: { id: sale.listingId }, data: { status: finalListingStatus } });
       } else if (cancelling) {
         await tx.listing.updateMany({ where: { id: sale.listingId, status: "REZERVE" }, data: { status: "AKTIF" } });
@@ -101,7 +102,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           metadata: {
             fromStatus: existing.status,
             toStatus: sale.status,
-            listingStatus: sale.listing.status,
+            listingStatus: existing.listing.status,
             commissionChanged,
             paidPaymentCount: existing.payments.length,
           },
