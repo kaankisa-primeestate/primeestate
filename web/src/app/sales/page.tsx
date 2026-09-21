@@ -176,7 +176,7 @@ export default function SalesPage() {
     setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
 
     if (status === "GERCEKLESTI" && updatedShowing) {
-      const dueAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const dueAt = new Date(new Date(updatedShowing.dateTime).getTime() + 24 * 60 * 60 * 1000);
       const taskResponse = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
