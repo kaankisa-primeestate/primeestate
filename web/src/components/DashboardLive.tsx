@@ -65,7 +65,7 @@ export default function DashboardLive() {
       g<{ showings: S[] }>("/api/showings"),
       g<{ offers: O[] }>("/api/offers"),
       g<{ sales: Sale[] }>("/api/sales"),
-    ];
+    ] as const;
 
     const results = await Promise.allSettled(requests);
     const [x, y, z, q, w, n, m] = results;
