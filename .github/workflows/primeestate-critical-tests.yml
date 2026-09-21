@@ -54,3 +54,11 @@ jobs:
 
       - name: Run critical test suite
         run: npm test
+
+      - name: Dump Phase 7 current values
+        if: always()
+        run: |
+          if [ -f /tmp/phase7-current-values.json ]; then
+            echo "=== PHASE 7 CURRENT VALUES ==="
+            cat /tmp/phase7-current-values.json
+          fi
