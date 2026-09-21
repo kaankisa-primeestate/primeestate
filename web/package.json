@@ -18,7 +18,8 @@
     "db:studio": "prisma studio",
     "prebuild": "node scripts/clean-next.mjs",
     "typecheck": "tsc --noEmit",
-    "db:migration:check": "node scripts/verify-migration-parity.mjs"
+    "db:migration:check": "node scripts/verify-migration-parity.mjs",
+    "test": "node --test tests"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
