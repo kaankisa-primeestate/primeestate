@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: 0c64b2f204ea73d8d0cae7c144b1920b1af8b4f3
+> Base main: 0dc3f3309223fdaca1b97dcac202b21e4809cfe2
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -92,7 +92,7 @@
 - [x] Add initial authorization matrix integration tests across actual route handlers.
 - [x] Add Team Leader scope integration tests for customer routes.
 - [ ] Add Office/Admin scope integration tests.
-- [ ] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
+- [x] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
 - [ ] Make critical tests required before merge.
 
 ## Phase 7 — Critical E2E business chain
@@ -132,4 +132,4 @@
 - [ ] Foundation declared ready for new product feature development.
 
 ## Next action
-Phase 6: Office/Admin scope integration + Payment ↔ Ledger / PaymentPlan ↔ Installment invariants + critical-test required-check coverage. Do not start product feature development in parallel.
+Phase 6: make critical tests required before merge. Then proceed to Phase 7 Critical E2E business chain. Do not start product feature development in parallel.
