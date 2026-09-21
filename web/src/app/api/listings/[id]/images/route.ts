@@ -1,25 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = ["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"] as const;
+import { hasCapability, listingWriteScope } from "@/lib/authorization";
 
 async function authorizedListing(id: string, context: Awaited<ReturnType<typeof getUserContext>>) {
   if (!context) return null;
-  const listing = await prisma.listing.findFirst({
-    where: { id, organizationId: context.organizationId, officeId: context.officeId },
+  return prisma.listing.findFirst({
+    where: { id, ...listingWriteScope(context) },
     include: { consultant: { select: { id: true, teamId: true } } },
   });
-  if (!listing) return null;
-  const isManager = MANAGER_ROLES.includes(context.role as (typeof MANAGER_ROLES)[number]);
-  const isOwner = listing.consultantUserId === context.userId;
-  const isTeamLeader = context.role === "TEAM_LEADER" && !!context.teamId && listing.consultant?.teamId === context.teamId;
-  return isManager || isOwner || isTeamLeader ? listing : false;
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "listings:write")) return NextResponse.json({ message: "Portföy fotoğrafı düzenleme yetkiniz yok." }, { status: 403 });
   const { id } = await params;
   const listing = await authorizedListing(id, context);
   if (listing === false) return NextResponse.json({ message: "Bu portföye fotoğraf ekleme yetkiniz yok." }, { status: 403 });
