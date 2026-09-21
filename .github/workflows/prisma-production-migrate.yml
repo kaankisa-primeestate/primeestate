@@ -2,13 +2,6 @@ name: Apply Prisma Production Migration
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "web/prisma/migrations/**"
-      - "web/prisma/schema.prisma"
-      - ".github/workflows/prisma-production-migrate.yml"
 
 jobs:
   migrate:
