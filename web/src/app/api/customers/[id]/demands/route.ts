@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
+import { customerReadScope, hasCapability } from "@/lib/authorization";
 
 const demandTypes = new Set(["SATIN_ALMA", "KIRALAMA"]);
 const propertyTypes = new Set(["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"]);
@@ -14,21 +13,13 @@ async function getScopedCustomer(id: string) {
   if (!context) return { context: null, customer: null };
 
   const customer = await prisma.customer.findFirst({
-    where: { id, organizationId: context.organizationId, officeId: context.officeId },
+    where: { id, ...customerReadScope(context) },
     select: { id: true, ownerUserId: true },
   });
 
   if (!customer) return { context, customer: null };
 
-  const allowed =
-    MANAGER_ROLES.has(context.role) ||
-    customer.ownerUserId === context.userId ||
-    (context.role === "TEAM_LEADER" &&
-      context.teamId &&
-      !!(await prisma.user.findFirst({
-        where: { id: customer.ownerUserId, teamId: context.teamId, officeId: context.officeId },
-        select: { id: true },
-      })));
+  const allowed = true;
 
   return { context, customer: allowed ? customer : null };
 }
@@ -41,6 +32,7 @@ export async function POST(
   const { context, customer } = await getScopedCustomer(id);
 
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "customers:write")) return NextResponse.json({ message: "Talep oluşturma yetkiniz yok." }, { status: 403 });
   if (!customer) return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
 
   let body: Record<string, unknown>;
