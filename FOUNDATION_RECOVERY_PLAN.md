@@ -35,7 +35,7 @@ Goal: code schema, migration history, and deployed database are deterministicall
 
 ## Phase 2 — Data model integrity
 Goal: invalid business relationships become difficult or impossible to persist.
-- [ ] Review tenant/office/team foreign-key consistency.
+- [x] Review tenant/office/team foreign-key consistency: User → Office → Organization and User → Team → Office are guarded by composite foreign keys; inconsistent existing rows block migration.
 - [x] Harden Sale ↔ Offer ↔ Listing consistency (accepted-offer validation, one Sale per Listing, atomic listing reservation).
 - [x] Harden Sale ↔ Payment ↔ Ledger consistency (paid-total calculation corrected; settlement commission changes locked).
 - [x] Remove or constrain redundant PaymentInstallment.saleId relationship (derive through PaymentPlan; migration blocks inconsistent legacy rows).
@@ -124,4 +124,4 @@ Goal: foundation is formally accepted before new feature work.
 - [ ] Foundation declared ready for new feature development.
 
 ## Next action
-Phase 2 is active. The current branch hardens Sale/Listing/Offer and PaymentPlan/Installment integrity. After CI, review the migration and runtime behavior before merge. Do not start feature development in parallel.
+Phase 2 is active. The current branch additionally hardens User → Office → Organization and User → Team → Office foreign-key consistency with guarded migration checks. After CI, review migration behavior before merge. Do not start feature development in parallel.

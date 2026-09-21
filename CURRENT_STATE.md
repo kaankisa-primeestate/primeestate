@@ -21,7 +21,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - API seviyesinde tenant + role scope
 - AI provider bağımsız mimari
 
-## 3. Foundation Recovery durumu — 21.09.2026
+## 3. Foundation Recovery durumu — Phase 2 aktif
 
 Yeni özellik geliştirme **geçici olarak donduruldu**. Önce teknik temel P0-P9 aşamalarında sertleştirilecek.
 
@@ -41,13 +41,15 @@ Audit sonucu öne çıkan kritik riskler:
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`bbde12a3891a509a8aea15446b0f2410158915a7`
+`208d7fe5448db75ea3ab4c8c578333c7a1ec2fde`
 
 PR #48 Phase 1 database/migration integrity merge edildi: `927d6d12508979d22aebc6395678dcf578074fb5`.
 PR #49 production runtime smoke genişletmesi merge edildi: `bbde12a3891a509a8aea15446b0f2410158915a7`.
 Production migration #2 başarıyla çalıştı ve production smoke #31 başarıyla geçti; `/api/sales`, `/api/payments` ve `/api/payment-plans` authenticated smoke kapsamında doğrulandı.
 
 **Aktif phase: Phase 2 — Data model integrity.**
+
+PR #50 merged. Phase 2 ikinci hardening paketi `foundation/phase2-data-integrity-v2` branch'inde: User → Office → Organization ve User → Team → Office ilişkileri için guarded foreign-key bütünlüğü hazırlanıyor. Migration mevcut tutarsız kayıtları sessizce düzeltmez; tespit edilirse migration'ı durdurur.
 
 
 PR #46 — **Fix dashboard API response handling**
@@ -77,7 +79,7 @@ Production smoke #31 başarıyla geçti. Dashboard/Finance UI görsel doğrulama
 9. Phase 8 — Codebase cleanup & documentation
 10. Phase 9 — Release gate
 
-**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 1 aktif; production DB migration state henüz doğrulanmadı.
+**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek. Phase 2 aktif; tenant/office/team FK hardening CI doğrulamasında.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
