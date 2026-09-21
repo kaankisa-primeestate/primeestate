@@ -1,0 +1,193 @@
+"use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import Sidebar from "@/components/Sidebar";
+
+type D = { id: string; title: string; type: string; propertyType: string; urgency: string };
+type C = { id: string; name: string; phone: string | null; email: string | null; relationshipScore: number; demands: D[] };
+type S = { id: string; dateTime: string; status: string; listing: { title: string; code: string } };
+type O = { id: string; status: string; amount: string | number; currency: string; listing: { title: string; code: string } };
+type Sale = { id: string; status: string; amount: string | number; currency: string; listing: { title: string; code: string } };
+type P = { id: string; amount: string | number; currency: string; status: string; sale: { id: string } };
+
+async function g<T>(u: string): Promise<T> {
+  const r = await fetch(u, { cache: "no-store" });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.message ?? "Veri alınamadı.");
+  return d;
+}
+
+const money = (v: string | number, c = "TRY") =>
+  new Intl.NumberFormat("tr-TR", { style: "currency", currency: c }).format(Number(v));
+const dt = (v: string) =>
+  new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(v));
+
+export default function CrmFlow() {
+  const [c, setC] = useState<C[]>([]);
+  const [id, setId] = useState("");
+  const [did, setDid] = useState("");
+  const [sh, setSh] = useState<S[]>([]);
+  const [o, setO] = useState<O[]>([]);
+  const [s, setS] = useState<Sale[]>([]);
+  const [p, setP] = useState<P[]>([]);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void g<{ customers: C[] }>("/api/customers")
+        .then((x) => {
+          setC(x.customers);
+          setId(x.customers[0]?.id ?? "");
+        })
+        .catch((e) => setErr(e instanceof Error ? e.message : "Müşteriler alınamadı."));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const selected = c.find((x) => x.id === id);
+  const demand = selected?.demands.find((x) => x.id === did) ?? selected?.demands[0];
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!selected) {
+        setDid("");
+        return;
+      }
+      setDid((x) => (x && selected.demands.some((d) => d.id === x) ? x : selected.demands[0]?.id ?? ""));
+      void Promise.all([
+        g<{ showings: S[] }>(`/api/showings?customerId=${id}`),
+        g<{ offers: O[] }>(`/api/offers?customerId=${id}`),
+        g<{ sales: Sale[] }>(`/api/sales?customerId=${id}`),
+        g<{ payments: P[] }>("/api/payments"),
+      ])
+        .then(([a, b, cx, px]) => {
+          setSh(a.showings);
+          setO(b.offers);
+          setS(cx.sales);
+          setP(px.payments.filter((x) => cx.sales.some((y) => y.id === x.sale.id)));
+        })
+        .catch((e) => setErr(e instanceof Error ? e.message : "Akış verileri alınamadı."));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [id, selected]);
+
+  const paid = p.filter((x) => x.status === "ODENDI").reduce((n, x) => n + Number(x.amount), 0);
+  const stages = [
+    ["01", "Müşteri", selected ? "Hazır" : "—", "/relationships"],
+    ["02", "Talep", demand?.title ?? "Aktif talep yok", "/relationships"],
+    ["03", "Eşleşme", "Müşteri + talep için portföy eşleştir", "/matching"],
+    ["04", "Gösterim", `${sh.length} kayıt`, "/sales"],
+    ["05", "Teklif", `${o.length} kayıt`, "/sales"],
+    ["06", "Satış", `${s.length} kayıt`, "/sales"],
+    ["07", "Komisyon", "Finans workspace", "/finance"],
+    ["08", "Tahsilat", paid ? money(paid) : "Tahsilat yok", "/finance/dashboard"],
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50 md:flex">
+      <Sidebar />
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl">
+          <header className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[.18em] text-slate-400">PrimeEstate · CRM Flow</p>
+              <h1 className="mt-2 text-3xl font-semibold">CRM Akış Merkezi</h1>
+              <p className="mt-2 text-sm text-slate-500">Müşteri → Talep → Eşleşme → Gösterim → Teklif → Satış → Komisyon → Tahsilat.</p>
+            </div>
+            <Link href="/dashboard" className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold">Dashboard</Link>
+          </header>
+          {err && <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
+
+          <section className="mt-6 grid gap-5 lg:grid-cols-[300px_1fr]">
+            <aside className="rounded-3xl border bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[.16em] text-slate-400">Müşteriler</p>
+              <div className="mt-3 space-y-2">
+                {c.map((x) => (
+                  <button key={x.id} onClick={() => setId(x.id)} className={`w-full rounded-2xl p-3 text-left ${id === x.id ? "bg-slate-950 text-white" : "bg-slate-50"}`}>
+                    <p className="font-semibold">{x.name}</p>
+                    <p className="mt-1 text-xs opacity-60">{x.demands.length} talep · skor {x.relationshipScore}</p>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <div>
+              {selected && (
+                <>
+                  <div className="rounded-3xl bg-slate-950 p-6 text-white">
+                    <p className="text-xs uppercase tracking-[.16em] text-slate-400">Seçili müşteri</p>
+                    <h2 className="mt-2 text-2xl font-semibold">{selected.name}</h2>
+                    <p className="mt-1 text-sm text-slate-400">{selected.phone ?? "Telefon yok"} · {selected.email ?? "E-posta yok"}</p>
+                  </div>
+
+                  <div className="mt-5 overflow-x-auto pb-2">
+                    <div className="grid min-w-[980px] grid-cols-8 gap-2">
+                      {stages.map(([no, title, value, href], i) => (
+                        <div key={no} className="rounded-2xl border bg-white p-4 shadow-sm">
+                          <p className="text-xs font-bold text-slate-400">{no}</p>
+                          <p className="mt-2 text-sm font-semibold">{title}</p>
+                          <p className="mt-2 min-h-10 text-xs text-slate-500">{value}</p>
+                          <Link href={href} className="mt-4 inline-flex text-xs font-semibold">İşleme git →</Link>
+                          {i < 7 && <p className="mt-3 text-xs text-slate-300">→</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-5 xl:grid-cols-3">
+                    <section className="rounded-3xl border bg-white p-5">
+                      <p className="text-xs uppercase tracking-[.16em] text-slate-400">Aktif Talep</p>
+                      {selected.demands.length ? (
+                        <>
+                          <select value={demand?.id ?? ""} onChange={(e) => setDid(e.target.value)} className="mt-3 w-full rounded-xl border px-3 py-3 text-sm">
+                            {selected.demands.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
+                          </select>
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <span className="rounded-xl bg-slate-50 p-3">{demand?.type}</span>
+                            <span className="rounded-xl bg-slate-50 p-3">{demand?.propertyType}</span>
+                          </div>
+                        </>
+                      ) : <p className="mt-3 text-sm text-slate-500">Aktif talep yok.</p>}
+                    </section>
+
+                    <section className="rounded-3xl border bg-white p-5">
+                      <p className="text-xs uppercase tracking-[.16em] text-slate-400">Gösterimler</p>
+                      <div className="mt-3 space-y-2">
+                        {sh.slice(0, 4).map((x) => (
+                          <div key={x.id} className="rounded-xl bg-slate-50 p-3">
+                            <p className="text-sm font-semibold">{x.listing.title}</p>
+                            <p className="text-xs text-slate-500">{x.status} · {dt(x.dateTime)}</p>
+                          </div>
+                        ))}
+                        {!sh.length && <p className="text-sm text-slate-500">Henüz gösterim yok.</p>}
+                      </div>
+                    </section>
+
+                    <section className="rounded-3xl border bg-white p-5">
+                      <p className="text-xs uppercase tracking-[.16em] text-slate-400">Teklif / Satış</p>
+                      <div className="mt-3 space-y-2">
+                        {o.slice(0, 3).map((x) => (
+                          <div key={x.id} className="rounded-xl bg-slate-50 p-3">
+                            <p className="text-sm font-semibold">{x.listing.title}</p>
+                            <p className="text-xs text-slate-500">{money(x.amount, x.currency)} · {x.status}</p>
+                          </div>
+                        ))}
+                        {s.map((x) => (
+                          <div key={x.id} className="rounded-xl bg-emerald-50 p-3">
+                            <p className="text-sm font-semibold">{x.listing.title}</p>
+                            <p className="text-xs text-emerald-700">{money(x.amount, x.currency)} · {x.status}</p>
+                          </div>
+                        ))}
+                        {!o.length && !s.length && <p className="text-sm text-slate-500">Henüz teklif veya satış yok.</p>}
+                      </div>
+                    </section>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
