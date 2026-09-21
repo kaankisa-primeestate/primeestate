@@ -1,0 +1,366 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { spawn, type ChildProcess } from "node:child_process";
+import { test, before, after } from "node:test";
+
+process.env.BETTER_AUTH_SECRET ??= "phase7-e2e-test-secret";
+process.env.BETTER_AUTH_URL ??= "http://127.0.0.1:4318";
+
+const { prisma } = await import("../src/lib/prisma");
+const { auth } = await import("../src/lib/auth");
+
+const BASE_URL = process.env.PHASE7_E2E_TEST_URL ?? "http://127.0.0.1:4318";
+let server: ChildProcess | null = null;
+const createdOrganizations: string[] = [];
+
+async function waitForServer() {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(BASE_URL + "/login");
+      if (response.status >= 200 && response.status < 500) return;
+    } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  throw new Error("Phase 7 E2E Next.js test server did not become ready.");
+}
+
+async function createAgent(suffix: string) {
+  const organization = await prisma.organization.create({
+    data: { name: `Phase7 E2E Org ${suffix}`, slug: `phase7-e2e-${suffix}` },
+  });
+  createdOrganizations.push(organization.id);
+
+  const office = await prisma.office.create({
+    data: { organizationId: organization.id, name: "E2E Office", slug: `e2e-office-${suffix}` },
+  });
+  const team = await prisma.team.create({
+    data: { officeId: office.id, name: `E2E Team ${suffix}` },
+  });
+
+  const email = `phase7-agent-${suffix}@example.test`;
+  const password = "Phase7-Test-Password-123!";
+  const context = await auth.$context;
+  const user = await context.internalAdapter.createUser(
+    {
+      email,
+      name: "Phase 7 E2E Agent",
+      emailVerified: true,
+      organizationId: organization.id,
+      officeId: office.id,
+      teamId: team.id,
+      role: "AGENT",
+      active: true,
+    },
+    { method: "phase7-e2e-test" },
+  );
+
+  await context.internalAdapter.linkAccount({
+    accountId: user.id,
+    providerId: "credential",
+    userId: user.id,
+    password: await context.password.hash(password),
+  });
+
+  return { organization, office, team, user, email, password };
+}
+
+async function login(email: string, password: string) {
+  const response = await fetch(BASE_URL + "/api/auth/sign-in/email", {
+    method: "POST",
+    headers: { "content-type": "application/json", Origin: BASE_URL },
+    body: JSON.stringify({ email, password, rememberMe: true }),
+  });
+  assert.equal(response.ok, true, await response.text());
+
+  const cookies = response.headers.getSetCookie?.() ?? [];
+  const cookieHeader = cookies
+    .map((cookie) => cookie.split(";", 1)[0])
+    .filter(Boolean)
+    .join("; ");
+  assert.ok(cookieHeader, "Better Auth did not return a session cookie.");
+  return cookieHeader;
+}
+
+async function api(path: string, cookie: string, body?: unknown, method = "GET") {
+  const response = await fetch(BASE_URL + path, {
+    method,
+    headers: {
+      Cookie: cookie,
+      ...(body !== undefined ? { "content-type": "application/json" } : {}),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  return response;
+}
+
+async function json<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  assert.ok(text, `Expected JSON response body, received empty body (HTTP ${response.status}).`);
+  return JSON.parse(text) as T;
+}
+
+before(async () => {
+  server = spawn(
+    process.platform === "win32" ? "npx.cmd" : "npx",
+    ["next", "dev", "-p", "4318"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET!,
+        BETTER_AUTH_URL: BASE_URL,
+        NEXT_TELEMETRY_DISABLED: "1",
+      },
+      stdio: "ignore",
+    },
+  );
+  await waitForServer();
+});
+
+after(async () => {
+  if (server) {
+    server.kill("SIGTERM");
+    server = null;
+  }
+  for (const organizationId of createdOrganizations.splice(0)) {
+    await prisma.organization.delete({ where: { id: organizationId } }).catch(() => {});
+  }
+  await prisma.$disconnect();
+});
+
+test("Phase 7: critical customer-to-finance business chain works through real HTTP routes", async () => {
+  const fixture = await createAgent(randomUUID().slice(0, 8));
+  const cookie = await login(fixture.email, fixture.password);
+
+  // 1. Customer
+  const customerResponse = await api(
+    "/api/customers",
+    cookie,
+    {
+      name: "Phase 7 Customer",
+      phone: "+905555555555",
+      roles: ["ALICI"],
+    },
+    "POST",
+  );
+  assert.equal(customerResponse.status, 201, await customerResponse.text());
+  const customerPayload = await json<{ customer: { id: string } }>(customerResponse);
+  const customerId = customerPayload.customer.id;
+
+  // 2. Demand
+  const demandResponse = await api(
+    `/api/customers/${customerId}/demands`,
+    cookie,
+    {
+      title: "Bostancı 3+1 Satın Alma Talebi",
+      type: "SATIN_ALMA",
+      propertyType: "DAIRE",
+      locations: ["Bostanci"],
+      budgetMin: 4000000,
+      budgetMax: 6000000,
+      currency: "TRY",
+      minSize: 90,
+      maxSize: 140,
+      rooms: "3+1",
+      urgency: "YUKSEK",
+    },
+    "POST",
+  );
+  assert.equal(demandResponse.status, 201, await demandResponse.text());
+  const demandPayload = await json<{ demand: { id: string } }>(demandResponse);
+  const demandId = demandPayload.demand.id;
+
+  // 3. Listing / property
+  const listingResponse = await api(
+    "/api/listings",
+    cookie,
+    {
+      propertyType: "DAIRE",
+      purpose: "SATILIK",
+      title: "Bostancı E2E 3+1",
+      city: "Istanbul",
+      district: "Kadikoy",
+      neighborhood: "Bostanci",
+      price: 5000000,
+      sizeM2: 110,
+      rooms: "3+1",
+      floor: "5",
+      currency: "TRY",
+    },
+    "POST",
+  );
+  assert.equal(listingResponse.status, 201, await listingResponse.text());
+  const listingPayload = await json<{ listing: { id: string; propertyId: string; status: string } }>(listingResponse);
+  assert.equal(listingPayload.listing.status, "AKTIF");
+
+  // 4. Match demand to listing
+  const matchingResponse = await api(
+    "/api/matching",
+    cookie,
+    { demandId, limit: 10 },
+    "POST",
+  );
+  assert.equal(matchingResponse.status, 200, await matchingResponse.text());
+  const matchingPayload = await json<{ matches: Array<{ listingId: string; score: number }> }>(matchingResponse);
+  assert.ok(matchingPayload.matches.some((match) => match.listingId === listingPayload.listing.id));
+  assert.ok((matchingPayload.matches.find((match) => match.listingId === listingPayload.listing.id)?.score ?? 0) > 0);
+
+  // 5. Showing
+  const showingResponse = await api(
+    "/api/showings",
+    cookie,
+    {
+      customerId,
+      listingId: listingPayload.listing.id,
+      dateTime: "2026-10-15T15:00:00.000Z",
+      attendees: 2,
+      note: "Phase 7 critical chain gösterimi",
+    },
+    "POST",
+  );
+  assert.equal(showingResponse.status, 201, await showingResponse.text());
+
+  // 6. Offer
+  const offerResponse = await api(
+    "/api/offers",
+    cookie,
+    {
+      customerId,
+      listingId: listingPayload.listing.id,
+      amount: 4800000,
+      currency: "TRY",
+      offeredAt: "2026-10-15T16:00:00.000Z",
+      nextAction: "Mal sahibi onayı",
+    },
+    "POST",
+  );
+  assert.equal(offerResponse.status, 201, await offerResponse.text());
+  const offerPayload = await json<{ offer: { id: string; status: string } }>(offerResponse);
+  assert.equal(offerPayload.offer.status, "TASLAK");
+
+  // 7. Accept offer
+  const acceptedResponse = await api(
+    `/api/offers/${offerPayload.offer.id}`,
+    cookie,
+    { status: "SUNULDU" },
+    "PATCH",
+  );
+  assert.equal(acceptedResponse.status, 200, await acceptedResponse.text());
+
+  const acceptedAgainResponse = await api(
+    `/api/offers/${offerPayload.offer.id}`,
+    cookie,
+    { status: "KARSILIKLI_TEKLIF" },
+    "PATCH",
+  );
+  assert.equal(acceptedAgainResponse.status, 200, await acceptedAgainResponse.text());
+
+  const acceptedFinalResponse = await api(
+    `/api/offers/${offerPayload.offer.id}`,
+    cookie,
+    { status: "KABUL" },
+    "PATCH",
+  );
+  assert.equal(acceptedFinalResponse.status, 200, await acceptedFinalResponse.text());
+
+  // 8. Accepted offer -> sale
+  const saleResponse = await api(
+    "/api/sales",
+    cookie,
+    { offerId: offerPayload.offer.id, note: "Phase 7 E2E satış" },
+    "POST",
+  );
+  assert.equal(saleResponse.status, 201, await saleResponse.text());
+  const salePayload = await json<{
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
+  }>(saleResponse);
+  assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
+  assert.equal(salePayload.sale.listingId, listingPayload.listing.id);
+  assert.equal(Number(salePayload.sale.amount), 4800000);
+  assert.equal(salePayload.sale.currency, "TRY");
+
+  // 9. Commission calculation
+  const commissionResponse = await api(
+    `/api/sales/${salePayload.sale.id}`,
+    cookie,
+    { commissionRate: 3, officeShareRate: 50 },
+    "PATCH",
+  );
+  assert.equal(commissionResponse.status, 200, await commissionResponse.text());
+  const commissionPayload = await json<{
+    sale: { grossCommission: string | number; officeShare: string | number; consultantShare: string | number };
+  }>(commissionResponse);
+  assert.equal(Number(commissionPayload.sale.grossCommission), 144000);
+  assert.equal(Number(commissionPayload.sale.officeShare), 72000);
+  assert.equal(Number(commissionPayload.sale.consultantShare), 72000);
+
+  // 10. Payment + ledger
+  const paymentResponse = await api(
+    "/api/payments",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      amount: 1000000,
+      currency: "TRY",
+      status: "ODENDI",
+      paidAt: "2026-10-20T10:00:00.000Z",
+    },
+    "POST",
+  );
+  assert.equal(paymentResponse.status, 201, await paymentResponse.text());
+  const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
+  assert.equal(Number(paymentPayload.payment.amount), 1000000);
+  assert.equal(paymentPayload.payment.status, "ODENDI");
+
+  // 11. Payment plan / installments
+  const planResponse = await api(
+    "/api/payment-plans",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      title: "4 Taksit E2E Plan",
+      installments: [
+        { amount: 1200000, dueAt: "2026-11-01T00:00:00.000Z" },
+        { amount: 1200000, dueAt: "2026-12-01T00:00:00.000Z" },
+        { amount: 1200000, dueAt: "2027-01-01T00:00:00.000Z" },
+        { amount: 1200000, dueAt: "2027-02-01T00:00:00.000Z" },
+      ],
+    },
+    "POST",
+  );
+  assert.equal(planResponse.status, 201, await planResponse.text());
+  const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ sequence: number; amount: string | number }> } }>(planResponse);
+  assert.equal(planPayload.plan.currency, "TRY");
+  assert.deepEqual(planPayload.plan.installments.map((item) => item.sequence), [1, 2, 3, 4]);
+  assert.equal(
+    planPayload.plan.installments.reduce((sum, item) => sum + Number(item.amount), 0),
+    4800000,
+  );
+
+  // 12. Read-back: the chain is visible to the same scoped user and finance endpoints.
+  const salesRead = await api("/api/sales", cookie);
+  assert.equal(salesRead.status, 200);
+  const salesPayload = await json<{ sales: Array<{ id: string }> }>(salesRead);
+  assert.ok(salesPayload.sales.some((sale) => sale.id === salePayload.sale.id));
+
+  const paymentsRead = await api("/api/payments", cookie);
+  assert.equal(paymentsRead.status, 200);
+  const paymentsPayload = await json<{ payments: Array<{ id: string; sale: { id: string } }> }>(paymentsRead);
+  assert.ok(paymentsPayload.payments.some((payment) => payment.id === paymentPayload.payment.id && payment.sale.id === salePayload.sale.id));
+
+  const plansRead = await api("/api/payment-plans", cookie);
+  assert.equal(plansRead.status, 200);
+  const plansPayload = await json<{ plans: Array<{ id: string; sale: { id: string } }> }>(plansRead);
+  assert.ok(plansPayload.plans.some((plan) => plan.id === planPayload.plan.id && plan.sale.id === salePayload.sale.id));
+
+  const listingRead = await api(`/api/listings?q=Bostancı E2E 3+1`, cookie);
+  assert.equal(listingRead.status, 200);
+  const listingReadPayload = await json<{ listings: Array<{ id: string; status: string }> }>(listingRead);
+  assert.ok(listingReadPayload.listings.some((listing) => listing.id === listingPayload.listing.id && listing.status === "REZERVE"));
+
+  const showingRead = await api(`/api/showings?customerId=${customerId}`, cookie);
+  assert.equal(showingRead.status, 200);
+  const showingPayload = await json<{ showings: Array<{ customer: { id: string }; listing: { id: string } }> }>(showingRead);
+  assert.ok(showingPayload.showings.some((showing) => showing.customer.id === customerId && showing.listing.id === listingPayload.listing.id));
+});
