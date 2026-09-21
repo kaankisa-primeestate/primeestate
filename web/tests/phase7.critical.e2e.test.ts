@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
+import net from "node:net";
 import { test, before, after } from "node:test";
 
 process.env.BETTER_AUTH_SECRET ??= "phase7-e2e-test-secret-0123456789-abcdef";
@@ -13,18 +14,40 @@ const BASE_URL = process.env.PHASE7_E2E_TEST_URL ?? "http://127.0.0.1:4318";
 let server: ChildProcess | null = null;
 const createdOrganizations: string[] = [];
 
+let serverOutput = "";
+
 async function waitForServer() {
   const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
-    try {
-      const response = await fetch(BASE_URL + "/api/auth/get-session", {
-        headers: { Origin: BASE_URL },
+    if (server?.exitCode !== null && server?.exitCode !== undefined) {
+      throw new Error(
+        `Phase 7 E2E Next.js test server exited with code ${server.exitCode}.\\n${serverOutput.slice(-12000)}`,
+      );
+    }
+
+    const connected = await new Promise<boolean>((resolve) => {
+      const socket = net.createConnection({ host: "127.0.0.1", port: 4318 });
+      socket.once("connect", () => {
+        socket.destroy();
+        resolve(true);
       });
-      if (response.status >= 200 && response.status < 500) return;
-    } catch {}
+      socket.once("error", () => {
+        socket.destroy();
+        resolve(false);
+      });
+      socket.setTimeout(1000, () => {
+        socket.destroy();
+        resolve(false);
+      });
+    });
+
+    if (connected) return;
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  throw new Error("Phase 7 E2E Next.js test server did not become ready within 120 seconds.");
+
+  throw new Error(
+    `Phase 7 E2E Next.js test server did not open port 4318 within 120 seconds.\\n${serverOutput.slice(-12000)}`,
+  );
 }
 
 async function createAgent(suffix: string) {
@@ -105,7 +128,7 @@ async function json<T>(response: Response): Promise<T> {
 before(async () => {
   server = spawn(
     process.platform === "win32" ? "npx.cmd" : "npx",
-    ["next", "dev", "-H", "127.0.0.1", "-p", "4318"],
+    ["next", "dev", "--webpack", "-H", "127.0.0.1", "-p", "4318"],
     {
       cwd: process.cwd(),
       env: {
@@ -114,9 +137,17 @@ before(async () => {
         BETTER_AUTH_URL: BASE_URL,
         NEXT_TELEMETRY_DISABLED: "1",
       },
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
     },
   );
+
+  server.stdout?.on("data", (chunk) => {
+    serverOutput = (serverOutput + chunk.toString()).slice(-12000);
+  });
+  server.stderr?.on("data", (chunk) => {
+    serverOutput = (serverOutput + chunk.toString()).slice(-12000);
+  });
+
   await waitForServer();
 });
 
