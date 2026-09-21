@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 const ROLE_VALUES = [
   "SUPER_ADMIN",
   "ORG_ADMIN",
@@ -37,7 +37,7 @@ function canManageRole(
 function userScope(
   context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
 ) {
-  if (context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN") {
+  if (isManagerRole(context.role)) {
     return { organizationId: context.organizationId };
   }
 
@@ -57,12 +57,7 @@ export async function GET() {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
-    return NextResponse.json(
-      { message: "Bu alanı görüntüleme yetkiniz yok." },
-      { status: 403 },
-    );
-  }
+  assertCan(context, "users", "read");
 
   const users = await prisma.user.findMany({
     where: userScope(context),
@@ -135,12 +130,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
-    return NextResponse.json(
-      { message: "Kullanıcı yönetimi yetkiniz yok." },
-      { status: 403 },
-    );
-  }
+  assertCan(context, "users", "create");
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";

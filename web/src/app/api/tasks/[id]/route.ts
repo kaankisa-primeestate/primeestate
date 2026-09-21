@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
+import { assertCan, isManagerRole } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  assertCan(context, "tasks", "update");
   const { id } = await params;
   const task = await prisma.task.findFirst({
-    where: { id, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(MANAGER_ROLES.has(context.role) ? {} : { id: context.userId }) } },
+    where: { id, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(isManagerRole(context.role) ? {} : { id: context.userId }) } },
     select: { id: true },
   });
   if (!task) return NextResponse.json({ message: "Görev bulunamadı veya yetkiniz yok." }, { status: 404 });
