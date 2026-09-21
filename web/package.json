@@ -19,7 +19,7 @@
     "prebuild": "node scripts/clean-next.mjs",
     "typecheck": "tsc --noEmit",
     "db:migration:check": "node scripts/verify-migration-parity.mjs",
-    "test": "npm run db:deploy && node --test tests && npx --yes tsx@4.20.6 --test tests/phase6.integration.test.ts tests/phase6.api.integration.test.ts"
+    "test": "npm run db:deploy && node --test tests && npx --yes tsx@4.20.6 --test tests/phase6.integration.test.ts tests/phase6.api.integration.test.ts tests/phase7.critical.e2e.test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
