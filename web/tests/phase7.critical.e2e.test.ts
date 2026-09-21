@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
-import { writeFile } from "node:fs/promises";
 import net from "node:net";
 import { test, before, after } from "node:test";
 
@@ -339,19 +338,19 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(saleResponse, 201, "saleResponse");
   const salePayload = await json<{
-    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; listing?: { id: string }; };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
-  const saleListingId = salePayload.sale.listingId;
-  const offerListingId = offerPayload.offer.listing.id;
-  if (saleListingId !== offerListingId) {
-    await writeFile("/tmp/phase7-mismatch.json", JSON.stringify({
-      saleListingId, offerListingId, expectedListingId: listingPayload.listing.id,
-      salePayload, offerPayload, listingPayload,
-      strictEqual: saleListingId === offerListingId,
-    }, null, 2));
-    throw new Error("Sale/offer listing linkage mismatch");
-  }
+  assert.equal(
+    salePayload.sale.listingId,
+    listingPayload.listing.id,
+    "Sale listingId must match the listing selected by the test.",
+  );
+  assert.equal(
+    salePayload.sale.listing?.id,
+    listingPayload.listing.id,
+    "Sale relation must resolve to the listing selected by the test.",
+  );
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
 
