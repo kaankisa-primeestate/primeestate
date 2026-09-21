@@ -425,7 +425,6 @@ model Offer {
 
   @@index([customerId, offeredAt])
   @@index([listingId, status])
-  @@unique([listingId])
 }
 
 
@@ -456,6 +455,7 @@ model Sale {
 
   @@index([customerId, status])
   @@index([listingId, status])
+  @@unique([listingId])
 }
 
 model PaymentPlan {
