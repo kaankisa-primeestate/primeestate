@@ -2,15 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-function canAccessOwner(
-  context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
-  ownerUserId: string,
-) {
-  if (["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"].includes(context.role)) return true;
-  if (context.role === "TEAM_LEADER") return true;
-  return ownerUserId === context.userId;
-}
+import { assertCan, customerOwnershipScope } from "@/lib/authz";
 
 export async function GET(
   _request: Request,
@@ -18,6 +10,11 @@ export async function GET(
 ) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try {
+    assertCan(context, "customers", "read");
+  } catch {
+    return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
+  }
 
   const { id } = await params;
   const customer = await prisma.customer.findFirst({
@@ -25,6 +22,7 @@ export async function GET(
       id,
       organizationId: context.organizationId,
       officeId: context.officeId,
+      ...customerOwnershipScope(context),
     },
     include: {
       roles: true,
@@ -35,11 +33,7 @@ export async function GET(
     },
   });
 
-  if (!customer || !canAccessOwner(context, customer.ownerUserId)) {
-    return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
-  }
-
-  if (context.role === "TEAM_LEADER" && customer.owner.teamId !== context.teamId) {
+  if (!customer) {
     return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
   }
 
@@ -53,23 +47,25 @@ export async function PATCH(
 ) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try {
+    assertCan(context, "customers", "update");
+  } catch {
+    return NextResponse.json({ message: "Müşteri düzenleme yetkiniz yok." }, { status: 403 });
+  }
 
   const { id } = await params;
   const customer = await prisma.customer.findFirst({
-    where: { id, organizationId: context.organizationId, officeId: context.officeId },
+    where: {
+      id,
+      organizationId: context.organizationId,
+      officeId: context.officeId,
+      ...customerOwnershipScope(context),
+    },
     select: { id: true, ownerUserId: true },
   });
 
-  if (!customer || !canAccessOwner(context, customer.ownerUserId)) {
+  if (!customer) {
     return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
-  }
-
-  if (context.role === "TEAM_LEADER") {
-    const owner = await prisma.user.findFirst({
-      where: { id: customer.ownerUserId, teamId: context.teamId },
-      select: { id: true },
-    });
-    if (!owner) return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
   }
 
   let body: {

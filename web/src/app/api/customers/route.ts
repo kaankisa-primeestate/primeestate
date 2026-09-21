@@ -2,19 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
-
-const MANAGER_ROLES = new Set([
-  "SUPER_ADMIN",
-  "ORG_ADMIN",
-  "OFFICE_ADMIN",
-]);
-
-function canSeeCustomer(context: Awaited<ReturnType<typeof getUserContext>>, ownerUserId: string) {
-  if (!context) return false;
-  if (isManagerRole(context.role)) return true;
-  return ownerUserId === context.userId;
-}
+import { assertCan, canAssignCustomerOwner, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
@@ -23,16 +11,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   }
 
+  try {
+    assertCan(context, "customers", "read");
+  } catch {
+    return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q")?.trim();
   const role = searchParams.get("role")?.trim();
 
-  const ownerScope =
-    context.role === "AGENT"
-      ? { ownerUserId: context.userId }
-      : context.role === "TEAM_LEADER" && context.teamId
-        ? { owner: { teamId: context.teamId } }
-        : {};
+  const ownerScope = customerOwnershipScope(context);
 
   const customers = await prisma.customer.findMany({
     where: {
@@ -119,7 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Geçerli bir sorumlu danışman bulunamadı." }, { status: 400 });
   }
 
-  if (!canSeeCustomer(context, requestedOwnerId)) {
+  if (!isManagerRole(context.role) && requestedOwnerId !== context.userId && !canAssignCustomerOwner(context, owner.teamId)) {
     return NextResponse.json({ message: "Bu danışman adına müşteri oluşturma yetkiniz yok." }, { status: 403 });
   }
 

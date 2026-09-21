@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, isManagerRole, officeListingScope } from "@/lib/authz";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
 const STATUSES = ["AKTIF", "REZERVE", "PASIF", "SATILDI", "KIRALANDI"] as const;
-const MANAGER_ROLES = ["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"] as const;
-
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try {
+    assertCan(context, "listings", "read");
+  } catch {
+    return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
+  }
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
-    where: { id, organizationId: context.organizationId, officeId: context.officeId },
+    where: { id, ...officeListingScope(context) },
     include: {
       property: true,
       consultant: { select: { id: true, name: true, email: true, teamId: true } },
@@ -27,14 +31,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try {
+    assertCan(context, "listings", "update");
+  } catch {
+    return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
+  }
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
-    where: { id, organizationId: context.organizationId, officeId: context.officeId },
+    where: { id, ...officeListingScope(context) },
     include: { property: true, consultant: { select: { id: true, teamId: true } } },
   });
   if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
 
-  const isManager = MANAGER_ROLES.includes(context.role as (typeof MANAGER_ROLES)[number]);
+  const isManager = isManagerRole(context.role);
   const isOwner = listing.consultantUserId === context.userId;
   const isTeamLeader = context.role === "TEAM_LEADER" && !!context.teamId && listing.consultant?.teamId === context.teamId;
   if (!isManager && !isOwner && !isTeamLeader) return NextResponse.json({ message: "Bu portföyü düzenleme yetkiniz yok." }, { status: 403 });
