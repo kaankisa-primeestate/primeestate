@@ -12,5 +12,8 @@ export default defineConfig({
     url:
       process.env.DATABASE_URL ??
       "postgresql://placeholder:placeholder@localhost:5432/primeestate?schema=public",
+    // Migration/schema parity CI kontrolü için izole shadow database.
+    // Production/staging migration komutlarında bu değer verilmez.
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });
