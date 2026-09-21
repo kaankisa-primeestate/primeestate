@@ -72,7 +72,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   }
 
-  try {\n    assertCan(context, "customers", "create");\n  } catch {\n    return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });\n  }\n\n  let body: {
+  try {
+    assertCan(context, "customers", "create");
+  } catch {
+    return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });
+  }
+
+  let body: {
     name?: unknown;
     phone?: unknown;
     email?: unknown;
