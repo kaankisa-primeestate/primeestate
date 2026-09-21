@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { can, customerOwnershipScope } from "@/lib/authz";
 
 export async function GET() {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "paymentPlans", "read"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  try { if (!can(context.role, "paymentPlans", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   const plans = await prisma.paymentPlan.findMany({
     where: { sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } } },
     include: {
@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "paymentPlans", "create"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  try { if (!can(context.role, "paymentPlans", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   let body: { saleId?: unknown; title?: unknown; installments?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
