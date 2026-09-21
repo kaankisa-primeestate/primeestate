@@ -11,8 +11,6 @@ export async function GET(
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
-  if (!hasCapability(context, "customers:write")) return NextResponse.json({ message: "Müşteri düzenleme yetkiniz yok." }, { status: 403 });
-
   const { id } = await params;
   const customer = await prisma.customer.findFirst({
     where: { id, ...customerReadScope(context) },
@@ -39,6 +37,7 @@ export async function PATCH(
 ) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "customers:write")) return NextResponse.json({ message: "Müşteri düzenleme yetkiniz yok." }, { status: 403 });
 
   const { id } = await params;
   const customer = await prisma.customer.findFirst({
