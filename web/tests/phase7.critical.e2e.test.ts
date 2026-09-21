@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
 import { test, before, after } from "node:test";
 
-process.env.BETTER_AUTH_SECRET ??= "phase7-e2e-test-secret";
+process.env.BETTER_AUTH_SECRET ??= "phase7-e2e-test-secret-0123456789-abcdef";
 process.env.BETTER_AUTH_URL ??= "http://127.0.0.1:4318";
 
 const { prisma } = await import("../src/lib/prisma");
@@ -14,15 +14,17 @@ let server: ChildProcess | null = null;
 const createdOrganizations: string[] = [];
 
 async function waitForServer() {
-  const deadline = Date.now() + 60_000;
+  const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(BASE_URL + "/login");
+      const response = await fetch(BASE_URL + "/api/auth/get-session", {
+        headers: { Origin: BASE_URL },
+      });
       if (response.status >= 200 && response.status < 500) return;
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  throw new Error("Phase 7 E2E Next.js test server did not become ready.");
+  throw new Error("Phase 7 E2E Next.js test server did not become ready within 120 seconds.");
 }
 
 async function createAgent(suffix: string) {
@@ -103,7 +105,7 @@ async function json<T>(response: Response): Promise<T> {
 before(async () => {
   server = spawn(
     process.platform === "win32" ? "npx.cmd" : "npx",
-    ["next", "dev", "-p", "4318"],
+    ["next", "dev", "-H", "127.0.0.1", "-p", "4318"],
     {
       cwd: process.cwd(),
       env: {
@@ -240,29 +242,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(offerPayload.offer.status, "TASLAK");
 
   // 7. Accept offer
-  const acceptedResponse = await api(
-    `/api/offers/${offerPayload.offer.id}`,
-    cookie,
-    { status: "SUNULDU" },
-    "PATCH",
-  );
-  assert.equal(acceptedResponse.status, 200, await acceptedResponse.text());
-
-  const acceptedAgainResponse = await api(
-    `/api/offers/${offerPayload.offer.id}`,
-    cookie,
-    { status: "KARSILIKLI_TEKLIF" },
-    "PATCH",
-  );
-  assert.equal(acceptedAgainResponse.status, 200, await acceptedAgainResponse.text());
-
-  const acceptedFinalResponse = await api(
-    `/api/offers/${offerPayload.offer.id}`,
-    cookie,
-    { status: "KABUL" },
-    "PATCH",
-  );
-  assert.equal(acceptedFinalResponse.status, 200, await acceptedFinalResponse.text());
+  for (const status of ["SUNULDU", "KARSILIKLI_TEKLIF", "KABUL"] as const) {
+    const response = await api(
+      `/api/offers/${offerPayload.offer.id}`,
+      cookie,
+      { status },
+      "PATCH",
+    );
+    assert.equal(response.status, 200, await response.text());
+  }
 
   // 8. Accepted offer -> sale
   const saleResponse = await api(
