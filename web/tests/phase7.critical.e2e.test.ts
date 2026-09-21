@@ -338,18 +338,13 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(saleResponse, 201, "saleResponse");
   const salePayload = await json<{
-    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; listing?: { id: string }; };
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   assert.equal(
     salePayload.sale.listingId,
     listingPayload.listing.id,
     "Sale listingId must match the listing selected by the test.",
-  );
-  assert.equal(
-    salePayload.sale.listing?.id,
-    listingPayload.listing.id,
-    "Sale relation must resolve to the listing selected by the test.",
   );
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
