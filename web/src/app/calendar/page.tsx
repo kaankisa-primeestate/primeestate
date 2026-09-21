@@ -249,7 +249,7 @@ export default function CalendarPage() {
           <section className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Entegrasyon hazırlığı</p>
             <h2 className="mt-1 text-lg font-semibold text-slate-950">Google Takvim bağlantısı bu yapının üzerine eklenecek</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Her danışman kendi Google hesabını OAuth ile bağlayacak. Bağlantı kullanıcı bazında tutulacak; özel Google etkinlikleri diğer danışmanlara açılmayacak. PrimeEstate görev ve gösterimleri daha sonra Google Takvim'e aktarılabilecek.</p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Her danışman kendi Google hesabını OAuth ile bağlayacak. Bağlantı kullanıcı bazında tutulacak; özel Google etkinlikleri diğer danışmanlara açılmayacak. PrimeEstate görev ve gösterimleri daha sonra Google Takvim&apos;e aktarılabilecek.</p>
           </section>
         </div>
       </main>
