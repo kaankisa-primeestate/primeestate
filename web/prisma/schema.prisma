@@ -449,9 +449,56 @@ model Sale {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  payments Payment[]
+  ledgerEntries LedgerEntry[]
 
   @@index([customerId, status])
   @@index([listingId, status])
+}
+
+model Payment {
+  id         String        @id @default(uuid())
+  saleId     String
+  amount     Decimal       @db.Decimal(18, 2)
+  currency   String        @default("TRY")
+  status     PaymentStatus @default(BEKLIYOR)
+  paidAt     DateTime?
+  note       String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  ledgerEntries LedgerEntry[]
+
+  @@index([saleId, status, paidAt])
+}
+
+enum PaymentStatus {
+  BEKLIYOR
+  ODENDI
+  IPTAL
+}
+
+enum LedgerAccount {
+  OFFICE
+  CONSULTANT
+}
+
+model LedgerEntry {
+  id          String        @id @default(uuid())
+  saleId      String
+  paymentId   String?
+  account     LedgerAccount
+  amount      Decimal       @db.Decimal(18, 2)
+  currency    String        @default("TRY")
+  description String
+  createdAt   DateTime      @default(now())
+
+  sale    Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([paymentId, account])
+  @@index([saleId, account, createdAt])
 }
 
 model AuditLog {
