@@ -29,7 +29,10 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Migration parity
+        run: npm run db:migration:check
 
       - name: Lint
         run: npm run lint
