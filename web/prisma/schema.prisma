@@ -438,6 +438,11 @@ model Sale {
   status     SaleStatus @default(ACIK)
   closedAt   DateTime?
   note       String?
+  commissionRate     Decimal? @db.Decimal(7, 4)
+  grossCommission   Decimal? @db.Decimal(18, 2)
+  officeShareRate   Decimal? @db.Decimal(7, 4)
+  officeShare       Decimal? @db.Decimal(18, 2)
+  consultantShare   Decimal? @db.Decimal(18, 2)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
