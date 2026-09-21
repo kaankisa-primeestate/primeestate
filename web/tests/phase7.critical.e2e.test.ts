@@ -314,8 +314,9 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     "POST",
   );
   await expectStatus(offerResponse, 201, "offerResponse");
-  const offerPayload = await json<{ offer: { id: string; status: string } }>(offerResponse);
+  const offerPayload = await json<{ offer: { id: string; status: string; listing: { id: string } } }>(offerResponse);
   assert.equal(offerPayload.offer.status, "TASLAK");
+  assert.equal(offerPayload.offer.listing.id, listingPayload.listing.id, "Offer must retain the listing selected by the test.");
 
   // 7. Accept offer
   for (const status of ["SUNULDU", "KARSILIKLI_TEKLIF", "KABUL"] as const) {
@@ -340,7 +341,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
-  assert.equal(salePayload.sale.listingId, listingPayload.listing.id);
+  assert.equal(salePayload.sale.listingId, offerPayload.offer.listing.id, "Sale must retain the listing linked to the accepted offer.");
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
 
