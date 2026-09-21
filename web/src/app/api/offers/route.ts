@@ -2,14 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { customerReadScope, hasCapability } from "@/lib/authorization";
 
 const OFFER_STATUSES = ["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"] as const;
 
@@ -25,11 +18,7 @@ export async function GET(request: Request) {
     where: {
       ...(customerId ? { customerId } : {}),
       ...(status && OFFER_STATUSES.includes(status as (typeof OFFER_STATUSES)[number]) ? { status: status as never } : {}),
-      customer: {
-        organizationId: context.organizationId,
-        officeId: context.officeId,
-        ...customerScope(context),
-      },
+      customer: customerReadScope(context),
     },
     include: {
       customer: { select: { id: true, name: true, ownerUserId: true } },
@@ -55,6 +44,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+
+  if (!hasCapability(context, "operations:write")) return NextResponse.json({ message: "Teklif oluşturma yetkiniz yok." }, { status: 403 });
 
   let body: {
     customerId?: unknown;
@@ -82,12 +73,7 @@ export async function POST(request: Request) {
   }
 
   const customer = await prisma.customer.findFirst({
-    where: {
-      id: customerId,
-      organizationId: context.organizationId,
-      officeId: context.officeId,
-      ...customerScope(context),
-    },
+    where: { id: customerId, ...customerReadScope(context) },
     select: { id: true },
   });
   if (!customer) return NextResponse.json({ message: "Bu müşteri için teklif oluşturma yetkiniz yok." }, { status: 403 });
