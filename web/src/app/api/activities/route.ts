@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       id: customerId,
       organizationId: context.organizationId,
       officeId: context.officeId,
-      ...customerScope(context),
+      ...customerOwnershipScope(context),
     },
     select: { id: true, ownerUserId: true },
   });
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     });
     if (!owner) return NextResponse.json({ message: "Geçerli bir sorumlu danışman bulunamadı." }, { status: 400 });
     ownerUserId = owner.id;
-  } else if (!MANAGER_ROLES.has(context.role) && ownerUserId !== customer.ownerUserId) {
+  } else if (!isManagerRole(context.role) && ownerUserId !== customer.ownerUserId) {
     return NextResponse.json({ message: "Bu müşterinin aktivitesi yalnızca sorumlu danışman tarafından oluşturulabilir." }, { status: 403 });
   }
 
