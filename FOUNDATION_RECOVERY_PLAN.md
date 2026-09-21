@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: 01cf5c99e8308c134875e1aeb6c707f6824813dc
+> Base main: 51001ae67e7ae355f522b972a2136906a46eb9ae
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -66,18 +66,23 @@
 - [ ] Broad API contract test suite.
 - Note: remaining Phase 4 work is intentionally deferred.
 
-## Phase 5 — Runtime & route protection — ACTIVE
-- [ ] Add centralized page/route authentication guard.
-- [ ] Add role-aware route protection.
-- [ ] Verify Better Auth session behavior.
-- [ ] Verify unauthenticated redirect behavior.
-- [ ] Verify authenticated-but-unauthorized behavior.
-- [ ] Verify production route manifest checks remain green.
+## Phase 5 — Runtime & route protection — COMPLETE
+- [x] Add centralized page/route authentication guard.
+- [x] Add role-aware route protection.
+- [x] Verify Better Auth session behavior.
+- [x] Verify unauthenticated redirect behavior.
+- [x] Verify authenticated-but-unauthorized behavior.
+- [x] Verify production route manifest checks remain green.
+- [x] Web Quality #456 green on merged main.
+- [x] Production Auth Smoke #48 green on merged main.
 
-## Phase 6 — Test foundation — INITIAL SLICE COMPLETE
+## Phase 6 — Test foundation — ACTIVE
+### Completed initial slice
 - [x] Add Node built-in test runner and `npm test`.
 - [x] Run tests in Web Quality CI.
 - [x] Add authorization matrix/unit coverage for core authz policy.
+
+### Remaining active scope
 - [ ] Add integration tests for critical API routes.
 - [ ] Add authorization matrix integration tests.
 - [ ] Add tenant isolation tests.
@@ -121,4 +126,4 @@
 - [ ] Foundation declared ready for new product feature development.
 
 ## Next action
-Phase 5: runtime & route protection. Do not start product feature development in parallel.
+Phase 6: integration / tenant isolation / business invariant tests. Do not start product feature development in parallel.
