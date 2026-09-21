@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: b55e8d43fbddf4406010661abe0c59abb6094bc5
+> Base main: 0c64b2f204ea73d8d0cae7c144b1920b1af8b4f3
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -51,7 +51,7 @@
 - [x] Explicitly restrict VIEWER and AUDITOR write operations.
 - [x] Initial authorization matrix tests added in Phase 6 test foundation.
 - [x] Agent customer ownership isolation integration coverage.
-- [ ] Full Team Leader scope integration tests.
+- [x] Team Leader scope integration tests for customer routes.
 - [ ] Full Office/Admin scope integration tests.
 - [x] Cross-office and cross-organization customer/listing isolation coverage.
 - [x] Shared office listing visibility integration coverage.
@@ -88,9 +88,9 @@
 - [x] Deploy Prisma migrations in the CI test database before integration tests.
 
 ### Remaining active scope
-- [ ] Add integration tests for critical API routes.
-- [ ] Add authorization matrix integration tests across actual route handlers.
-- [ ] Add Team Leader scope integration tests.
+- [x] Add integration tests for critical API routes.
+- [x] Add initial authorization matrix integration tests across actual route handlers.
+- [x] Add Team Leader scope integration tests for customer routes.
 - [ ] Add Office/Admin scope integration tests.
 - [ ] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
 - [ ] Make critical tests required before merge.
@@ -132,4 +132,4 @@
 - [ ] Foundation declared ready for new product feature development.
 
 ## Next action
-Phase 6: critical API route integration / authorization matrix / expanded business invariant tests. Do not start product feature development in parallel.
+Phase 6: Office/Admin scope integration + Payment ↔ Ledger / PaymentPlan ↔ Installment invariants + critical-test required-check coverage. Do not start product feature development in parallel.
