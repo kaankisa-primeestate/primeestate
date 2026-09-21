@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -7,8 +8,8 @@ import { can, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "activities", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "activities", "read")) return forbidden();
 
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
@@ -47,8 +48,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "activities", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "activities", "create")) return forbidden();
 
   let body: {
     customerId?: unknown;
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 });
+    return validationError("Geçersiz JSON.");
   }
 
   const customerId = typeof body.customerId === "string" ? body.customerId.trim() : "";
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
 
   const validTypes = new Set(["ARAMA", "WHATSAPP", "EMAIL", "NOT", "GOSTERIM", "TEKLIF"]);
   if (!customerId || !summary || !validTypes.has(type)) {
-    return NextResponse.json({ message: "Müşteri, aktivite tipi ve özet zorunludur." }, { status: 400 });
+    return validationError("Müşteri, aktivite tipi ve özet zorunludur.");
   }
 
   const customer = await prisma.customer.findFirst({
