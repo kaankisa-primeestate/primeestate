@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { hasCapability, listingReadScope } from "@/lib/authorization";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
@@ -17,8 +18,7 @@ export async function GET(request: Request) {
 
   const listings = await prisma.listing.findMany({
     where: {
-      organizationId: context.organizationId,
-      officeId: context.officeId,
+      ...listingReadScope(context),
       ...(q ? { OR: [
         { code: { contains: q, mode: "insensitive" } },
         { title: { contains: q, mode: "insensitive" } },
@@ -47,6 +47,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+
+  if (!hasCapability(context, "listings:write")) return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ message: "Geçersiz istek." }, { status: 400 });
