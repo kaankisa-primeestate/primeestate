@@ -99,6 +99,17 @@ export function customerOwnershipScope(context: AuthorizationContext) {
   return { ownerUserId: context.userId };
 }
 
+export function canAssignCustomerOwner(
+  context: AuthorizationContext,
+  ownerTeamId: string | null,
+): boolean {
+  if (isManagerRole(context.role)) return true;
+  if (context.role === "TEAM_LEADER") {
+    return Boolean(context.teamId && ownerTeamId === context.teamId);
+  }
+  return false;
+}
+
 export function officeListingScope(context: AuthorizationContext) {
   return {
     organizationId: context.organizationId,
