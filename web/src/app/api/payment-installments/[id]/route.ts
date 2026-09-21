@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { if (!can(context.role, "installments", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { if (!can(context.role, "installments", "update")) return forbidden(); } catch { return forbidden(); }
   const { id } = await params;
   let body: { status?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
