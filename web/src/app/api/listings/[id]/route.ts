@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, isManagerRole, officeListingScope } from "@/lib/authz";
@@ -8,9 +9,9 @@ const PURPOSES = ["SATILIK", "KIRALIK"] as const;
 const STATUSES = ["AKTIF", "REZERVE", "PASIF", "SATILDI", "KIRALANDI"] as const;
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
   try {
-    if (!can(context.role, "listings", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "listings", "read")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -24,15 +25,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       _count: { select: { matches: true, showings: true, offers: true } },
     },
   });
-  if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
+  if (!listing) return notFound("Portföy bulunamadı.");
   return NextResponse.json({ listing });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
   try {
-    if (!can(context.role, "listings", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "listings", "update")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
   }
