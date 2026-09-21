@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -8,8 +9,8 @@ const OFFER_STATUSES = ["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDD
 
 export async function GET(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "offers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "offers", "read")) return forbidden();
 
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
@@ -48,8 +49,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "offers", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "offers", "create")) return forbidden();
 
   let body: {
     customerId?: unknown;
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 });
+    return validationError("Geçersiz JSON.");
   }
 
   const customerId = typeof body.customerId === "string" ? body.customerId.trim() : "";
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
   const offeredAt = typeof body.offeredAt === "string" && body.offeredAt.trim() ? new Date(body.offeredAt) : new Date();
 
   if (!customerId || !listingId || !Number.isFinite(amount) || amount <= 0 || Number.isNaN(offeredAt.getTime())) {
-    return NextResponse.json({ message: "Müşteri, portföy, geçerli teklif tutarı ve tarih zorunludur." }, { status: 400 });
+    return validationError("Müşteri, portföy, geçerli teklif tutarı ve tarih zorunludur.");
   }
 
   const customer = await prisma.customer.findFirst({
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
     },
     select: { id: true },
   });
-  if (!listing) return NextResponse.json({ message: "Geçerli bir aktif ofis portföyü bulunamadı." }, { status: 400 });
+  if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
 
   const offer = await prisma.offer.create({
     data: {
