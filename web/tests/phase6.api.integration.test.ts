@@ -49,7 +49,7 @@ async function createUser(
   organizationId: string,
   officeId: string,
   teamId: string | null,
-  role: "AGENT" | "TEAM_LEADER" | "VIEWER",
+  role: "ORG_ADMIN" | "OFFICE_ADMIN" | "AGENT" | "TEAM_LEADER" | "VIEWER",
   suffix: string,
 ): Promise<TestUser> {
   const context = await auth.$context;
@@ -106,6 +106,8 @@ async function createFixture(): Promise<Fixture> {
     data: { officeId: office.id, name: `API Team ${suffix}` },
   });
 
+  const orgAdmin = await createUser(organization.id, office.id, null, "ORG_ADMIN", `org-admin-${suffix}`);
+  const officeAdmin = await createUser(organization.id, office.id, null, "OFFICE_ADMIN", `office-admin-${suffix}`);
   const agent1 = await createUser(organization.id, office.id, team.id, "AGENT", `one-${suffix}`);
   const agent2 = await createUser(organization.id, office.id, team.id, "AGENT", `two-${suffix}`);
   const teamLeader = await createUser(
@@ -135,6 +137,8 @@ async function createFixture(): Promise<Fixture> {
   });
 
   return {
+    orgAdmin,
+    officeAdmin,
     agent1,
     agent2,
     teamLeader,
@@ -275,4 +279,33 @@ test("Phase 6 API: VIEWER is denied write access by actual route handlers", asyn
     const response = await api(path, { cookie, method: "POST", body });
     assert.equal(response.status, 403, `${path} should deny VIEWER writes`);
   }
+});
+
+
+test("Phase 6 API: OFFICE_ADMIN sees all customer owners within its office", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.officeAdmin);
+
+  const response = await api("/api/customers", { cookie });
+  assert.equal(response.status, 200);
+
+  const payload = (await response.json()) as { customers: Array<{ id: string }> };
+  assert.deepEqual(
+    new Set(payload.customers.map((customer) => customer.id)),
+    new Set([fixture.customer1Id, fixture.customer2Id]),
+  );
+});
+
+test("Phase 6 API: ORG_ADMIN follows the current office-scoped customer route contract", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.orgAdmin);
+
+  const response = await api("/api/customers", { cookie });
+  assert.equal(response.status, 200);
+
+  const payload = (await response.json()) as { customers: Array<{ id: string }> };
+  assert.deepEqual(
+    new Set(payload.customers.map((customer) => customer.id)),
+    new Set([fixture.customer1Id, fixture.customer2Id]),
+  );
 });
