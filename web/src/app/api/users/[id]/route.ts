@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
@@ -54,12 +55,7 @@ export async function PATCH(
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
-    return NextResponse.json(
-      { message: "Kullanıcı yönetimi yetkiniz yok." },
-      { status: 403 },
-    );
-  }
+  assertCan(context, "users", "create");
 
   const { id } = await params;
   const existing = await prisma.user.findFirst({
