@@ -450,10 +450,52 @@ model Sale {
   listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
   payments Payment[]
+  paymentPlan PaymentPlan?
+  installments PaymentInstallment[]
   ledgerEntries LedgerEntry[]
 
   @@index([customerId, status])
   @@index([listingId, status])
+}
+
+model PaymentPlan {
+  id         String   @id @default(uuid())
+  saleId     String   @unique
+  title      String
+  currency   String   @default("TRY")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sale         Sale                @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  installments PaymentInstallment[]
+
+  @@index([saleId])
+}
+
+model PaymentInstallment {
+  id         String            @id @default(uuid())
+  planId     String
+  saleId     String
+  sequence   Int
+  amount     Decimal           @db.Decimal(18, 2)
+  currency   String            @default("TRY")
+  dueAt      DateTime
+  status     InstallmentStatus @default(BEKLIYOR)
+  note       String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  plan     PaymentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  sale     Sale        @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, sequence])
+  @@index([saleId, dueAt, status])
+}
+
+enum InstallmentStatus {
+  BEKLIYOR
+  ODENDI
+  IPTAL
 }
 
 model Payment {
