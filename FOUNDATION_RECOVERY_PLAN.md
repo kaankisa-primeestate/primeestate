@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: 51001ae67e7ae355f522b972a2136906a46eb9ae
+> Base main: b55e8d43fbddf4406010661abe0c59abb6094bc5
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -50,11 +50,11 @@
 - [x] Define read/create/update/delete/manage permissions.
 - [x] Explicitly restrict VIEWER and AUDITOR write operations.
 - [x] Initial authorization matrix tests added in Phase 6 test foundation.
-- [ ] Full Agent isolation integration tests.
+- [x] Agent customer ownership isolation integration coverage.
 - [ ] Full Team Leader scope integration tests.
 - [ ] Full Office/Admin scope integration tests.
-- [ ] Full cross-organization isolation integration tests.
-- [ ] Full shared office listing visibility integration tests.
+- [x] Cross-office and cross-organization customer/listing isolation coverage.
+- [x] Shared office listing visibility integration coverage.
 
 ## Phase 4 — API contract & error handling
 - [x] Create shared API response helpers.
@@ -77,16 +77,22 @@
 - [x] Production Auth Smoke #48 green on merged main.
 
 ## Phase 6 — Test foundation — ACTIVE
-### Completed initial slice
+### Completed
 - [x] Add Node built-in test runner and `npm test`.
 - [x] Run tests in Web Quality CI.
 - [x] Add authorization matrix/unit coverage for core authz policy.
+- [x] Add database-backed integration coverage for agent customer ownership isolation.
+- [x] Add cross-office and cross-organization isolation coverage.
+- [x] Add shared office listing visibility coverage.
+- [x] Add Sale ↔ accepted Offer ↔ Listing uniqueness invariant coverage.
+- [x] Deploy Prisma migrations in the CI test database before integration tests.
 
 ### Remaining active scope
 - [ ] Add integration tests for critical API routes.
-- [ ] Add authorization matrix integration tests.
-- [ ] Add tenant isolation tests.
-- [ ] Add database/business invariant tests.
+- [ ] Add authorization matrix integration tests across actual route handlers.
+- [ ] Add Team Leader scope integration tests.
+- [ ] Add Office/Admin scope integration tests.
+- [ ] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
 - [ ] Make critical tests required before merge.
 
 ## Phase 7 — Critical E2E business chain
@@ -126,4 +132,4 @@
 - [ ] Foundation declared ready for new product feature development.
 
 ## Next action
-Phase 6: integration / tenant isolation / business invariant tests. Do not start product feature development in parallel.
+Phase 6: critical API route integration / authorization matrix / expanded business invariant tests. Do not start product feature development in parallel.
