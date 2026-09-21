@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, officeListingScope } from "@/lib/authz";
+import { can, customerOwnershipScope, officeListingScope } from "@/lib/authz";
 
 const OFFER_STATUSES = ["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"] as const;
 
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "offers", "read");
+  if (!can(context.role, "offers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "offers", "create");
+  if (!can(context.role, "offers", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   let body: {
     customerId?: unknown;
