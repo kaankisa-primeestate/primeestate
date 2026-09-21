@@ -9,6 +9,8 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "CURRENT_STATE.md"
+      - "FOUNDATION_RECOVERY_PLAN.md"
       - ".github/workflows/primeestate-web-quality.yml"
       - ".github/workflows/production-auth-smoke.yml"
 
