@@ -11,6 +11,12 @@ export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
+  try {
+    assertCan(context, "listings", "read");
+  } catch {
+    return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   const purpose = searchParams.get("purpose")?.trim();
@@ -18,8 +24,7 @@ export async function GET(request: Request) {
 
   const listings = await prisma.listing.findMany({
     where: {
-      organizationId: context.organizationId,
-      officeId: context.officeId,
+      ...officeListingScope(context),
       ...(q ? { OR: [
         { code: { contains: q, mode: "insensitive" } },
         { title: { contains: q, mode: "insensitive" } },
