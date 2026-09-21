@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import type { UserRole } from "@/lib/authz";
 import { canAccessPageRole, isPublicPagePath, requiredRoleForPage } from "@/lib/route-access";
 
 export async function proxy(request: NextRequest) {
@@ -19,9 +20,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const requirement = requiredRoleForPage(pathname);
-  const role = typeof session.user.role === "string" ? session.user.role : null;
+  const role =
+    typeof session.user.role === "string"
+      ? (session.user.role as UserRole)
+      : null;
 
-  if (!canAccessPageRole(role as Parameters<typeof canAccessPageRole>[0], requirement)) {
+  if (!canAccessPageRole(role, requirement)) {
     return NextResponse.redirect(new URL("/forbidden", request.url));
   }
 
