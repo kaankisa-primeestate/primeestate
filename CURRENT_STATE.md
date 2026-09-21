@@ -1,171 +1,97 @@
 # PrimeEstate — CURRENT STATE
 
-> Bu dosya projenin oturumlar arası devralma kaydıdır. Yeni bir oturum başlamadan önce GitHub'daki güncel branch/PR/CI durumu ile birlikte kontrol edilmelidir.
+> Oturumlar arası devralma kaydıdır. Her yeni oturumda bu dosya GitHub'daki gerçek main/branch/PR/CI durumu ile karşılaştırılır.
 
 ## 1. Proje
 PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Operating System / SaaS platformudur.
 
-Ana prensip: **TEK VERİ, ÇOK FONKSİYON**
+**Ana prensip:** TEK VERİ, ÇOK FONKSİYON
 
 - Ana geliştirme repo: `kaankisa-primeestate/primeestate`
 - Canlı/referans repo: `kaankisa-primeestate/remax-CRM`
 - `remax-CRM` canlı sistemdir; değiştirilmez.
 - PrimeEstate ana geliştirme tabanıdır.
 
-## 2. Mimari temel
+## 2. Mimari
 - Next.js + React + TypeScript
 - Prisma + PostgreSQL/Neon
 - Better Auth
 - Multi-tenant
 - Responsive / mobile-first
 - API seviyesinde tenant + role scope
-- AI provider bağımsız mimari hedefi
+- AI provider bağımsız mimari
 
 ## 3. Yetki modeli
 - Agent: kendi müşterileri
 - Team Leader: kendi ekibinin müşterileri
 - Office/Admin: ofis kapsamındaki müşteri verileri
 - Ofis portföy havuzu: danışmanlar arasında ortak
-- Frontend gizleme tek başına yetki kontrolü değildir; API/backend scope zorunludur.
+- Yetkilendirme frontend'e bırakılmaz; API/backend scope zorunludur.
 - AI kullanıcı yetkilerini aşamaz.
 
-## 4. Tamamlanan işler
+## 4. Doğrulanmış main durumu — 21.09.2026
+Son main commit:
+`a4d7f2ed1f9f495b51b22fe4f5fb3149ca6d2992`
 
-### Foundation
-- PostgreSQL / Prisma altyapısı
-- Better Auth
-- tenant context
-- kullanıcı rolleri
-- admin bootstrap
-- kontrollü password reset
-- production build hardening
-- CI kalite workflow'u
+PR #43 (Finance V7) main'e merge edilmiş durumda.
 
-### Customer API V1 — PR #6
-Merge edildi.
-- GET /api/customers
-- POST /api/customers
-- GET /api/customers/[id]
-- tenant scope
-- agent/team leader/manager yetki kapsamları
-- audit log
+PR #44 — **CRM V8: activate visible workspace and live dashboard**
+- Branch: `crm/visible-workspace-v8`
+- Son CI: workflow #261
+- Son CI sonucu: **success**
+- Lint: success
+- Typecheck: success
+- Production build: success
+- PR #44: **merge edildi**
+- Merge commit: `a4d7f2ed1f9f495b51b22fe4f5fb3149ca6d2992`
 
-### Clients / CRM — PR #7
-Merge edildi.
-- gerçek DB müşterileri
-- arama ve rol filtreleri
-- loading/error durumları
-- yeni müşteri oluşturma
-- seed veri kaldırıldı
+V8 ile:
+- Dashboard gerçek CRM API verilerine bağlandı.
+- Müşteri / aktif portföy / açık görev / açık fırsat sayıları görünür hale geldi.
+- CRM Akış Merkezi görünür hale geldi.
+- Müşteri → Talep → Eşleşme → Gösterim → Teklif → Satış → Komisyon → Tahsilat akışı ekrana taşındı.
+- CRM Akış Merkezi ve Finans navigasyona eklendi.
+- Son aktif portföyler ve son hareketler dashboard'da görünür hale geldi.
 
-### Customer Demand V1 — PR #8
-Merge edildi.
-- POST /api/customers/[id]/demands
-- müşteri-talep ilişkisi
-- talep tipi / gayrimenkul tipi
-- lokasyon
-- bütçe
-- m²
-- oda
-- öncelik
-- notlar
-- audit log
-
-## 5. Son aktif iş — Portfolio Real Data V1
-
+## 5. Şu anki aktif iş — CRM V9
 Branch:
-`crm/portfolio-real-data-v1`
+`crm/dashboard-quick-actions-v9`
 
 PR:
-#9 — CRM V1: connect portfolio screen to real listings
+**#45 — CRM V9: add dashboard quick actions and live refresh**
 
-Son bilinen commit:
-`4c2f5e1776c9c007b81128640195283c310789f3`
+PR #45 durumu: **Açık**
+Head commit:
+`6107ed33c2403928db506b5f00b052c1602cb24c`
 
-Bu işte:
-- `GET /api/listings` oluşturuldu.
-- Portföy ekranı seed veriden çıkarıldı.
-- Gerçek Property + Listing verisine bağlandı.
-- arama
-- Satılık/Kiralık filtreleri
-- gayrimenkul tipi filtreleri
-- loading/error/empty states
-- danışman bilgileri
-- match/showing/offer sayıları
-- ofis ortak portföy havuzu
+Bu dikey dilimde:
+- Dashboard'a görünür Hızlı Aksiyonlar eklendi.
+- Yeni Müşteri
+- Yeni Portföy
+- Eşleştirme
+- CRM Akış Merkezi
+- Dashboard 30 saniyede bir otomatik yenileniyor.
+- Son başarılı güncelleme zamanı gösteriliyor.
+- Manuel yenileme korunuyor.
+- Mevcut scoped API'ler korunuyor.
 
-**Güncel doğrulama:** PR #9, 20.09.2026 tarihinde CI başarılı olduktan sonra merge edildi. Merge commit: `3b486045e96dd16472d24e5a65f8ba306f0683ed`.
+**CI durumu:** PR #45 için henüz doğrulanmış workflow sonucu alınmadı. CI yeşil olmadan merge edilmeyecek.
 
-## 6. Şu anki aktif iş — Matching Engine V1
+## 6. Sonraki hedef
+V9 tamamlandıktan sonra dashboard/CRM operasyon döngüsü doğrulanacak:
 
-Branch:
-`crm/matching-engine-v1`
+1. Yeni müşteri oluştur
+2. Dashboard'a yansımasını doğrula
+3. Yeni portföy oluştur
+4. Dashboard'a yansımasını doğrula
+5. Talep oluştur
+6. Eşleştirme ekranında görünmesini doğrula
+7. Gösterim → Teklif → Satış → Komisyon → Tahsilat zincirini doğrula
+8. Yetki kapsamını Agent / Team Leader / Office seviyelerinde doğrula
 
-PR:
-#10 — CRM V1: deterministic matching engine
+Amaç: **arka planda çalışan veri değil, kullanıcının ekranda anında görebildiği gerçek operasyon.**
 
-Durum: **Açık / Draft / CI çalışıyor**
-
-İlk dikey dilim gerçek tenant-scoped Customer + Demand + Listing verisini kullanacak şekilde geliştirildi.
-
-Tamamlanan bu dilimde:
-- deterministic 0–100 skor
-- kategori %20
-- lokasyon %25
-- bütçe %20
-- m² %10
-- temel özellikler %15
-- tercihler %5
-- uygunluk %5
-- `mustNotHave` için güçlü negatif ceza
-- eşleşme nedenleri ve karşılanmayan kriterler
-- `Match` kayıtlarının persist edilmesi
-- matching workspace'in mock veriden gerçek API'ye bağlanması
-
-CI yeşil olmadan PR #10 merge edilmeyecek.
-
-## 7. Sonraki iş
-Matching Engine V1 tamamlandıktan sonra:
-
-**Sales Operations — gerçek veri bağlantısı**
-
-İlk versiyon deterministic/rule-based olacaktır.
-
-Önerilen ağırlıklar:
-- Kategori %20
-- Lokasyon %25
-- Bütçe %20
-- m² %10
-- Temel özellikler %15
-- Tercihler %5
-- Zaman/aciliyet %5
-
-Çıktı:
-- 0–100 skor
-- eşleşen kriterler
-- karşılanmayan kriterler
-- eşleşme nedenleri
-- must-not-have için güçlü negatif etki
-
-İlk hedef:
-**TALEP → UYGUN PORTFÖYLER**
-
-AI ilk aşamada skorlamayı yapmayacak. Deterministik motor kurulduktan sonra AI açıklama/özet/öneri katmanı olarak eklenecek.
-
-## 8. Çalışma disiplini
-Her geliştirme:
-1. Mevcut main/branch/PR/CI durumu doğrulanır.
-2. Tek bir küçük dikey dilim seçilir.
-3. Ayrı branch açılır.
-4. Kodlanır.
-5. lint + typecheck + build çalıştırılır.
-6. CI sonucu kontrol edilir.
-7. PR oluşturulur.
-8. CI yeşil olmadan merge edilmez.
-9. Merge sonrası main doğrulanır.
-10. Bu dosya güncellenir.
-
-## 9. Kırmızı çizgiler
+## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
 - Secret/connection string kullanıcıdan istenmez.
 - Tahmin edilen durum gerçek durum gibi sunulmaz.
@@ -173,10 +99,20 @@ Her geliştirme:
 - Yetkilendirme frontend'e bırakılmaz.
 - Modüller bağımsız ada şeklinde tasarlanmaz.
 - Çalışan özellikler gereksiz yere kırılmaz.
-- AI kritik alanları izinsiz değiştiremez.
+- CI yeşil olmadan merge edilmez.
 
-## 10. Yeni oturum başlangıç komutu
+## 8. Çalışma disiplini
+1. main/branch/PR/CI doğrulanır.
+2. Tek bir küçük dikey dilim seçilir.
+3. Ayrı branch açılır.
+4. Kodlanır.
+5. lint + typecheck + build CI'da doğrulanır.
+6. PR açılır.
+7. CI yeşil olmadan merge edilmez.
+8. Merge sonrası main tekrar doğrulanır.
+9. CURRENT_STATE.md güncellenir.
 
+## 9. Yeni oturum başlangıç komutu
 ```
 PrimeEstate'i devral. Önce CURRENT_STATE.md dosyasını ve GitHub'daki güncel main, branch, PR ve CI durumunu kontrol et. Bu kayıttaki bilgileri tahmin olarak değil, GitHub'dan doğrulanmış gerçek durumla karşılaştır. Fark varsa belirt. Son tamamlanmamış işten devam et. Canlı remax-CRM reposuna dokunma. Tek bir doğrulanabilir dikey dilim üzerinde çalış; CI yeşil olmadan merge etme. Oturum sonunda CURRENT_STATE.md dosyasını güncelle.
 ```
