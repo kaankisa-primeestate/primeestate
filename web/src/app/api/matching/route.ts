@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { customerReadScope, hasCapability, listingReadScope } from "@/lib/authorization";
 import { calculateMatch } from "@/core/matching-engine";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 
 async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
   const demand = await prisma.demand.findFirst({
@@ -12,13 +11,7 @@ async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnTy
       id,
       active: true,
       customer: {
-        organizationId: context.organizationId,
-        officeId: context.officeId,
-        ...(MANAGER_ROLES.has(context.role)
-          ? {}
-          : context.role === "TEAM_LEADER" && context.teamId
-            ? { owner: { teamId: context.teamId } }
-            : { ownerUserId: context.userId }),
+        ...customerReadScope(context),
       },
     },
     include: {
@@ -31,6 +24,7 @@ async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnTy
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "operations:write")) return NextResponse.json({ message: "Eşleştirme çalıştırma yetkiniz yok." }, { status: 403 });
 
   let body: { demandId?: unknown; limit?: unknown };
   try { body = await request.json(); }
@@ -47,8 +41,7 @@ export async function POST(request: Request) {
 
   const listings = await prisma.listing.findMany({
     where: {
-      organizationId: context.organizationId,
-      officeId: context.officeId,
+      ...listingReadScope(context),
       status: "AKTIF",
       ...(demand.type === "SATIN_ALMA" ? { purpose: "SATILIK" } : { purpose: "KIRALIK" }),
     },
