@@ -1,0 +1,35 @@
+name: Foundation State Validation
+
+on:
+  pull_request:
+    paths:
+      - "CURRENT_STATE.md"
+      - "FOUNDATION_RECOVERY_PLAN.md"
+      - ".github/workflows/foundation-state-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-state:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate foundation state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f CURRENT_STATE.md
+          test -f FOUNDATION_RECOVERY_PLAN.md
+
+          grep -Fq "Phase 5 — Runtime & Route Protection" CURRENT_STATE.md
+          grep -Fq "**Phase 6 — Integration / Tenant Isolation / Business Invariant Tests**" CURRENT_STATE.md
+          grep -Fq "Phase 5 — Runtime & route protection — COMPLETE" FOUNDATION_RECOVERY_PLAN.md
+          grep -Fq "Phase 6 — Test foundation — ACTIVE" FOUNDATION_RECOVERY_PLAN.md
+          grep -Fq "Phase 6: integration / tenant isolation / business invariant tests." FOUNDATION_RECOVERY_PLAN.md
+
+          echo "Foundation state validation passed."
