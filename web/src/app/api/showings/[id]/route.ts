@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
+import { customerReadScope, hasCapability } from "@/lib/authorization";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "operations:write")) return NextResponse.json({ message: "Operasyon kaydı oluşturma veya düzenleme yetkiniz yok." }, { status: 403 });
   const { id } = await params;
   const showing = await prisma.showing.findFirst({
     where: { id, customer: { organizationId: context.organizationId, officeId: context.officeId, ...(context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN" || context.role === "OFFICE_ADMIN" ? {} : context.role === "TEAM_LEADER" && context.teamId ? { owner: { teamId: context.teamId } } : { ownerUserId: context.userId }) } },
