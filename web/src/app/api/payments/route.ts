@@ -14,14 +14,13 @@ function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Pr
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!hasCapability(context, "finance:write")) return NextResponse.json({ message: "Tahsilat oluşturma yetkiniz yok." }, { status: 403 });
   if (!hasCapability(context, "finance:read")) return NextResponse.json({ message: "Finans kayıtlarını görüntüleme yetkiniz yok." }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const saleId = searchParams.get("saleId")?.trim();
   const payments = await prisma.payment.findMany({
     where: {
       ...(saleId ? { saleId } : {}),
-      sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+      sale: saleScope(context),
     },
     include: { ledgerEntries: true, sale: { select: { id: true, amount: true, currency: true, customer: { select: { id: true, name: true } }, listing: { select: { code: true, title: true } } } } },
     orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
@@ -33,6 +32,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "finance:write")) return NextResponse.json({ message: "Tahsilat oluşturma yetkiniz yok." }, { status: 403 });
   let body: { saleId?: unknown; amount?: unknown; currency?: unknown; status?: unknown; paidAt?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const status = body.status === "ODENDI" ? "ODENDI" : body.status === "IPTAL" ? "IPTAL" : "BEKLIYOR";
   if (!saleId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Satış ve pozitif tahsilat tutarı zorunludur." }, { status: 400 });
   const sale = await prisma.sale.findFirst({
-    where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+    where: { id: saleId, status: { not: "IPTAL" }, ...saleScope(context) },
     select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
