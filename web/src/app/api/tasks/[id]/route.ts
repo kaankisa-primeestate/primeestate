@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { assertCan, isManagerRole } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
