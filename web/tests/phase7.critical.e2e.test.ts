@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
-import { writeFile } from "node:fs/promises";
 import net from "node:net";
 import { test, before, after } from "node:test";
 
@@ -341,9 +340,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const salePayload = await json<{
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
-  const dbSale = await prisma.sale.findUnique({ where: { id: salePayload.sale.id }, select: { id: true, offerId: true, listingId: true, amount: true, currency: true } });
-  const dbOffer = await prisma.offer.findUnique({ where: { id: offerPayload.offer.id }, select: { id: true, listingId: true, sale: { select: { id: true, listingId: true } } } });
-  await writeFile("/tmp/phase7-sale-diagnostic.json", JSON.stringify({ listingPayload, offerPayload, salePayload, dbSale, dbOffer }, null, 2));
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   const saleListingId = salePayload.sale.listingId;
   const offerListingId = offerPayload.offer.listing.id;
