@@ -203,7 +203,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(customerResponse.status, 201, await customerResponse.text());
+  assert.equal(customerResponse.status, 201, customerResponse.status === 201 ? undefined : await customerResponse.text());
   const customerPayload = await json<{ customer: { id: string } }>(customerResponse);
   const customerId = customerPayload.customer.id;
 
@@ -226,7 +226,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(demandResponse.status, 201, await demandResponse.text());
+  assert.equal(demandResponse.status, 201, demandResponse.status === 201 ? undefined : await demandResponse.text());
   const demandPayload = await json<{ demand: { id: string } }>(demandResponse);
   const demandId = demandPayload.demand.id;
 
@@ -249,7 +249,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(listingResponse.status, 201, await listingResponse.text());
+  assert.equal(listingResponse.status, 201, listingResponse.status === 201 ? undefined : await listingResponse.text());
   const listingPayload = await json<{ listing: { id: string; propertyId: string; status: string } }>(listingResponse);
   assert.equal(listingPayload.listing.status, "AKTIF");
 
@@ -260,7 +260,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { demandId, limit: 10 },
     "POST",
   );
-  assert.equal(matchingResponse.status, 200, await matchingResponse.text());
+  assert.equal(matchingResponse.status, 200, matchingResponse.status === 200 ? undefined : await matchingResponse.text());
   const matchingPayload = await json<{ matches: Array<{ listingId: string; score: number }> }>(matchingResponse);
   assert.ok(matchingPayload.matches.some((match) => match.listingId === listingPayload.listing.id));
   assert.ok((matchingPayload.matches.find((match) => match.listingId === listingPayload.listing.id)?.score ?? 0) > 0);
@@ -278,7 +278,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(showingResponse.status, 201, await showingResponse.text());
+  assert.equal(showingResponse.status, 201, showingResponse.status === 201 ? undefined : await showingResponse.text());
 
   // 6. Offer
   const offerResponse = await api(
@@ -294,7 +294,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(offerResponse.status, 201, await offerResponse.text());
+  assert.equal(offerResponse.status, 201, offerResponse.status === 201 ? undefined : await offerResponse.text());
   const offerPayload = await json<{ offer: { id: string; status: string } }>(offerResponse);
   assert.equal(offerPayload.offer.status, "TASLAK");
 
@@ -306,7 +306,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
       { status },
       "PATCH",
     );
-    assert.equal(response.status, 200, await response.text());
+    assert.equal(response.status, 200, response.status === 200 ? undefined : await response.text());
   }
 
   // 8. Accepted offer -> sale
@@ -316,7 +316,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { offerId: offerPayload.offer.id, note: "Phase 7 E2E satış" },
     "POST",
   );
-  assert.equal(saleResponse.status, 201, await saleResponse.text());
+  assert.equal(saleResponse.status, 201, saleResponse.status === 201 ? undefined : await saleResponse.text());
   const salePayload = await json<{
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
@@ -332,7 +332,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { commissionRate: 3, officeShareRate: 50 },
     "PATCH",
   );
-  assert.equal(commissionResponse.status, 200, await commissionResponse.text());
+  assert.equal(commissionResponse.status, 200, commissionResponse.status === 200 ? undefined : await commissionResponse.text());
   const commissionPayload = await json<{
     sale: { grossCommission: string | number; officeShare: string | number; consultantShare: string | number };
   }>(commissionResponse);
@@ -353,7 +353,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(paymentResponse.status, 201, await paymentResponse.text());
+  assert.equal(paymentResponse.status, 201, paymentResponse.status === 201 ? undefined : await paymentResponse.text());
   const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
   assert.equal(Number(paymentPayload.payment.amount), 1000000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
@@ -374,7 +374,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  assert.equal(planResponse.status, 201, await planResponse.text());
+  assert.equal(planResponse.status, 201, planResponse.status === 201 ? undefined : await planResponse.text());
   const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ sequence: number; amount: string | number }> } }>(planResponse);
   assert.equal(planPayload.plan.currency, "TRY");
   assert.deepEqual(planPayload.plan.installments.map((item) => item.sequence), [1, 2, 3, 4]);
