@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { can, customerOwnershipScope } from "@/lib/authz";
 
 const demandTypes = new Set(["SATIN_ALMA", "KIRALAMA"]);
 const propertyTypes = new Set(["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"]);
@@ -28,7 +28,7 @@ export async function POST(
   const { context, customer } = await getScopedCustomer(id);
 
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "demands", "create");
+  if (!can(context.role, "demands", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   if (!customer) return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
 
   let body: Record<string, unknown>;
