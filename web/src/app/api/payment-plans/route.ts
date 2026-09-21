@@ -2,19 +2,14 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { customerReadScope, hasCapability } from "@/lib/authorization";
 
 export async function GET() {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "finance:read")) return NextResponse.json({ message: "Finans kayıtlarını görüntüleme yetkiniz yok." }, { status: 403 });
   const plans = await prisma.paymentPlan.findMany({
-    where: { sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } } },
+    where: { sale: { customer: customerReadScope(context) } },
     include: {
       installments: { orderBy: { sequence: "asc" } },
       sale: { select: { id: true, amount: true, currency: true, customer: { select: { id: true, name: true } }, listing: { select: { code: true, title: true } } } },
@@ -28,6 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "finance:write")) return NextResponse.json({ message: "Ödeme planı oluşturma yetkiniz yok." }, { status: 403 });
   let body: { saleId?: unknown; title?: unknown; installments?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
@@ -36,7 +32,7 @@ export async function POST(request: Request) {
   if (!saleId || !title || raw.length < 1 || raw.length > 24) return NextResponse.json({ message: "Satış, plan adı ve 1-24 taksit zorunludur." }, { status: 400 });
 
   const sale = await prisma.sale.findFirst({
-    where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+    where: { id: saleId, status: { not: "IPTAL" }, customer: customerReadScope(context) },
     select: { id: true, amount: true, currency: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
