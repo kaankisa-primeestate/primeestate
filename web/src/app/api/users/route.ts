@@ -3,10 +3,9 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { assertCan, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 const ROLE_VALUES = [
   "SUPER_ADMIN",
   "ORG_ADMIN",
@@ -38,7 +37,7 @@ function canManageRole(
 function userScope(
   context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>,
 ) {
-  if (context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN") {
+  if (isManagerRole(context.role)) {
     return { organizationId: context.organizationId };
   }
 
@@ -131,7 +130,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
+  if (!isManagerRole(context.role)) {
     return NextResponse.json(
       { message: "Kullanıcı yönetimi yetkiniz yok." },
       { status: 403 },
