@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
@@ -54,7 +55,7 @@ export async function PATCH(
     );
   }
 
-  if (!can(context.role, "users", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+  if (!can(context.role, "users", "update")) return forbidden();
 
   const { id } = await params;
   const existing = await prisma.user.findFirst({
