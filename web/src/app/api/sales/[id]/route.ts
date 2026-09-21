@@ -88,7 +88,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         const finalListingStatus = sale.listing.purpose === "SATILIK" ? "SATILDI" : "KIRALANDI";
         await tx.listing.update({ where: { id: sale.listingId }, data: { status: finalListingStatus } });
       } else if (cancelling) {
-        await tx.listing.update({ where: { id: sale.listingId, status: "REZERVE" }, data: { status: "AKTIF" } });
+        await tx.listing.updateMany({ where: { id: sale.listingId, status: "REZERVE" }, data: { status: "AKTIF" } });
       }
 
       await tx.auditLog.create({
