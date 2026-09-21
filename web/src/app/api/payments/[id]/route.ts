@@ -2,17 +2,12 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { hasCapability, saleScope } from "@/lib/authorization";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "finance:write")) return NextResponse.json({ message: "Tahsilat düzenleme yetkiniz yok." }, { status: 403 });
   const { id } = await params;
   let body: { status?: unknown; paidAt?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
@@ -20,7 +15,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!status && body.paidAt === undefined && body.note === undefined) return NextResponse.json({ message: "Güncellenecek alan bulunamadı." }, { status: 400 });
 
   const existing = await prisma.payment.findFirst({
-    where: { id, sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } } },
+    where: { id, sale: saleScope(context) },
     include: { sale: { select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true } }, ledgerEntries: true },
   });
   if (!existing) return NextResponse.json({ message: "Tahsilat bulunamadı veya yetkiniz yok." }, { status: 404 });
