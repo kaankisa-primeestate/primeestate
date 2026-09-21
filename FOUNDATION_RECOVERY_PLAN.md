@@ -2,14 +2,15 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: 399a6cd2fc08cde4b28a79d304e61f611fa393a0
+> Base main: bbde12a3891a509a8aea15446b0f2410158915a7
 
 ## Operating rules
 
 - [x] Freeze feature development until foundation gates pass.
 - [x] Never modify kaankisa-primeestate/remax-CRM.
 - [x] One phase at a time; no phase is skipped.
-- [x] Phase 0 completed through implementation -> automated validation review -> PR -> merge -> main verification -> state update.\n- [ ] Every subsequent phase must have: implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
+- [x] Phase 0 completed through implementation -> automated validation review -> PR -> merge -> main verification -> state update.\n- [x] Phase 1 completed with implementation -> automated validation -> PR -> green CI -> merge -> production migration -> runtime smoke -> state reconciliation.
+- [ ] Every subsequent phase must have: implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update.
 - [ ] Production database is never reset as a shortcut.
 - [ ] No new feature work until all P0-P8 gates are green.
 
@@ -18,30 +19,30 @@
 - [x] Record the /api/sales 500 as a runtime symptom, not a frontend root cause.
 - [x] Identify migration/release parity as a critical risk.
 - [x] Create this master checklist.
-- [ ] Verify current main workflow state after PR #46 merge.
-- [ ] Update CURRENT_STATE.md to the foundation recovery baseline.
+- [x] Verify current main workflow state after foundation merges.
+- [x] Update CURRENT_STATE.md to the foundation recovery baseline.
 
 ## Phase 1 — Database / migration integrity
 Goal: code schema, migration history, and deployed database are deterministically aligned.
-- [ ] Inventory every migration in order.
-- [ ] Verify schema.prisma matches the final migration state.
-- [ ] Verify migration history has no drift, gaps, duplicate assumptions, or destructive shortcuts.
-- [ ] Establish a single safe production migration path.
-- [ ] Add CI validation that migration state is deployable.
-- [ ] Add runtime/schema health check without exposing secrets.
-- [ ] Resolve the /api/sales 500 at its database/runtime root.
-- [ ] Verify Sales, Commission, Payment, Ledger, PaymentPlan, Installment schema parity.
+- [x] Inventory every migration in order.
+- [x] Verify schema.prisma matches the final migration state.
+- [x] Verify migration history has no drift, gaps, duplicate assumptions, or destructive shortcuts.
+- [x] Establish a single safe production migration path.
+- [x] Add CI validation that migration state is deployable.
+- [x] Add runtime/schema health check without exposing secrets.
+- [x] Resolve the /api/sales 500 at its database/runtime root.
+- [x] Verify Sales, Commission, Payment, Ledger, PaymentPlan, Installment schema parity.
 
 ## Phase 2 — Data model integrity
 Goal: invalid business relationships become difficult or impossible to persist.
 - [ ] Review tenant/office/team foreign-key consistency.
-- [ ] Harden Sale ↔ Offer ↔ Listing consistency.
-- [ ] Harden Sale ↔ Payment ↔ Ledger consistency.
-- [ ] Remove or constrain redundant PaymentInstallment.saleId relationship if appropriate.
+- [x] Harden Sale ↔ Offer ↔ Listing consistency (accepted-offer validation, one Sale per Listing, atomic listing reservation).
+- [x] Harden Sale ↔ Payment ↔ Ledger consistency (paid-total calculation corrected; settlement commission changes locked).
+- [x] Remove or constrain redundant PaymentInstallment.saleId relationship (derive through PaymentPlan; migration blocks inconsistent legacy rows).
 - [ ] Define deletion policies explicitly.
-- [ ] Define status-transition invariants.
-- [ ] Prevent completed/cancelled sale and listing states from becoming inconsistent.
-- [ ] Define immutable financial facts after settlement where required.
+- [x] Define status-transition invariants for Sale.
+- [x] Prevent completed/cancelled sale and listing states from becoming inconsistent.
+- [x] Define immutable financial facts after settlement where required.
 
 ## Phase 3 — Authorization foundation
 Goal: one centralized policy model used by every protected API.
@@ -123,4 +124,4 @@ Goal: foundation is formally accepted before new feature work.
 - [ ] Foundation declared ready for new feature development.
 
 ## Next action
-Phase 0 is the current gate. Once the main workflow state is verified and CURRENT_STATE.md is reconciled, begin Phase 1. Do not start feature development in parallel.
+Phase 2 is active. The current branch hardens Sale/Listing/Offer and PaymentPlan/Installment integrity. After CI, review the migration and runtime behavior before merge. Do not start feature development in parallel.

@@ -451,11 +451,11 @@ model Sale {
   offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
   payments Payment[]
   paymentPlan PaymentPlan?
-  installments PaymentInstallment[]
   ledgerEntries LedgerEntry[]
 
   @@index([customerId, status])
   @@index([listingId, status])
+  @@unique([listingId])
 }
 
 model PaymentPlan {
@@ -475,7 +475,6 @@ model PaymentPlan {
 model PaymentInstallment {
   id         String            @id @default(uuid())
   planId     String
-  saleId     String
   sequence   Int
   amount     Decimal           @db.Decimal(18, 2)
   currency   String            @default("TRY")
@@ -486,10 +485,8 @@ model PaymentInstallment {
   updatedAt  DateTime          @updatedAt
 
   plan     PaymentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  sale     Sale        @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@unique([planId, sequence])
-  @@index([saleId, dueAt, status])
 }
 
 enum InstallmentStatus {

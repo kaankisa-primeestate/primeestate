@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       const created = await tx.paymentPlan.create({
         data: {
           saleId, title, currency: sale.currency,
-          installments: { create: installments.map((x) => ({ sequence: x.sequence, amount: new Prisma.Decimal(x.amount.toFixed(2)), currency: sale.currency, dueAt: x.dueAt, note: x.note, sale: { connect: { id: sale.id } } })) },
+          installments: { create: installments.map((x) => ({ sequence: x.sequence, amount: new Prisma.Decimal(x.amount.toFixed(2)), currency: sale.currency, dueAt: x.dueAt, note: x.note })) },
         },
         include: { installments: { orderBy: { sequence: "asc" } } },
       });

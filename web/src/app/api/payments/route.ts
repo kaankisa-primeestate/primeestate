@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const payment = await prisma.$transaction(async (tx) => {
       const existingPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId, status: "ODENDI" } });
       const alreadyPaid = existingPaid._sum.amount ?? new Prisma.Decimal(0);
-      const nextPaid = alreadyPaid.add(new Prisma.Decimal(String(amount)));
+      const nextPaid = status === "ODENDI" ? alreadyPaid.add(new Prisma.Decimal(String(amount))) : alreadyPaid;
       if (nextPaid.gt(sale.amount)) throw new Error("Toplam tahsilat satış tutarını aşamaz.");
       if (status === "ODENDI") commissionForPayment(new Prisma.Decimal(String(amount)), sale);
 

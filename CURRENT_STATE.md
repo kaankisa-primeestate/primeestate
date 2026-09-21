@@ -41,7 +41,14 @@ Audit sonucu öne çıkan kritik riskler:
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`399a6cd2fc08cde4b28a79d304e61f611fa393a0`
+`bbde12a3891a509a8aea15446b0f2410158915a7`
+
+PR #48 Phase 1 database/migration integrity merge edildi: `927d6d12508979d22aebc6395678dcf578074fb5`.
+PR #49 production runtime smoke genişletmesi merge edildi: `bbde12a3891a509a8aea15446b0f2410158915a7`.
+Production migration #2 başarıyla çalıştı ve production smoke #31 başarıyla geçti; `/api/sales`, `/api/payments` ve `/api/payment-plans` authenticated smoke kapsamında doğrulandı.
+
+**Aktif phase: Phase 2 — Data model integrity.**
+
 
 PR #46 — **Fix dashboard API response handling**
 - CI #269: **success**
@@ -54,20 +61,14 @@ PR #47 ile foundation recovery baseline merge edildi.\n\nPR #46 ile Dashboard:
 - problemli endpoint/status bilgisini gösteriyor.
 
 ## 5. Mevcut runtime bulgusu
-Production ekranında:
-- Müşteriler: 3
-- Aktif portföy: 1
-- Dashboard verilerinin bir kısmı alınamıyor.
-- Hatalı endpoint: `/api/sales`
-- HTTP: 500
-
-Bu hata frontend parser problemi olarak kapatılmayacak; Phase 1 kapsamında database/runtime kök nedeni çözülecek.
+Önceki `/api/sales` HTTP 500 problemi production migration parity eksikliğinden kaynaklanıyordu ve Phase 1 kapsamında giderildi.
+Production smoke #31 başarıyla geçti. Dashboard/Finance UI görsel doğrulaması ayrıca yapılabilir; API runtime tarafında kritik finans endpointleri smoke testten geçti.
 
 ## 6. Foundation çalışma sırası
 
 1. Phase 0 — Inventory & freeze
-2. Phase 1 — Database / migration integrity
-3. Phase 2 — Data model integrity
+2. Phase 1 — Database / migration integrity — tamamlandı
+3. Phase 2 — Data model integrity — aktif
 4. Phase 3 — Authorization foundation
 5. Phase 4 — API contract & error handling
 6. Phase 5 — Runtime & route protection
