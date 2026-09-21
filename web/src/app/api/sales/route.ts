@@ -7,12 +7,11 @@ import { hasCapability, saleScope } from "@/lib/authorization";
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!hasCapability(context, "sales:write")) return NextResponse.json({ message: "Satış oluşturma yetkiniz yok." }, { status: 403 });
   if (!hasCapability(context, "sales:read")) return NextResponse.json({ message: "Satışları görüntüleme yetkiniz yok." }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   const sales = await prisma.sale.findMany({
-    where: { ...(customerId ? { customerId } : {}), customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+    where: { ...(customerId ? { customerId } : {}), ...saleScope(context) },
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
     orderBy: { createdAt: "desc" }, take: 100,
   });
@@ -22,6 +21,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!hasCapability(context, "sales:write")) return NextResponse.json({ message: "Satış oluşturma yetkiniz yok." }, { status: 403 });
   let body: { offerId?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const offerId = typeof body.offerId === "string" ? body.offerId.trim() : "";
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         where: {
           id: offerId,
           status: "KABUL",
-          customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) },
+          ...saleScope(context),
           listing: { organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } },
         },
         include: {
