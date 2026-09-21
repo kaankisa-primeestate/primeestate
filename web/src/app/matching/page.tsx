@@ -59,6 +59,10 @@ export default function MatchingPage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
+  const [showingMatch, setShowingMatch] = useState<Match | null>(null);
+  const [offerMatch, setOfferMatch] = useState<Match | null>(null);
+  const [savingAction, setSavingAction] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   const customer = customers.find((item) => item.id === customerId) ?? null;
   const demand = customer?.demands.find((item) => item.id === demandId) ?? customer?.demands[0] ?? null;
@@ -120,6 +124,67 @@ export default function MatchingPage() {
     return () => { cancelled = true; };
   }, [demand?.id]);
 
+  const createShowing = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!showingMatch?.listing?.id || !customerId) return;
+    setSavingAction(true);
+    setActionMessage("");
+    try {
+      const form = new FormData(event.currentTarget);
+      const date = String(form.get("date") ?? "");
+      const time = String(form.get("time") ?? "");
+      const response = await fetch("/api/showings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          listingId: showingMatch.listing.id,
+          dateTime: new Date(`${date}T${time}:00`).toISOString(),
+          attendees: Number(form.get("attendees") ?? 1),
+          note: String(form.get("note") ?? "").trim(),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message ?? "Gösterim oluşturulamadı.");
+      setShowingMatch(null);
+      setActionMessage("Gösterim planlandı. Takvimden takip edebilirsiniz.");
+    } catch (cause: unknown) {
+      setActionMessage(cause instanceof Error ? cause.message : "Gösterim oluşturulamadı.");
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
+  const createOffer = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!offerMatch?.listing?.id || !customerId) return;
+    setSavingAction(true);
+    setActionMessage("");
+    try {
+      const form = new FormData(event.currentTarget);
+      const response = await fetch("/api/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          listingId: offerMatch.listing.id,
+          amount: Number(form.get("amount") ?? 0),
+          currency: String(form.get("currency") ?? offerMatch.listing.currency),
+          offeredAt: new Date(String(form.get("offeredAt") ?? "")).toISOString(),
+          nextAction: String(form.get("nextAction") ?? "").trim(),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message ?? "Teklif oluşturulamadı.");
+      setOfferMatch(null);
+      setActionMessage("Teklif taslağı oluşturuldu. İş Akışı ekranından takip edebilirsiniz.");
+    } catch (cause: unknown) {
+      setActionMessage(cause instanceof Error ? cause.message : "Teklif oluşturulamadı.");
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
   const stats = useMemo(() => ({
     strong: matches.filter((match) => match.score >= 75).length,
     review: matches.filter((match) => match.score >= 55 && match.score < 75).length,
@@ -143,6 +208,7 @@ export default function MatchingPage() {
         </header>
 
         {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+        {actionMessage && <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{actionMessage}</div>}
 
         <section className="mt-8 grid gap-4 lg:grid-cols-[1.1fr_1.9fr]">
           <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -182,7 +248,12 @@ export default function MatchingPage() {
                   <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold text-slate-400">{match.listing?.code ?? "Portföy"}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{labelMap[match.listing?.purpose ?? ""] ?? match.listing?.purpose}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{labelMap[match.property.propertyType] ?? match.property.propertyType}</span></div>
                   <h3 className="mt-2 text-xl font-semibold text-slate-950">{match.listing?.title ?? match.property.title}</h3><p className="mt-1 text-sm text-slate-500">{match.property.neighborhood}, {match.property.district} · {match.property.sizeM2 ? match.property.sizeM2 + " m²" : "m² yok"} · {match.property.rooms ?? "Oda yok"}</p><p className="mt-3 text-lg font-semibold text-slate-950">{money(match.listing?.price ?? null, match.listing?.currency ?? "")}</p>
                 </div></div>
-                <div className="flex items-center gap-4 xl:w-48 xl:flex-col xl:items-end"><div className="text-right"><p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Uyum skoru</p><p className="mt-1 text-4xl font-semibold tracking-tight text-slate-950">{match.score}<span className="text-lg text-slate-400">/100</span></p></div><button className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white">{match.score >= 75 ? "Gösterim planla" : "Portföyü incele"}</button></div>
+                <div className="flex items-center gap-4 xl:w-48 xl:flex-col xl:items-end"><div className="text-right"><p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Uyum skoru</p><p className="mt-1 text-4xl font-semibold tracking-tight text-slate-950">{match.score}<span className="text-lg text-slate-400">/100</span></p></div>{match.score >= 75 ? (
+  <button onClick={() => setShowingMatch(match)} className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white">Gösterim planla</button>
+) : (
+  <Link href="/portfolio" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white">Portföyü incele</Link>
+)}
+<button onClick={() => setOfferMatch(match)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">Teklif oluştur</button></div>
               </div>
               <div className="mt-6 grid gap-3 lg:grid-cols-2">{match.reasons.slice(0, 6).map((reason, i) => <div key={`${match.id}-${i}`} className={`rounded-2xl p-4 ${reason.type === "positive" ? "bg-emerald-50" : reason.type === "negative" ? "bg-red-50" : "bg-amber-50"}`}><p className={`text-sm font-semibold ${reason.type === "positive" ? "text-emerald-800" : reason.type === "negative" ? "text-red-800" : "text-amber-800"}`}>{reason.type === "positive" ? "✓" : reason.type === "negative" ? "×" : "!"} {reason.title}</p><p className={`mt-1 text-xs ${reason.type === "positive" ? "text-emerald-700" : reason.type === "negative" ? "text-red-700" : "text-amber-700"}`}>{reason.detail}</p></div>)}</div>
               <div className="mt-4 border-t border-slate-100 pt-4"><p className="text-xs text-slate-400">Skor dağılımı</p><div className="mt-2 flex flex-wrap gap-2">{Object.entries(match.breakdown).filter(([key]) => key !== "penalty").map(([label, value]) => <span key={label} className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">{label} <b className="text-slate-800">{value}</b></span>)}{match.breakdown.penalty > 0 && <span className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700">Ceza <b>-{match.breakdown.penalty}</b></span>}</div></div>
@@ -191,6 +262,41 @@ export default function MatchingPage() {
           {!matches.length && !running && <div className="rounded-3xl bg-white p-12 text-center ring-1 ring-slate-200"><p className="font-semibold text-slate-900">{demand ? "Uygun portföy bulunamadı." : "Önce aktif bir talep seç."}</p><p className="mt-1 text-sm text-slate-500">Eşleşme yalnızca erişebildiğiniz müşteri talepleri ve ofisin aktif portföy havuzu üzerinden hesaplanır.</p></div>}
         </section>
         </div>
+      {showingMatch && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-3 sm:items-center">
+          <form onSubmit={createShowing} className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Gösterim planla</p><h2 className="mt-1 text-xl font-semibold text-slate-950">{showingMatch.listing?.title}</h2><p className="mt-1 text-sm text-slate-500">{customer?.name}</p></div>
+              <button type="button" onClick={() => setShowingMatch(null)} className="rounded-full px-3 py-1 text-slate-500 hover:bg-slate-100">×</button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-700">Tarih<input required name="date" type="date" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" /></label>
+              <label className="text-sm font-medium text-slate-700">Saat<input required name="time" type="time" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" /></label>
+              <label className="text-sm font-medium text-slate-700">Katılımcı<input name="attendees" type="number" min="1" defaultValue="1" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" /></label>
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">Not<textarea name="note" rows={3} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" placeholder="Müşteri beklentisi, buluşma noktası..." /></label>
+            </div>
+            <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setShowingMatch(null)} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={savingAction} className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{savingAction ? "Kaydediliyor…" : "Gösterimi kaydet"}</button></div>
+          </form>
+        </div>
+      )}
+      {offerMatch && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-3 sm:items-center">
+          <form onSubmit={createOffer} className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Teklif oluştur</p><h2 className="mt-1 text-xl font-semibold text-slate-950">{offerMatch.listing?.title}</h2><p className="mt-1 text-sm text-slate-500">{customer?.name} · Liste fiyatı {money(offerMatch.listing?.price ?? null, offerMatch.listing?.currency ?? "")}</p></div>
+              <button type="button" onClick={() => setOfferMatch(null)} className="rounded-full px-3 py-1 text-slate-500 hover:bg-slate-100">×</button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-700">Teklif tutarı<input required name="amount" type="number" min="1" step="1" defaultValue={Number(offerMatch.listing?.price ?? 0)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" /></label>
+              <label className="text-sm font-medium text-slate-700">Para birimi<select name="currency" defaultValue={offerMatch.listing?.currency ?? "TRY"} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5"><option>TRY</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+              <label className="text-sm font-medium text-slate-700">Teklif tarihi<input required name="offeredAt" type="datetime-local" defaultValue={new Date().toISOString().slice(0,16)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" /></label>
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">Sonraki aksiyon<input name="nextAction" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5" placeholder="Örn. 2 gün sonra mal sahibi ile görüş" /></label>
+            </div>
+            <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setOfferMatch(null)} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={savingAction} className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{savingAction ? "Kaydediliyor…" : "Teklifi oluştur"}</button></div>
+          </form>
+        </div>
+      )}
+
       </main>
     </div>
   );
