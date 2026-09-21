@@ -342,7 +342,8 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   if (salePayload.sale.listingId !== offerPayload.offer.listing.id) {
-    throw new Error("Sale listing linkage mismatch. sale.listingId=" + salePayload.sale.listingId + " offer.listing.id=" + offerPayload.offer.listing.id + " offer.id=" + offerPayload.offer.id + " expected listing.id=" + listingPayload.listing.id);
+    console.error("PHASE7_SALE_LINKAGE", JSON.stringify({ saleListingId: salePayload.sale.listingId, offerListingId: offerPayload.offer.listing.id, offerId: offerPayload.offer.id, expectedListingId: listingPayload.listing.id }));
+    throw new Error("Sale listing linkage mismatch.");
   }
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
