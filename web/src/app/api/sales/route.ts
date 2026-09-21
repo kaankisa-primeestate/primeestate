@@ -2,21 +2,16 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-
-const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
-function customerScope(context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
-  if (MANAGER_ROLES.has(context.role)) return {};
-  if (context.role === "TEAM_LEADER" && context.teamId) return { owner: { teamId: context.teamId } };
-  return { ownerUserId: context.userId };
-}
+import { assertCan, customerOwnershipScope } from "@/lib/authz";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try { assertCan(context, "sales", "read"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   const sales = await prisma.sale.findMany({
-    where: { ...(customerId ? { customerId } : {}), customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } },
+    where: { ...(customerId ? { customerId } : {}), customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
     orderBy: { createdAt: "desc" }, take: 100,
   });
@@ -26,6 +21,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  try { assertCan(context, "sales", "create"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
   let body: { offerId?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const offerId = typeof body.offerId === "string" ? body.offerId.trim() : "";
@@ -37,7 +33,7 @@ export async function POST(request: Request) {
         where: {
           id: offerId,
           status: "KABUL",
-          customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) },
+          customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) },
           listing: { organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } },
         },
         include: {
