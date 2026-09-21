@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, isManagerRole } from "@/lib/authz";
+import { can, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const ROLE_VALUES = [
@@ -57,7 +57,7 @@ export async function GET() {
     );
   }
 
-  assertCan(context, "users", "read");
+  if (!can(context.role, "users", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   const users = await prisma.user.findMany({
     where: userScope(context),
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     );
   }
 
-  assertCan(context, "users", "create");
+  if (!can(context.role, "users", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
