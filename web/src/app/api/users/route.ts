@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
+import { assertCan, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const MANAGER_ROLES = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
@@ -57,12 +58,7 @@ export async function GET() {
     );
   }
 
-  if (!MANAGER_ROLES.has(context.role)) {
-    return NextResponse.json(
-      { message: "Bu alanı görüntüleme yetkiniz yok." },
-      { status: 403 },
-    );
-  }
+  assertCan(context, "users", "read");
 
   const users = await prisma.user.findMany({
     where: userScope(context),
