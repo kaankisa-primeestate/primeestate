@@ -2,13 +2,14 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { UserRole } from "@/lib/authz";
 
 export type UserContext = {
   userId: string;
   organizationId: string;
   officeId: string;
   teamId: string | null;
-  role: "SUPER_ADMIN" | "ORG_ADMIN" | "OFFICE_ADMIN" | "TEAM_LEADER" | "AGENT" | "VIEWER" | "AUDITOR";
+  role: UserRole;
 };
 
 export async function getUserContext(): Promise<UserContext | null> {
