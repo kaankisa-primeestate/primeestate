@@ -147,7 +147,7 @@ async function createFixture(): Promise<Fixture> {
 async function login(user: TestUser): Promise<string> {
   const response = await fetch(BASE_URL + "/api/auth/sign-in/email", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", Origin: BASE_URL },
     body: JSON.stringify({
       email: user.email,
       password: user.password,
