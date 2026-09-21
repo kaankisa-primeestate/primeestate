@@ -21,98 +21,88 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - API seviyesinde tenant + role scope
 - AI provider bağımsız mimari
 
-## 3. Yetki modeli
-- Agent: kendi müşterileri
-- Team Leader: kendi ekibinin müşterileri
-- Office/Admin: ofis kapsamındaki müşteri verileri
-- Ofis portföy havuzu: danışmanlar arasında ortak
-- Yetkilendirme frontend'e bırakılmaz; API/backend scope zorunludur.
-- AI kullanıcı yetkilerini aşamaz.
+## 3. Foundation Recovery durumu — 21.09.2026
 
-## 4. Doğrulanmış main durumu — 21.09.2026
-Son main commit:
-`a4d7f2ed1f9f495b51b22fe4f5fb3149ca6d2992`
+Yeni özellik geliştirme **geçici olarak donduruldu**. Önce teknik temel P0-P9 aşamalarında sertleştirilecek.
 
-PR #43 (Finance V7) main'e merge edilmiş durumda.
+Master checklist:
+`FOUNDATION_RECOVERY_PLAN.md`
 
-PR #44 — **CRM V8: activate visible workspace and live dashboard**
-- Branch: `crm/visible-workspace-v8`
-- Son CI: workflow #261
-- Son CI sonucu: **success**
-- Lint: success
-- Typecheck: success
-- Production build: success
-- PR #44: **merge edildi**
-- Merge commit: `a4d7f2ed1f9f495b51b22fe4f5fb3149ca6d2992`
+Audit sonucu öne çıkan kritik riskler:
+- Production DB migration state ile uygulama/schema parity'si ayrıca doğrulanmalı.
+- `/api/sales` production'da 500 veriyor; dashboard V10 artık gerçek endpoint/status bilgisini gösteriyor.
+- API response/error standardı merkezi değil.
+- Authorization policy endpoint'lere dağılmış durumda; VIEWER/AUDITOR davranışları ayrıca sertleştirilmeli.
+- UI route seviyesinde merkezi auth guard bulunmuyor.
+- Otomatik test/E2E kapsamı kritik iş akışının gerisinde.
+- İki matching engine bulunuyor; tek business engine'e indirilecek.
+- Finansal state transition ve ledger bütünlüğü sertleştirilecek.
+- Dokümantasyon kodla yeniden senkronize edilecek.
 
-V8 ile:
-- Dashboard gerçek CRM API verilerine bağlandı.
-- Müşteri / aktif portföy / açık görev / açık fırsat sayıları görünür hale geldi.
-- CRM Akış Merkezi görünür hale geldi.
-- Müşteri → Talep → Eşleşme → Gösterim → Teklif → Satış → Komisyon → Tahsilat akışı ekrana taşındı.
-- CRM Akış Merkezi ve Finans navigasyona eklendi.
-- Son aktif portföyler ve son hareketler dashboard'da görünür hale geldi.
+## 4. Doğrulanmış main
+Son doğrulanmış main commit:
+`399a6cd2fc08cde4b28a79d304e61f611fa393a0`
 
-## 5. Şu anki aktif iş — CRM V9
-Branch:
-`crm/dashboard-quick-actions-v9`
+PR #46 — **Fix dashboard API response handling**
+- CI #269: **success**
+- PR #46: **merged**
+- Merge commit: `399a6cd2fc08cde4b28a79d304e61f611fa393a0`
 
-PR:
-**#45 — CRM V9: add dashboard quick actions and live refresh**
+PR #46 ile Dashboard:
+- boş/non-JSON response'larda güvenli parse yapıyor,
+- tek endpoint arızasının tüm dashboard'u düşürmesini engelliyor,
+- problemli endpoint/status bilgisini gösteriyor.
 
-PR #45 durumu: **Açık**
-Head commit:
-`6107ed33c2403928db506b5f00b052c1602cb24c`
+## 5. Mevcut runtime bulgusu
+Production ekranında:
+- Müşteriler: 3
+- Aktif portföy: 1
+- Dashboard verilerinin bir kısmı alınamıyor.
+- Hatalı endpoint: `/api/sales`
+- HTTP: 500
 
-Bu dikey dilimde:
-- Dashboard'a görünür Hızlı Aksiyonlar eklendi.
-- Yeni Müşteri
-- Yeni Portföy
-- Eşleştirme
-- CRM Akış Merkezi
-- Dashboard 30 saniyede bir otomatik yenileniyor.
-- Son başarılı güncelleme zamanı gösteriliyor.
-- Manuel yenileme korunuyor.
-- Mevcut scoped API'ler korunuyor.
+Bu hata frontend parser problemi olarak kapatılmayacak; Phase 1 kapsamında database/runtime kök nedeni çözülecek.
 
-**CI durumu:** PR #45 için henüz doğrulanmış workflow sonucu alınmadı. CI yeşil olmadan merge edilmeyecek.
+## 6. Foundation çalışma sırası
 
-## 6. Sonraki hedef
-V9 tamamlandıktan sonra dashboard/CRM operasyon döngüsü doğrulanacak:
+1. Phase 0 — Inventory & freeze
+2. Phase 1 — Database / migration integrity
+3. Phase 2 — Data model integrity
+4. Phase 3 — Authorization foundation
+5. Phase 4 — API contract & error handling
+6. Phase 5 — Runtime & route protection
+7. Phase 6 — Test foundation
+8. Phase 7 — Critical E2E business chain
+9. Phase 8 — Codebase cleanup & documentation
+10. Phase 9 — Release gate
 
-1. Yeni müşteri oluştur
-2. Dashboard'a yansımasını doğrula
-3. Yeni portföy oluştur
-4. Dashboard'a yansımasını doğrula
-5. Talep oluştur
-6. Eşleştirme ekranında görünmesini doğrula
-7. Gösterim → Teklif → Satış → Komisyon → Tahsilat zincirini doğrula
-8. Yetki kapsamını Agent / Team Leader / Office seviyelerinde doğrula
-
-Amaç: **arka planda çalışan veri değil, kullanıcının ekranda anında görebildiği gerçek operasyon.**
+**Kural:** Bir phase doğrulanmadan sonraki phase'e geçilmeyecek.
 
 ## 7. Kırmızı çizgiler
 - Canlı `remax-CRM` değiştirilmez.
 - Secret/connection string kullanıcıdan istenmez.
+- Production database reset yapılmaz.
 - Tahmin edilen durum gerçek durum gibi sunulmaz.
 - Seed veri gerçek veri gibi bırakılmaz.
 - Yetkilendirme frontend'e bırakılmaz.
 - Modüller bağımsız ada şeklinde tasarlanmaz.
 - Çalışan özellikler gereksiz yere kırılmaz.
 - CI yeşil olmadan merge edilmez.
+- Migration uygulanmadan önce migration planı ve geri dönüş etkisi incelenir.
 
 ## 8. Çalışma disiplini
 1. main/branch/PR/CI doğrulanır.
-2. Tek bir küçük dikey dilim seçilir.
+2. O anki phase'in tek hedefi seçilir.
 3. Ayrı branch açılır.
 4. Kodlanır.
-5. lint + typecheck + build CI'da doğrulanır.
+5. Otomatik doğrulamalar çalıştırılır.
 6. PR açılır.
 7. CI yeşil olmadan merge edilmez.
 8. Merge sonrası main tekrar doğrulanır.
-9. CURRENT_STATE.md güncellenir.
+9. Bu dosya ve `FOUNDATION_RECOVERY_PLAN.md` güncellenir.
+10. Sonraki phase'e geçilir.
 
 ## 9. Yeni oturum başlangıç komutu
 ```
-PrimeEstate'i devral. Önce CURRENT_STATE.md dosyasını ve GitHub'daki güncel main, branch, PR ve CI durumunu kontrol et. Bu kayıttaki bilgileri tahmin olarak değil, GitHub'dan doğrulanmış gerçek durumla karşılaştır. Fark varsa belirt. Son tamamlanmamış işten devam et. Canlı remax-CRM reposuna dokunma. Tek bir doğrulanabilir dikey dilim üzerinde çalış; CI yeşil olmadan merge etme. Oturum sonunda CURRENT_STATE.md dosyasını güncelle.
+PrimeEstate'i devral. Önce CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını, GitHub'daki güncel main/branch/PR/CI durumunu kontrol et. Hangi foundation phase'inde olduğumuzu doğrula. Tamamlanan aşamaları tekrar yapma; bir sonraki tamamlanmamış aşamadan devam et. Canlı remax-CRM reposuna dokunma. Her aşamada implementation -> automated validation -> PR -> green CI -> merge -> main verification -> state update zincirini uygula.
 ```
