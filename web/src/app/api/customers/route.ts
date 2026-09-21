@@ -4,12 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { assertCan, canAssignCustomerOwner, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
-function canSeeCustomer(context: Awaited<ReturnType<typeof getUserContext>>, ownerUserId: string) {
-  if (!context) return false;
-  if (isManagerRole(context.role)) return true;
-  return ownerUserId === context.userId;
-}
-
 export async function GET(request: Request) {
   const context = await getUserContext();
 
