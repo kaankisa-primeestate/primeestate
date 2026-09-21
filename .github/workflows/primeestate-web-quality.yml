@@ -5,10 +5,12 @@ on:
     paths:
       - "web/**"
       - ".github/workflows/primeestate-web-quality.yml"
+      - ".github/workflows/production-auth-smoke.yml"
   pull_request:
     paths:
       - "web/**"
       - ".github/workflows/primeestate-web-quality.yml"
+      - ".github/workflows/production-auth-smoke.yml"
 
 jobs:
   web-quality:
