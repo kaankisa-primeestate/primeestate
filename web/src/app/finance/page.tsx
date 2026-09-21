@@ -40,7 +40,7 @@ export default function FinancePage() {
     }
   }
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { const timer = setTimeout(() => { void load(); }, 0); return () => clearTimeout(timer); }, []);
 
   async function save(id: string, commissionRate: string, officeShareRate: string) {
     setSaving(id);
