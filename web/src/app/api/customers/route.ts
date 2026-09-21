@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -8,11 +9,11 @@ export async function GET(request: Request) {
   const context = await getUserContext();
 
   if (!context) {
-    return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+    return authenticationRequired();
   }
 
   try {
-    if (!can(context.role, "customers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "customers", "read")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -58,11 +59,11 @@ export async function POST(request: Request) {
   const context = await getUserContext();
 
   if (!context) {
-    return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+    return authenticationRequired();
   }
 
   try {
-    if (!can(context.role, "customers", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "customers", "create")) return forbidden();
   } catch {
     return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });
   }

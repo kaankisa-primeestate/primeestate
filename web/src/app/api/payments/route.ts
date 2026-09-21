@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -13,8 +14,8 @@ function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Pr
 
 export async function GET(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "payments", "read"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "payments", "read"); } catch { return forbidden(); }
   const { searchParams } = new URL(request.url);
   const saleId = searchParams.get("saleId")?.trim();
   const payments = await prisma.payment.findMany({
@@ -31,8 +32,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "payments", "create"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "payments", "create"); } catch { return forbidden(); }
   let body: { saleId?: unknown; amount?: unknown; currency?: unknown; status?: unknown; paidAt?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
