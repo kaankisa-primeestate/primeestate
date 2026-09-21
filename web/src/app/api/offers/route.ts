@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       id: customerId,
       organizationId: context.organizationId,
       officeId: context.officeId,
-      ...customerScope(context),
+      ...customerOwnershipScope(context),
     },
     select: { id: true },
   });
