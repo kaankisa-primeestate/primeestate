@@ -17,8 +17,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prebuild": "node scripts/clean-next.mjs",
-    "typecheck": "tsc --noEmit",
-    "prestart": "prisma migrate deploy"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
