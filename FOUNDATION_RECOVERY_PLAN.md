@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 21.09.2026
-> Base main: 0dc3f3309223fdaca1b97dcac202b21e4809cfe2
+> Base main: ba5b2b2a9eaece6592166916d91611d38f801c26
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -93,7 +93,7 @@
 - [x] Add Team Leader scope integration tests for customer routes.
 - [ ] Add Office/Admin scope integration tests.
 - [x] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
-- [ ] Make critical tests required before merge.
+- [ ] Make `Critical Tests` required in the main branch protection/ruleset. The dedicated CI check itself is implemented and green; repository administration settings could not be changed from the current GitHub integration.
 
 ## Phase 7 — Critical E2E business chain
 - [ ] Create customer.
@@ -132,4 +132,4 @@
 - [ ] Foundation declared ready for new product feature development.
 
 ## Next action
-Phase 6: make critical tests required before merge. Then proceed to Phase 7 Critical E2E business chain. Do not start product feature development in parallel.
+Phase 6 release gate: mark `Critical Tests` as a required main-branch status check. Then proceed to Phase 7 Critical E2E business chain. Do not start product feature development in parallel.
