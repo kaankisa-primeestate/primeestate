@@ -17,7 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   if (body.status !== "BEKLIYOR" && body.status !== "ODENDI" && body.status !== "IPTAL") return NextResponse.json({ message: "Geçersiz taksit durumu." }, { status: 400 });
   const existing = await prisma.paymentInstallment.findFirst({
-    where: { id, sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } } },
+    where: { id, plan: { sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) } } } },
   });
   if (!existing) return NextResponse.json({ message: "Taksit bulunamadı veya yetkiniz yok." }, { status: 404 });
   const updated = await prisma.paymentInstallment.update({
