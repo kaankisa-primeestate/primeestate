@@ -3,17 +3,21 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import ts from "typescript";
 
-const sourcePath = new URL("../src/lib/authz.ts", import.meta.url);
-const source = await readFile(sourcePath, "utf8");
-const compiled = ts.transpileModule(source, {
-  compilerOptions: {
-    target: ts.ScriptTarget.ES2022,
-    module: ts.ModuleKind.ESNext,
-  },
-}).outputText;
-const authz = await import(
-  `data:text/javascript;charset=utf-8,${encodeURIComponent(compiled)}`
-);
+async function loadTypeScriptModule(relativePath) {
+  const source = await readFile(new URL(relativePath, import.meta.url), "utf8");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+    },
+  }).outputText;
+  return import(
+    `data:text/javascript;charset=utf-8,${encodeURIComponent(compiled)}`
+  );
+}
+
+const authz = await loadTypeScriptModule("../src/lib/authz.ts");
+const routeAccess = await loadTypeScriptModule("../src/lib/route-access.ts");
 
 const roles = [
   "SUPER_ADMIN",
@@ -129,4 +133,28 @@ test("assertCan denies read-only writes and allows agent writes", () => {
     (error) => error?.name === "AuthorizationDeniedError",
   );
   assert.doesNotThrow(() => authz.assertCan(agent, "customers", "create"));
+});
+
+test("page access policy keeps auth pages public and users manager-only", () => {
+  for (const path of ["/login", "/forgot-password", "/reset-password", "/forbidden", "/health"]) {
+    assert.equal(routeAccess.isPublicPagePath(path), true);
+  }
+
+  for (const path of ["/", "/dashboard", "/clients", "/finance", "/portfolio"]) {
+    assert.equal(routeAccess.isPublicPagePath(path), false);
+    assert.equal(routeAccess.requiredRoleForPage(path), null);
+  }
+
+  assert.equal(routeAccess.requiredRoleForPage("/users"), "manager");
+  assert.equal(routeAccess.requiredRoleForPage("/users/123"), "manager");
+
+  for (const role of ["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]) {
+    assert.equal(routeAccess.canAccessPageRole(role, "manager"), true);
+  }
+
+  for (const role of ["TEAM_LEADER", "AGENT", "VIEWER", "AUDITOR"]) {
+    assert.equal(routeAccess.canAccessPageRole(role, "manager"), false);
+  }
+
+  assert.equal(routeAccess.canAccessPageRole("AGENT", null), true);
 });
