@@ -49,7 +49,13 @@ export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
 
-  try {\n    assertCan(context, "listings", "create");\n  } catch {\n    return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });\n  }\n\n  const body = await request.json().catch(() => null);
+  try {
+    assertCan(context, "listings", "create");
+  } catch {
+    return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });
+  }
+
+  const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return NextResponse.json({ message: "Geçersiz istek." }, { status: 400 });
 
   const propertyType = String(body.propertyType ?? "");
