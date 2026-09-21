@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const attendees = typeof body.attendees === "number" && Number.isInteger(body.attendees) && body.attendees > 0 ? body.attendees : 1;
   if (!customerId || !listingId || !dateTime || Number.isNaN(dateTime.getTime())) return NextResponse.json({ message: "Müşteri, portföy ve geçerli gösterim tarihi zorunludur." }, { status: 400 });
 
-  const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerScope(context) }, select: { id: true } });
+  const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true } });
   if (!customer) return NextResponse.json({ message: "Bu müşteri için gösterim oluşturma yetkiniz yok." }, { status: 403 });
 
   const listing = await prisma.listing.findFirst({ where: { id: listingId, ...officeListingScope(context), status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true } });
