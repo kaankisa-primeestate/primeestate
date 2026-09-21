@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, isManagerRole } from "@/lib/authz";
+import { can, isManagerRole } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "tasks", "update");
+  if (!can(context.role, "tasks", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   const { id } = await params;
   const task = await prisma.task.findFirst({
     where: { id, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(isManagerRole(context.role) ? {} : { id: context.userId }) } },
