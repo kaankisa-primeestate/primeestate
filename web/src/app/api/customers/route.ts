@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { assertCan, canAssignCustomerOwner, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { can, canAssignCustomerOwner, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    assertCan(context, "customers", "read");
+    if (!can(context.role, "customers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
   }
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    assertCan(context, "customers", "create");
+    if (!can(context.role, "customers", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
   } catch {
     return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });
   }
