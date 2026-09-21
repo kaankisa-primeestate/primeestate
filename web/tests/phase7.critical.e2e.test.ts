@@ -123,7 +123,10 @@ async function login(email: string, password: string) {
       `Phase 7 login request failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}\\nNext.js output:\\n${serverOutput.slice(-16000)}`,
     );
   }
-  assert.equal(response.ok, true, await response.text());
+  if (!response.ok) {
+    throw new Error(`Phase 7 login failed: HTTP ${response.status}. Response body: ${await response.text() || "<empty>"}`);
+  }
+  await response.arrayBuffer();
 
   const cookies = response.headers.getSetCookie?.() ?? [];
   const cookieHeader = cookies
@@ -146,11 +149,12 @@ async function api(path: string, cookie: string, body?: unknown, method = "GET")
   return response;
 }
 
-async function expectStatus(response: Response, expected: number, label: string) {
+async function expectStatus(response: Response, expected: number, label: string, consumeBody = true) {
   if (response.status !== expected) {
-    const body = await response.clone().text();
+    const body = await response.text();
     throw new Error(`${label}: expected HTTP ${expected}, received HTTP ${response.status}. Response body: ${body || "<empty>"}`);
   }
+  if (consumeBody) await response.arrayBuffer();
 }
 
 async function json<T>(response: Response): Promise<T> {
@@ -210,7 +214,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(customerResponse, 201, "customerResponse");
+  await expectStatus(customerResponse, 201, "customerResponse", false);
   const customerPayload = await json<{ customer: { id: string } }>(customerResponse);
   const customerId = customerPayload.customer.id;
 
@@ -233,7 +237,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(demandResponse, 201, "demandResponse");
+  await expectStatus(demandResponse, 201, "demandResponse", false);
   const demandPayload = await json<{ demand: { id: string } }>(demandResponse);
   const demandId = demandPayload.demand.id;
 
@@ -256,7 +260,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(listingResponse, 201, "listingResponse");
+  await expectStatus(listingResponse, 201, "listingResponse", false);
   const listingPayload = await json<{ listing: { id: string; propertyId: string; status: string } }>(listingResponse);
   assert.equal(listingPayload.listing.status, "AKTIF");
 
@@ -267,7 +271,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { demandId, limit: 10 },
     "POST",
   );
-  await expectStatus(matchingResponse, 200, "matchingResponse");
+  await expectStatus(matchingResponse, 200, "matchingResponse", false);
   const matchingPayload = await json<{ matches: Array<{ listingId: string; score: number }> }>(matchingResponse);
   assert.ok(matchingPayload.matches.some((match) => match.listingId === listingPayload.listing.id));
   assert.ok((matchingPayload.matches.find((match) => match.listingId === listingPayload.listing.id)?.score ?? 0) > 0);
@@ -285,7 +289,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(showingResponse, 201, "showingResponse");
+  await expectStatus(showingResponse, 201, "showingResponse", false);
 
   // 6. Offer
   const offerResponse = await api(
@@ -301,7 +305,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(offerResponse, 201, "offerResponse");
+  await expectStatus(offerResponse, 201, "offerResponse", false);
   const offerPayload = await json<{ offer: { id: string; status: string } }>(offerResponse);
   assert.equal(offerPayload.offer.status, "TASLAK");
 
@@ -323,7 +327,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { offerId: offerPayload.offer.id, note: "Phase 7 E2E satış" },
     "POST",
   );
-  await expectStatus(saleResponse, 201, "saleResponse");
+  await expectStatus(saleResponse, 201, "saleResponse", false);
   const salePayload = await json<{
     sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
   }>(saleResponse);
@@ -339,7 +343,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     { commissionRate: 3, officeShareRate: 50 },
     "PATCH",
   );
-  await expectStatus(commissionResponse, 200, "commissionResponse");
+  await expectStatus(commissionResponse, 200, "commissionResponse", false);
   const commissionPayload = await json<{
     sale: { grossCommission: string | number; officeShare: string | number; consultantShare: string | number };
   }>(commissionResponse);
@@ -360,7 +364,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(paymentResponse, 201, "paymentResponse");
+  await expectStatus(paymentResponse, 201, "paymentResponse", false);
   const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
   assert.equal(Number(paymentPayload.payment.amount), 1000000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
@@ -381,7 +385,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     },
     "POST",
   );
-  await expectStatus(planResponse, 201, "planResponse");
+  await expectStatus(planResponse, 201, "planResponse", false);
   const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ sequence: number; amount: string | number }> } }>(planResponse);
   assert.equal(planPayload.plan.currency, "TRY");
   assert.deepEqual(planPayload.plan.installments.map((item) => item.sequence), [1, 2, 3, 4]);
