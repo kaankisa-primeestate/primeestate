@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { calculateMatch } from "@/core/matching-engine";
-import { assertCan, customerOwnershipScope, officeListingScope } from "@/lib/authz";
+import { can, customerOwnershipScope, officeListingScope } from "@/lib/authz";
 
 async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnType<typeof getUserContext>>>) {
   const demand = await prisma.demand.findFirst({
@@ -26,7 +26,7 @@ async function getScopedDemand(id: string, context: NonNullable<Awaited<ReturnTy
 export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  assertCan(context, "matching", "create");
+  if (!can(context.role, "matching", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
 
   let body: { demandId?: unknown; limit?: unknown };
   try { body = await request.json(); }
