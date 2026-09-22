@@ -44,9 +44,9 @@ export async function GET(request: Request) {
         { property: { district: { contains: q, mode: "insensitive" } } },
         { property: { neighborhood: { contains: q, mode: "insensitive" } } },
       ] } : {}),
-      ...(purpose ? { purpose: purpose as (typeof PURPOSES)[number] } : {}),
-      ...(propertyType ? { property: { propertyType: propertyType as (typeof PROPERTY_TYPES)[number] } } : {}),
-      ...(status ? { status: status as (typeof STATUSES)[number] } : {}),
+      ...(purpose ? { purpose: purpose as never } : {}),
+      ...(propertyType ? { property: { propertyType: propertyType as never } } : {}),
+      ...(status ? { status: status as never } : {}),
     },
     include: {
       property: { select: {
