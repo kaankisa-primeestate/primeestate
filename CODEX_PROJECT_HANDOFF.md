@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`c0d440ed27e2d53fd54d35699787f55e5f5c424a`
+`3846fe23ca59f8e0d5853931f74946184f72bc1f`
 
 Bu commit PR #80'in merge commitidir:
 
@@ -31,12 +31,8 @@ PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 
 ### Son merge
 
-PR #82 — Dashboard/Finance live verification — merged (`c0d440ed...`).
-
-PR #82 ile Dashboard finans özeti aggregate endpoint'e taşındı ve finans refresh hatasında son başarılı snapshot korunuyor.
-Critical Tests, Web Quality, Foundation State Validation, lint, typecheck ve production build yeşil doğrulandı. Merge sonrası main'de Web Quality ve Production Auth HTTP Smoke Test de yeşil.
-
-PR #81 stale durumda kapatılmıştır; merge edilmemiştir.
+PR #82 — Dashboard / Finance live verification — merged.
+PR #83 — documentation reconciliation — merged.
 
 ## 3. Production / Render
 
