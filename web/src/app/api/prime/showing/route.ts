@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       data: {
         organizationId: context.organizationId, actorUserId: context.userId,
         action: "PRIME_SHOWING_PLANNED", entityType: "Showing", entityId: showing.id,
-        metadata: { customerId, listingId, dateTime, taskId: task.id, whatsappPrepared: Boolean(whatsappUrl) },
+        metadata: { customerId, listingId, dateTime: dateTime.toISOString(), taskId: task.id, whatsappPrepared: Boolean(whatsappUrl) },
       },
     });
 
