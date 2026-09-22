@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`2aca0b13ef7def2636fd5aa2226d0558ea246cca`
+`d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
 
 Bu commit PR #88'in merge commitidir.
 
@@ -1114,7 +1114,7 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 
 # Son durum özeti
 
-**Main:** `2aca0b13ef7def2636fd5aa2226d0558ea246cca`
+**Main:** `d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
 
 **PR #80:** merged ✅
 

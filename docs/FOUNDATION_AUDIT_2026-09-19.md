@@ -160,7 +160,7 @@ Foundation recovery sonrasında aşağıdaki sonuçlar doğrulandı:
 - Eski duplicate matching engine repository-wide reference audit sonrasında kaldırıldı:
   - `web/src/core/matching.ts`
   - `web/src/types/Matching.ts`
-- Main commit `7c5f9218964ad5d1a669b8e568b7e56a55cd6a3e` üzerinde Web Quality ve Production Auth Smoke başarılıdır.
+- Main commit `2aca0b13ef7def2636fd5aa2226d0558ea246cca` üzerinde Web Quality ve Production Auth Smoke başarılıdır.
 - Production Auth Smoke, Render'ın aynı main commitini çalıştırdığını doğrulamış; login/session/customer/sales/payments/payment-plans endpoint'leri başarıyla yanıt vermiştir.
 - GitHub repository public'a çevrildikten sonra daha önce görülen zero-step Actions runner problemi ortadan kalkmış; PR #82'nin yeniden çalıştırılan Web Quality, Critical Tests ve Foundation State Validation kontrolleri başarılı olmuştur.
 
@@ -183,6 +183,6 @@ Foundation başlangıcındaki ana build/route determinism riskleri kapatılmış
 - Dashboard/Finance production no-500 verification
 - final migration-status verification when migration files change
 - final documentation reconciliation
-- release gate declaration
+- release gate declaration recorded
 
 Bu audit, yeni ürün özelliği geliştirmeden önce teknik temel doğrulaması için referans dokümandır.
