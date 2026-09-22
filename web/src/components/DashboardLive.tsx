@@ -116,8 +116,9 @@ export default function DashboardLive() {
     return acc;
   }, {});
   const pendingInstallments = plans.flatMap((plan) => plan.installments).filter((item) => item.status === "BEKLIYOR");
-  const overdueInstallments = pendingInstallments.filter((item) => Date.parse(item.dueAt) < Date.now());
-  const today = new Date().toDateString();
+  const referenceTime = lastUpdated?.getTime() ?? 0;
+  const overdueInstallments = pendingInstallments.filter((item) => Date.parse(item.dueAt) < referenceTime);
+  const today = lastUpdated?.toDateString() ?? "";
   const todayS = s.filter((x) => new Date(x.dateTime).toDateString() === today);
 
   return (
