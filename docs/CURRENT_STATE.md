@@ -6,7 +6,8 @@ This file is retained as a legacy documentation entry point. The project has pro
 
 ## Current verified baseline
 
-- Main: `2da8953f06304e6a2b6f049571a2df991b1e61e9`
+- Release-gate baseline: `2da8953f06304e6a2b6f049571a2df991b1e61e9`
+- Current main tip: latest merged state-reconciliation commit
 - Phase 7 business chain: complete
 - Dashboard / Finance live verification: complete
 - Phase 8 cleanup: complete

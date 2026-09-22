@@ -18,11 +18,11 @@
 
 ### Main
 
-Son doğrulanmış `main`:
+Release-gate baseline:
 
 `2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
-Bu commit PR #90'ın merge commitidir; PR #90 runtime kodu değiştirmeyen release-gate/state reconciliation çalışmasıdır.
+Bu commit PR #90'ın merge commitidir. Sonraki PR #91 state reconciliation çalışması yalnızca dokümantasyon/validation içindir; runtime kodunu değiştirmez. `main` tipindeki merge SHA'ları ayrıca oluşabilir; bu nedenle handoff release-gate baseline commitini referans alır.
 
 - PR #80 — Phase 7 Critical E2E business chain
 - customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment → payment plan/installments
@@ -1114,7 +1114,9 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 
 # Son durum özeti
 
-**Main:** `d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+**Release-gate baseline:** `2da8953f06304e6a2b6f049571a2df991b1e61e9`
+
+**Current main:** latest merged state-reconciliation commit; runtime baseline remains `2aca0b1`.
 
 **PR #80:** merged ✅
 

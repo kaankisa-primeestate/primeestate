@@ -48,10 +48,10 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 ## 4. Doğrulanmış GitHub durumu
 
-### Main
-`2da8953f06304e6a2b6f049571a2df991b1e61e9`
+### Main / Release-gate baseline
+Current main tip is the latest merge commit. The verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
-Bu main commit'i PR #90 merge commit'idir. PR #90 release-gate dokümantasyonunu ve Foundation State Validation beklentilerini gerçek main ile hizalamıştır. Production runtime doğrulaması uygulama kodunun bulunduğu `2aca0b13...` commit'ine aittir; PR #90 runtime kodu değiştirmemiştir.
+PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
 
 ### Son önemli merge'ler
 
