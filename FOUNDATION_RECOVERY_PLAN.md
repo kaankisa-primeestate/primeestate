@@ -1,7 +1,7 @@
 # PrimeEstate — Foundation Recovery & Hardening Plan
 
 > Updated: 22.09.2026
-> Verified main: `2aca0b13ef7def2636fd5aa2226d0558ea246cca`
+> Verified main: `d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -90,18 +90,18 @@
 - [x] Document business status transitions.
 - [x] Update foundation audit with completed remediation.
 - [ ] Remove stale/dead branches after explicit branch cleanup.
-- [ ] Final release-gate checklist.
+- [x] Final release-gate checklist.
 
 ## Phase 9 — Release gate
-- [x] Main Web Quality green on `7c5f921...`.
-- [x] Production Auth Smoke green on `7c5f921...`.
+- [x] Main Web Quality green on `2aca0b1...`.
+- [x] Production Auth Smoke green on `2aca0b1...`.
 - [x] Critical E2E green after repository visibility change.
 - [x] Foundation State Validation green on the current Phase 8 documentation branch after its assertion was reconciled.
 - [x] Explicit production migration-status validation recorded for final release commit `2aca0b1...` (`Database schema is up to date!`).
 - [x] Runtime `/api/health` verification recorded for final release commit `2aca0b1...` (`status=200`, `database=connected`).
 - [x] Dashboard/Finance production no-500 verification recorded for final release commit `2aca0b1...`.
 - [x] Final CURRENT_STATE reconciliation prepared against final main commit `2aca0b1...`.
-- [ ] Declare foundation ready for new feature development after this reconciliation is merged.
+- [x] Declare foundation ready for new feature development after this reconciliation is merged.
 
 ## Phase 8 / CI note
 
