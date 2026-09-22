@@ -159,6 +159,7 @@ export default function RelationshipLive({ customerId }: { customerId: string })
   const [outcome, setOutcome] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [showingDateTime, setShowingDateTime] = useState("");
+  const [showingConfirmationUrl, setShowingConfirmationUrl] = useState<string | null>(null);
   const [showingListingId, setShowingListingId] = useState("");
   const [showingDrafts, setShowingDrafts] = useState<Record<string, ShowingDraft>>({});
   const [busy, setBusy] = useState("");
@@ -309,8 +310,9 @@ export default function RelationshipLive({ customerId }: { customerId: string })
     setBusy("showing-create");
     setMessage("");
     setError("");
+    setShowingConfirmationUrl(null);
     try {
-      const response = await fetch("/api/showings", {
+      const response = await fetch("/api/prime/showing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -323,7 +325,8 @@ export default function RelationshipLive({ customerId }: { customerId: string })
       if (!response.ok) throw new Error(data?.message ?? "Gösterim oluşturulamadı.");
       setShowingDateTime("");
       setShowingListingId("");
-      setMessage("Gösterim planlandı. Prime artık bu randevuyu takip edecek.");
+      setShowingConfirmationUrl(data.confirmation?.whatsappUrl ?? null);
+      setMessage("Gösterim planlandı. Prime teyit görevini oluşturdu ve sonraki adımı “Gösterim teyidini al” olarak ayarladı.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gösterim oluşturulamadı.");
@@ -331,7 +334,6 @@ export default function RelationshipLive({ customerId }: { customerId: string })
       setBusy("");
     }
   }
-
   async function updateShowing(showingId: string) {
     const draft = showingDrafts[showingId];
     if (!draft) return;
@@ -385,7 +387,7 @@ export default function RelationshipLive({ customerId }: { customerId: string })
           <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">İlişki Workspace · Live</span>
         </div>
 
-        {message && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
+        {message && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700"><div>{message}</div>{showingConfirmationUrl && <a href={showingConfirmationUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white">WhatsApp ile Gösterim Teyidi Gönder</a>}</div>}
         {error && <div className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
 
         <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
