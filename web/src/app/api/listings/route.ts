@@ -3,6 +3,7 @@ import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, officeListingScope } from "@/lib/authz";
+import { findPrimeListingOpportunities } from "@/core/prime-listing-opportunities";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
@@ -136,5 +137,12 @@ export async function POST(request: Request) {
     return listing;
   });
 
-  return NextResponse.json({ listing: created }, { status: 201 });
+  let primeOpportunities: Awaited<ReturnType<typeof findPrimeListingOpportunities>> = [];
+  try {
+    primeOpportunities = await findPrimeListingOpportunities(created, context);
+  } catch {
+    // Prime matching is additive; a matching failure must not undo a successful listing save.
+  }
+
+  return NextResponse.json({ listing: created, primeOpportunities }, { status: 201 });
 }

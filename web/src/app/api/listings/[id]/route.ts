@@ -3,6 +3,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, isManagerRole, officeListingScope } from "@/lib/authz";
+import { findPrimeListingOpportunities } from "@/core/prime-listing-opportunities";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
 const PURPOSES = ["SATILIK", "KIRALIK"] as const;
@@ -97,5 +98,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
     return { property, listing: result };
   });
-  return NextResponse.json(updated);
+  let primeOpportunities: Awaited<ReturnType<typeof findPrimeListingOpportunities>> = [];
+  try {
+    primeOpportunities = await findPrimeListingOpportunities(updated.listing, context);
+  } catch {
+    // Prime matching is additive; a matching failure must not undo a successful listing update.
+  }
+
+  return NextResponse.json({ ...updated, primeOpportunities });
 }
