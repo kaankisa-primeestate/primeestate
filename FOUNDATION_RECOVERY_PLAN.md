@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 22.09.2026
-> Base main: b4e0d97e73e19f1c85ba220074e7759c51be39ff
+> Base main: c0d440ed27e2d53fd54d35699787f55e5f5c424a
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -76,7 +76,7 @@
 - [x] Web Quality #456 green on merged main.
 - [x] Production Auth Smoke #48 green on merged main.
 
-## Phase 6 — Test foundation — ACTIVE
+## Phase 6 — Test foundation — COMPLETE
 ### Completed
 - [x] Add Node built-in test runner and `npm test`.
 - [x] Run tests in Web Quality CI.
@@ -91,7 +91,7 @@
 - [x] Add integration tests for critical API routes.
 - [x] Add initial authorization matrix integration tests across actual route handlers.
 - [x] Add Team Leader scope integration tests for customer routes.
-- [ ] Add Office/Admin scope integration tests.
+- [x] Add Office/Admin scope integration tests.
 - [x] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
 - [x] Add a dedicated Critical Tests workflow/check. Branch protection enforcement remains a repository-settings concern and is not verified as enabled.
 
@@ -107,15 +107,15 @@
 - [x] Record payment.
 - [x] Create/update ledger.
 - [x] Create payment plan/installments.
-- [ ] Verify dashboard reflects the chain.
-- [ ] Verify Finance reflects the chain.
+- [x] Verify dashboard reflects the chain.
+- [x] Verify Finance reflects the chain.
 
-**Status:** Core HTTP business chain is implemented and merged via PR #80. Dashboard/Finance live-data verification remains open.
+**Status:** Core HTTP business chain is merged via PR #80. Dashboard/Finance live-data verification and finance summary hardening are merged via PR #82.
 
-## Phase 8 — Codebase cleanup & documentation/
+## Phase 8 — Codebase cleanup & documentation/ — ACTIVE
 - [ ] Consolidate/retire duplicate matching engines.
 - [ ] Remove stale/dead branches and obsolete PRs after confirming their changes are superseded.
-- [ ] Update CURRENT_STATE.md.
+- [x] Update CURRENT_STATE.md.
 - [ ] Update foundation audit with completed remediation.
 - [ ] Document release/migration procedure.
 - [ ] Document authorization matrix.
