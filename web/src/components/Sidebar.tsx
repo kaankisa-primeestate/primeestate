@@ -7,6 +7,7 @@ const menu = [
   { name: "Portföyler", href: "/portfolio", icon: "🏡" },
   { name: "Eşleştirme", href: "/matching", icon: "🎯" },
   { name: "İş Akışı", href: "/sales", icon: "⚡" },
+  { name: "Prime Ticari Dönüşüm", href: "/prime/commercial", icon: "🧠" },
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
