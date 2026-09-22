@@ -10,6 +10,12 @@ on:
       - ".github/workflows/primeestate-critical-tests.yml"
   workflow_dispatch:
 
+# Ayni dala art arda gonderim yapildiginda eskisi iptal edilir; gecersiz
+# kalmis bir calismanin sonuna kadar kosmasinin faydasi yok.
+concurrency:
+  group: critical-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

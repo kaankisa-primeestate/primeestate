@@ -1,7 +1,12 @@
 name: PrimeEstate Web Quality
 
 on:
+  # push yalnizca main icin. Once her dal gonderiminde de kosuyordu ve ayni
+  # commit'in PR karsiligi da ayrica kosuyordu: son 100 calismanin olcumunde
+  # 28 push calismasinin 27'si main disi bir daldaydi, yani her sey iki kez
+  # derleniyordu. Dal gonderimleri zaten asagidaki pull_request ile denetleniyor.
   push:
+    branches: [main]
     paths:
       - "web/**"
       - ".github/workflows/primeestate-web-quality.yml"
@@ -13,6 +18,13 @@ on:
       - "FOUNDATION_RECOVERY_PLAN.md"
       - ".github/workflows/primeestate-web-quality.yml"
       - ".github/workflows/production-auth-smoke.yml"
+
+# Ayni dala art arda gonderim yapildiginda eskisi iptal edilir. Bu tanim
+# yokken son 100 calismanin 66'si, uzerine yenisi geldigi halde sonuna kadar
+# kosmustu; hepsi bosa giden dakikaydi.
+concurrency:
+  group: web-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   web-quality:
