@@ -78,7 +78,7 @@ export default function PrimeBriefLive() {
       setSuccess("Temas kaydedildi. Prime yeni adımı belirledi: " + data.nextAction.label);
       await load();
       if (destination === "call") {
-        window.location.href = "tel:" + (lead?.client.phone ?? "");
+        window.open("tel:" + (lead?.client.phone ?? ""), "_self");
       } else if (lead?.client.phone) {
         window.open(
           "https://wa.me/" + lead.client.phone.replace(/\\D/g, "").replace(/^0/, "90"),
