@@ -28,33 +28,17 @@ async function readJson(response) {
 async function main() {
   const result = {
     baseUrl,
-    signIn: {
-      status: null,
-      ok: false,
-      setCookieCount: 0,
-    },
-    session: {
-      status: null,
-      ok: false,
-      present: false,
-    },
-    customers: {
-      status: null,
-      ok: false,
-      authenticated: false,
-    },
-    sales: {
-      status: null,
-      ok: false,
-    },
-    payments: {
-      status: null,
-      ok: false,
-    },
-    paymentPlans: {
-      status: null,
-      ok: false,
-    },
+    signIn: { status: null, ok: false, setCookieCount: 0 },
+    session: { status: null, ok: false, present: false },
+    health: { status: null, ok: false, database: null, healthy: false },
+    customers: { status: null, ok: false, authenticated: false },
+    dashboardPage: { status: null, ok: false, no500: false },
+    financePage: { status: null, ok: false, no500: false },
+    financeDashboardPage: { status: null, ok: false, no500: false },
+    listings: { status: null, ok: false },
+    sales: { status: null, ok: false },
+    payments: { status: null, ok: false },
+    paymentPlans: { status: null, ok: false },
   };
 
   const commonHeaders = {
@@ -66,11 +50,7 @@ async function main() {
   const signInResponse = await fetch(`${baseUrl}/api/auth/sign-in/email`, {
     method: "POST",
     headers: commonHeaders,
-    body: JSON.stringify({
-      email,
-      password,
-      rememberMe: true,
-    }),
+    body: JSON.stringify({ email, password, rememberMe: true }),
   });
 
   result.signIn.status = signInResponse.status;
@@ -96,39 +76,54 @@ async function main() {
   }
 
   const sessionResponse = await fetch(`${baseUrl}/api/auth/get-session`, {
-    method: "GET",
-    headers: {
-      Cookie: cookies,
-      Origin: baseUrl,
-      Referer: `${baseUrl}/dashboard`,
-    },
+    headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` },
   });
-
   result.session.status = sessionResponse.status;
   result.session.ok = sessionResponse.ok;
-
   const sessionBody = await readJson(sessionResponse);
   result.session.present = Boolean(sessionBody?.session?.id && sessionBody?.user?.id);
 
-  const customersResponse = await fetch(`${baseUrl}/api/customers?limit=1`, {
-    method: "GET",
-    headers: {
-      Cookie: cookies,
-      Origin: baseUrl,
-      Referer: `${baseUrl}/clients`,
-    },
+  const healthResponse = await fetch(`${baseUrl}/api/health`, {
+    headers: { Accept: "application/json", Origin: baseUrl, Referer: `${baseUrl}/dashboard` },
   });
+  const healthBody = await readJson(healthResponse);
+  result.health.status = healthResponse.status;
+  result.health.ok = healthResponse.ok;
+  result.health.database = healthBody?.database ?? null;
+  result.health.healthy = healthResponse.ok && healthBody?.status === "ok" && healthBody?.database === "connected";
 
+  const customersResponse = await fetch(`${baseUrl}/api/customers?limit=1`, {
+    headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/clients` },
+  });
   result.customers.status = customersResponse.status;
   result.customers.ok = customersResponse.ok;
   result.customers.authenticated = customersResponse.status !== 401;
 
-  const [salesResponse, paymentsResponse, paymentPlansResponse] = await Promise.all([
+  const [dashboardResponse, financeResponse, financeDashboardResponse] = await Promise.all([
+    fetch(`${baseUrl}/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
+    fetch(`${baseUrl}/finance`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
+    fetch(`${baseUrl}/finance/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
+  ]);
+
+  result.dashboardPage.status = dashboardResponse.status;
+  result.dashboardPage.ok = dashboardResponse.ok;
+  result.dashboardPage.no500 = dashboardResponse.status !== 500;
+  result.financePage.status = financeResponse.status;
+  result.financePage.ok = financeResponse.ok;
+  result.financePage.no500 = financeResponse.status !== 500;
+  result.financeDashboardPage.status = financeDashboardResponse.status;
+  result.financeDashboardPage.ok = financeDashboardResponse.ok;
+  result.financeDashboardPage.no500 = financeDashboardResponse.status !== 500;
+
+  const [listingsResponse, salesResponse, paymentsResponse, paymentPlansResponse] = await Promise.all([
+    fetch(`${baseUrl}/api/listings?limit=1`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/api/sales`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/api/payments`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
     fetch(`${baseUrl}/api/payment-plans`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
   ]);
 
+  result.listings.status = listingsResponse.status;
+  result.listings.ok = listingsResponse.ok;
   result.sales.status = salesResponse.status;
   result.sales.ok = salesResponse.ok;
   result.payments.status = paymentsResponse.status;
@@ -138,19 +133,14 @@ async function main() {
 
   console.log(JSON.stringify(result, null, 2));
 
-  if (!result.session.present) {
-    process.exitCode = 4;
+  if (!result.session.present) { process.exitCode = 4; return; }
+  if (!result.health.healthy) { process.exitCode = 5; return; }
+  if (!result.customers.authenticated) { process.exitCode = 6; return; }
+  if (!result.dashboardPage.ok || !result.dashboardPage.no500 || !result.financePage.ok || !result.financePage.no500 || !result.financeDashboardPage.ok || !result.financeDashboardPage.no500) {
+    process.exitCode = 7;
     return;
   }
-
-  if (!result.customers.authenticated) {
-    process.exitCode = 5;
-    return;
-  }
-
-  if (!result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) {
-    process.exitCode = 6;
-  }
+  if (!result.listings.ok || !result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) { process.exitCode = 8; }
 }
 
 main().catch((error) => {
