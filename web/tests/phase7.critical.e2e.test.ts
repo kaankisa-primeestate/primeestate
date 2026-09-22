@@ -446,6 +446,16 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const listingReadPayload = await json<{ listings: Array<{ id: string; status: string }> }>(listingRead);
   assert.ok(listingReadPayload.listings.some((listing) => listing.id === listingPayload.listing.id && listing.status === "REZERVE"));
 
+  const activeListingRead = await api(`/api/listings?status=AKTIF&q=${encodeURIComponent("Bostancı E2E 3+1")}`, cookie);
+  assert.equal(activeListingRead.status, 200);
+  const activeListingPayload = await json<{ listings: Array<{ id: string }> }>(activeListingRead);
+  assert.ok(!activeListingPayload.listings.some((listing) => listing.id === listingPayload.listing.id));
+
+  const reservedListingRead = await api(`/api/listings?status=REZERVE&q=${encodeURIComponent("Bostancı E2E 3+1")}`, cookie);
+  assert.equal(reservedListingRead.status, 200);
+  const reservedListingPayload = await json<{ listings: Array<{ id: string; status: string }> }>(reservedListingRead);
+  assert.ok(reservedListingPayload.listings.some((listing) => listing.id === listingPayload.listing.id && listing.status === "REZERVE"));
+
   const showingRead = await api(`/api/showings?customerId=${customerId}`, cookie);
   assert.equal(showingRead.status, 200);
   const showingPayload = await json<{ showings: Array<{ customer: { id: string }; listing: { id: string } }> }>(showingRead);
