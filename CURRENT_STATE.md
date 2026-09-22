@@ -49,9 +49,9 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 ## 4. Doğrulanmış GitHub durumu
 
 ### Main
-`7c5f9218964ad5d1a669b8e568b7e56a55cd6a3e`
+`2aca0b13ef7def2636fd5aa2226d0558ea246cca`
 
-Bu main commit'i PR #86 merge'idir.
+Bu main commit'i PR #88 merge'idir ve production release-gate smoke kapsamını genişletir.
 
 ### Son önemli merge'ler
 
@@ -61,6 +61,7 @@ Bu main commit'i PR #86 merge'idir.
 - PR #84 — post-merge documentation reconciliation — merged
 - PR #85 — final documentation reconciliation — merged
 - PR #86 — obsolete legacy matching engine cleanup — merged
+- PR #88 — production release-gate smoke hardening — merged
 
 ### Açık PR
 Şu anda eski Phase 6 dokümantasyon PR #79 kapatılmıştır. PR #81 ve #82 dahil eski Phase 7 PR'ları da artık kullanılmamaktadır.
@@ -91,7 +92,7 @@ Production servis:
 
 `https://primeestate-v9eo.onrender.com`
 
-22.09.2026 tarihinde main commit `7c5f921...` için Production Auth Smoke başarılıdır.
+22.09.2026 tarihinde main commit `2aca0b1...` için Production Auth Smoke başarılıdır.
 
 Doğrulananlar:
 - Render deployment commit eşleşmesi
@@ -106,9 +107,10 @@ Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıc
 
 ## 7. CI
 
-Main commit `7c5f921...` için:
+Main commit `2aca0b1...` için:
 - PrimeEstate Web Quality ✅
 - Production Auth Smoke ✅
+- Production Prisma Migration Status ✅ (`Database schema is up to date!`)
 
 PR #82'nin public repository sonrasında yeniden çalıştırılan CI'sinde:
 - Web Quality ✅
@@ -128,7 +130,9 @@ Release Gate hedefi:
 - authorization matrix green
 - Critical E2E green
 - runtime health green
-- Dashboard/Finance 500 olmadan çalışır
+- Dashboard/Finance production sayfaları 500 döndürmez
+- `/api/health` database bağlantısı ile başarılıdır
+- `/api/listings`, `/api/sales`, `/api/payments`, `/api/payment-plans` production smoke kapsamında başarılıdır
 - CURRENT_STATE gerçek main ile eşleşir
 
 ## 9. Kırmızı çizgiler
