@@ -44,12 +44,12 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - Release gate sonrası ele alınacak ürün dışı hardening işleri
 
 ### Aktif phase
-**Phase 8 — Codebase cleanup & documentation**
+**Phase 9 — Release Gate / next feature-development baseline**
 
 ## 4. Doğrulanmış GitHub durumu
 
 ### Main
-`2aca0b13ef7def2636fd5aa2226d0558ea246cca`
+`d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
 
 Bu main commit'i PR #88 merge'idir ve production release-gate smoke kapsamını genişletir.
 
@@ -84,7 +84,7 @@ Yeni Phase 8 PR:
 Kalan:
 - stale branch temizliği (GitHub branch silme yetkisi/işlemi ayrıca yürütülecek)
 - foundation audit remediation kaydını güncelleme
-- final release gate
+- final main reconciliation and release-gate declaration
 
 ## 6. Production
 
@@ -121,7 +121,7 @@ Private repository dönemindeki zero-step runner failure problemi artık görül
 
 ## 8. Release gate
 
-Yeni ürün özelliği geliştirmeye Release Gate tamamlanmadan başlanmaz.
+Foundation release gate doğrulaması tamamlanmış olduğundan yeni ürün özelliği geliştirme Phase 9 kapsamında başlatılabilir.
 
 Release Gate hedefi:
 - Main CI green
@@ -133,7 +133,7 @@ Release Gate hedefi:
 - Dashboard/Finance production sayfaları 500 döndürmez
 - `/api/health` database bağlantısı ile başarılıdır
 - `/api/listings`, `/api/sales`, `/api/payments`, `/api/payment-plans` production smoke kapsamında başarılıdır
-- CURRENT_STATE gerçek main ile eşleşir
+- CURRENT_STATE gerçek main commit'i ile eşleşir
 
 ## 9. Kırmızı çizgiler
 
