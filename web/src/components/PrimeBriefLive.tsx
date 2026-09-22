@@ -75,7 +75,11 @@ export default function PrimeBriefLive() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message ?? "Prime aksiyonu kaydedilemedi.");
       setOutcome("");
-      setSuccess("Temas kaydedildi. Prime yeni adımı belirledi: " + data.nextAction.label);
+      setSuccess(
+        data.demandChanges?.length
+          ? "Temas kaydedildi. Talep güncellendi: " + data.demandChanges.join(" ") + " Prime yeni adımı: " + data.nextAction.label
+          : "Temas kaydedildi. Prime yeni adımı belirledi: " + data.nextAction.label,
+      );
       await load();
       if (destination === "call") {
         window.open("tel:" + (lead?.client.phone ?? ""), "_self");
