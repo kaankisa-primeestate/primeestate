@@ -58,28 +58,36 @@ export default function PrimeBriefLive() {
     return () => clearInterval(interval);
   }, []);
 
-  async function recordActivity(customerId: string, type: "ARAMA" | "WHATSAPP", summary: string) {
+  async function recordPrimeAction(customerId: string, type: "ARAMA" | "WHATSAPP", destination: "call" | "whatsapp") {
     setBusyAction(type);
     setSuccess("");
+    setError("");
     try {
-      const response = await fetch("/api/activities", {
+      const response = await fetch("/api/prime/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
-          type,
-          summary,
+          action: type,
           outcome: outcome.trim() || null,
-          metadata: { source: "PRIME_BRAIN" },
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.message ?? "Aktivite kaydedilemedi.");
+      if (!response.ok) throw new Error(data?.message ?? "Prime aksiyonu kaydedilemedi.");
       setOutcome("");
-      setSuccess("Temas Prime hafızasına kaydedildi.");
+      setSuccess("Temas kaydedildi. Prime yeni adımı belirledi: " + data.nextAction.label);
       await load();
+      if (destination === "call") {
+        window.open("tel:" + (lead?.client.phone ?? ""), "_self");
+      } else if (lead?.client.phone) {
+        window.open(
+          "https://wa.me/" + lead.client.phone.replace(/\\D/g, "").replace(/^0/, "90"),
+          "_blank",
+          "noopener,noreferrer",
+        );
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Aktivite kaydedilemedi.");
+      setError(err instanceof Error ? err.message : "Prime aksiyonu kaydedilemedi.");
     } finally {
       setBusyAction("");
     }
@@ -162,16 +170,14 @@ export default function PrimeBriefLive() {
                 <>
                   <a
                     href={"tel:" + lead.client.phone}
-                    onClick={() => { void recordActivity(lead.client.id, "ARAMA", "Prime önerisiyle telefon görüşmesi başlatıldı."); }}
+                    onClick={(event) => { event.preventDefault(); void recordPrimeAction(lead.client.id, "ARAMA", "call"); }}
                     className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
                   >
                     📞 Ara
                   </a>
                   <a
                     href={"https://wa.me/" + lead.client.phone.replace(/\D/g, "").replace(/^0/, "90")}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => { void recordActivity(lead.client.id, "WHATSAPP", "Prime önerisiyle WhatsApp teması başlatıldı."); }}
+                    onClick={(event) => { event.preventDefault(); void recordPrimeAction(lead.client.id, "WHATSAPP", "whatsapp"); }}
                     className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
                   >
                     WhatsApp
