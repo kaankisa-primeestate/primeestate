@@ -50,7 +50,7 @@
 
 > Kalan Phase 4 hardening bilinçli olarak release gate sonrasına bırakılmıştır.
 
-## Phase 5 — Runtime & route protection
+## Phase 5 — Runtime & route protection — COMPLETE
 - [x] Central page authentication guard.
 - [x] Role-aware route protection.
 - [x] Better Auth session behavior.
@@ -78,7 +78,7 @@
 - [x] Dashboard reflection.
 - [x] Finance reflection.
 
-**Status:** Phase 7 complete and merged. Public repository sonrasında CI verification yeniden yeşil hale gelmiştir.
+**Status:** Phase 7 complete and merged. Dashboard/Finance live verification and finance summary hardening are also merged.
 
 ## Phase 8 — Codebase cleanup & documentation
 - [x] Remove obsolete legacy matching engine.
@@ -96,15 +96,15 @@
 - [x] Main Web Quality green on `7c5f921...`.
 - [x] Production Auth Smoke green on `7c5f921...`.
 - [x] Critical E2E green after repository visibility change.
-- [x] Foundation State Validation green.
+- [x] Foundation State Validation green on the current Phase 8 documentation branch after its assertion was reconciled.
 - [ ] Explicit production migration-status validation for the final release commit when migration files change.
 - [ ] Runtime `/api/health` verification recorded for the final release commit.
 - [ ] Dashboard/Finance production no-500 verification recorded for the final release commit.
 - [ ] Final CURRENT_STATE reconciliation after all Phase 8 documentation merges.
 - [ ] Declare foundation ready for new feature development.
 
-## Phase 8 operating note
+## Phase 8 / CI note
 
-Repository visibility is now public so GitHub-hosted Actions can run without the private-repository billing constraint that previously caused zero-step runner failures.
+Repository visibility is now public. After this change, GitHub-hosted Actions runners started normally again; the prior zero-step runner failures disappeared. No application workaround was introduced for that infrastructure issue.
 
-No application workaround was introduced for that CI infrastructure issue.
+CI state changes must be diagnosed from actual job steps/logs before code changes are made.
