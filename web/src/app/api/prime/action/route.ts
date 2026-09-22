@@ -119,25 +119,28 @@ export async function POST(request: Request) {
     };
   });
 
-  const matchSets = updatedDemands.map(({ demand, preferences }) => ({
-    demand: {
+  const matchSets = updatedDemands.map(({ demand, preferences }) => {
+    const updatedDemand = {
       ...demand,
       preferences,
       ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
       ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
       ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
-    },
-    demand,
-    results: listings
-      .filter((listing) =>
-        demand.type === "SATIN_ALMA"
-          ? listing.purpose === "SATILIK"
-          : listing.purpose === "KIRALIK",
-      )
-      .map((listing) => calculateMatch(demand, listing))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 50),
-  }));
+    };
+
+    return {
+      demand: updatedDemand,
+      results: listings
+        .filter((listing) =>
+          updatedDemand.type === "SATIN_ALMA"
+            ? listing.purpose === "SATILIK"
+            : listing.purpose === "KIRALIK",
+        )
+        .map((listing) => calculateMatch(updatedDemand, listing))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 50),
+    };
+  });
 
   const activitySummary =
     action === "ARAMA"
