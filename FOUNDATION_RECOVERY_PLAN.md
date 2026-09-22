@@ -113,7 +113,7 @@
 **Status:** Core HTTP business chain is merged via PR #80. Dashboard/Finance live-data verification and finance summary hardening are merged via PR #82.
 
 ## Phase 8 — Codebase cleanup & documentation/ — ACTIVE
-- [ ] Consolidate/retire duplicate matching engines.
+- [x] Consolidate/retire duplicate matching engines: legacy `web/src/core/matching.ts` and unused `web/src/types/Matching.ts` removed after repository-wide reference audit.
 - [ ] Remove stale/dead branches and obsolete PRs after confirming their changes are superseded.
 - [x] Update CURRENT_STATE.md.
 - [ ] Update foundation audit with completed remediation.
