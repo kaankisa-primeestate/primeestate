@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { commercialNextAction } from "@/core/prime-commercial";
 
 function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Prisma.Decimal | null; officeShareRate: Prisma.Decimal | null }) {
   if (!sale.commissionRate || !sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
   if (!saleId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Satış ve pozitif tahsilat tutarı zorunludur." }, { status: 400 });
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true },
+    select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
   const currency = typeof body.currency === "string" && body.currency.trim() ? body.currency.trim().toUpperCase() : sale.currency;
@@ -68,6 +69,12 @@ export async function POST(request: Request) {
           { saleId, paymentId: created.id, account: "CONSULTANT", amount: split.consultant, currency, description: "Tahsilat üzerinden danışman payı" },
         ] });
       }
+      const remaining = sale.amount.sub(nextPaid);
+      const next = commercialNextAction({ event: "PAYMENT_RECEIVED", remainingAmount: remaining });
+      await tx.customer.update({
+        where: { id: sale.customerId },
+        data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) },
+      });
       await tx.auditLog.create({ data: { organizationId: context.organizationId, actorUserId: context.userId, action: "PAYMENT_CREATED", entityType: "Payment", entityId: created.id, metadata: { saleId, amount: String(amount), currency, status } } });
       return created;
     });

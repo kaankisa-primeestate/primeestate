@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
+import { commercialNextAction } from "@/core/prime-commercial";
 
 export async function GET() {
   const context = await getUserContext();
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
 
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    select: { id: true, amount: true, currency: true },
+    select: { id: true, customerId: true, amount: true, currency: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
 
@@ -61,6 +62,11 @@ export async function POST(request: Request) {
           installments: { create: installments.map((x) => ({ sequence: x.sequence, amount: new Prisma.Decimal(x.amount.toFixed(2)), currency: sale.currency, dueAt: x.dueAt, note: x.note })) },
         },
         include: { installments: { orderBy: { sequence: "asc" } } },
+      });
+      const next = commercialNextAction({ event: "PAYMENT_PLAN_CREATED" });
+      await tx.customer.update({
+        where: { id: sale.customerId },
+        data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) },
       });
       await tx.auditLog.create({ data: { organizationId: context.organizationId, actorUserId: context.userId, action: "PAYMENT_PLAN_CREATED", entityType: "PaymentPlan", entityId: created.id, metadata: { saleId, installmentCount: installments.length, total: sale.amount.toString() } } });
       return created;

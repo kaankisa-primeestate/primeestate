@@ -130,14 +130,15 @@ export default function SalesPage() {
     setOfferSaving(true);
     setOfferError(null);
     try {
-      const response = await fetch("/api/offers", {
+      const response = await fetch("/api/prime/commercial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "OFFER_CREATE",
           customerId: offerForm.customerId,
           listingId: offerForm.listingId,
           amount: Number(offerForm.amount),
-          nextAction: offerForm.nextAction,
+          outcome: offerForm.nextAction,
         }),
       });
       const payload = await response.json();
@@ -195,6 +196,18 @@ export default function SalesPage() {
   }
 
   async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
+    if (data.status) {
+      const response = await fetch("/api/prime/commercial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "OFFER_STATUS", offerId: id, status: data.status, outcome: data.nextAction }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message ?? "Teklif güncellenemedi.");
+      setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
+      if (payload.sale) setSales((current) => [payload.sale, ...current]);
+      return;
+    }
     const response = await fetch(`/api/offers/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
