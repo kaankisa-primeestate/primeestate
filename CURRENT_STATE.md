@@ -80,7 +80,7 @@ Phase 7'nin kritik HTTP business chain'i ve Dashboard/Finance canlı veri doğru
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`98c4ab152b8b7b5107b43d99f48f289eb705ff17`
+`b4d7842e0e43bf6906a3c2407bf0076ab21a429a`
 
 PR #80 — Phase 7 Critical E2E business chain — merged.
 
@@ -93,8 +93,9 @@ Ayrıca Codex devralma dosyaları main'e eklenmiştir:
 - `CODEX_PROJECT_HANDOFF.md`
 
 ### Açık iş
-Phase 8 codebase cleanup & documentation.
-PR #81 stale durumda kapatılmış ve merge edilmemiştir. PR #82 current-main tabanında doğrulanmış ve merge edilmiştir. PR #84 post-merge dokümantasyon reconcile işlemini tamamlamıştır.
+Phase 8 codebase cleanup & documentation aktif. İlk temizlik: kullanılmayan eski `web/src/core/matching.ts` ve `web/src/types/Matching.ts` kaldırıldı; aktif API zaten `web/src/core/matching-engine.ts` kullanıyordu.
+PR #81 stale durumda kapatılmış ve merge edilmemiştir. PR #82 current-main tabanında doğrulanmış ve merge edilmiştir.
+PR #85 docs-only reconcile olarak merge edilmiştir. PR #84 ve PR #85 post-merge dokümantasyon reconcile işlemlerini tamamlamıştır.
 
 ## 5. Runtime / production notu
 Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
@@ -109,7 +110,7 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 7. Phase 6 — integration / authorization / business invariant testleri tamamlandı
 8. Phase 7 — Critical E2E business chain tamamlandı ve PR #80 main'e merge edildi
 9. Phase 7 — Dashboard ve Finance canlı veri doğrulaması — tamamlandı
-10. Phase 8 — Codebase cleanup & documentation
+10. Phase 8 — Codebase cleanup & documentation — aktif
 11. Phase 9 — Release gate
 
 > Yeni ürün özelliği geliştirmeye release gate tamamlanmadan başlanmaz.

@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`98c4ab152b8b7b5107b43d99f48f289eb705ff17`
+`b4d7842e0e43bf6906a3c2407bf0076ab21a429a`
 
 Bu commit PR #80'in merge commitidir:
 
@@ -33,6 +33,7 @@ PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 
 PR #82 — Dashboard / Finance live verification — merged.
 PR #84 — post-merge documentation reconciliation — merged.
+PR #85 — final main state reconciliation — merged.
 
 ## 3. Production / Render
 
@@ -771,7 +772,7 @@ Penalty uygulanabilir.
 
 ### Eski / UI type tabanlı matching
 
-`web/src/core/matching.ts`
+`web/src/core/matching.ts` (removed in Phase 8; no production-code references found)
 
 Bu sistem `Customer`, `Demand`, `Portfolio` gibi eski front-end type'larıyla çalışır.
 
