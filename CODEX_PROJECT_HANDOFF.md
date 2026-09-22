@@ -1114,7 +1114,9 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 
 # Son durum özeti
 
-**Main:** `d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+**Release-gate baseline:** `2da8953f06304e6a2b6f049571a2df991b1e61e9`
+
+**Current main:** latest merged state-reconciliation commit; runtime baseline remains `2aca0b1`.
 
 **PR #80:** merged ✅
 
