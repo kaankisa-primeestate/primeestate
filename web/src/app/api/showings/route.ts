@@ -114,7 +114,11 @@ export async function PATCH(request: Request) {
       },
     });
 
-    if (status === "GERCEKLESTI" || status === "IPTAL") {
+    const shouldRememberShowing =
+      (status === "GERCEKLESTI" && (showing.status !== "GERCEKLESTI" || note !== showing.note)) ||
+      (status === "IPTAL" && showing.status !== "IPTAL");
+
+    if (shouldRememberShowing) {
       await tx.activity.create({
         data: {
           customerId: showing.customer.id,
