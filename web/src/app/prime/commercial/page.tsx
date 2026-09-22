@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 
 type Customer = { id: string; name: string };
@@ -21,31 +21,31 @@ export default function PrimeCommercialPage() {
   const [commission, setCommission] = useState<Record<string, { rate: string; office: string }>>({});
   const [payment, setPayment] = useState<Record<string, string>>({});
 
-  async function load() {
-    const [c, l, o, s] = await Promise.all([
-      fetch("/api/customers", { cache: "no-store" }),
-      fetch("/api/listings?status=AKTIF", { cache: "no-store" }),
-      fetch("/api/offers", { cache: "no-store" }),
-      fetch("/api/sales", { cache: "no-store" }),
-    ]);
-    const [cp, lp, op, sp] = await Promise.all([c.json(), l.json(), o.json(), s.json()]);
-    if (!c.ok) throw new Error(cp.message ?? "Müşteriler alınamadı.");
-    if (!l.ok) throw new Error(lp.message ?? "Portföyler alınamadı.");
-    if (!o.ok) throw new Error(op.message ?? "Teklifler alınamadı.");
-    if (!s.ok) throw new Error(sp.message ?? "Satışlar alınamadı.");
-    setCustomers(cp.customers ?? []);
-    setListings(lp.listings ?? []);
-    setOffers(op.offers ?? []);
-    setSales(sp.sales ?? []);
-  }
+  const load = useCallback(async () => {
+    try {
+      const [c, l, o, s] = await Promise.all([
+        fetch("/api/customers", { cache: "no-store" }),
+        fetch("/api/listings?status=AKTIF", { cache: "no-store" }),
+        fetch("/api/offers", { cache: "no-store" }),
+        fetch("/api/sales", { cache: "no-store" }),
+      ]);
+      const [cp, lp, op, sp] = await Promise.all([c.json(), l.json(), o.json(), s.json()]);
+      if (!c.ok) throw new Error(cp.message ?? "Müşteriler alınamadı.");
+      if (!l.ok) throw new Error(lp.message ?? "Portföyler alınamadı.");
+      if (!o.ok) throw new Error(op.message ?? "Teklifler alınamadı.");
+      if (!s.ok) throw new Error(sp.message ?? "Satışlar alınamadı.");
+      setCustomers(cp.customers ?? []);
+      setListings(lp.listings ?? []);
+      setOffers(op.offers ?? []);
+      setSales(sp.sales ?? []);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Veriler alınamadı.");
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    void load().catch((e) => {
-      if (!cancelled) setMessage(e instanceof Error ? e.message : "Veriler alınamadı.");
-    });
-    return () => { cancelled = true; };
-  }, []);
+    void load();
+  }, [load]);
 
   async function post(body: Record<string, unknown>, key: string) {
     setBusy(key);
