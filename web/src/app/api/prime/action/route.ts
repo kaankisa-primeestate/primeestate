@@ -5,6 +5,7 @@ import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope, officeListingScope } from "@/lib/authz";
 import { calculateMatch } from "@/core/matching-engine";
 import { deriveNextAction, type PrimeActionType } from "@/core/prime-next-action";
+import { extractDemandPreferenceChanges } from "@/core/demand-preference-learning";
 
 export async function POST(request: Request) {
   const context = await getUserContext();
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
   if (!customer) return notFound("Müşteri bulunamadı veya erişim yetkiniz yok.");
 
   const nextAction = deriveNextAction(outcome || null, action as PrimeActionType);
+  const demandChanges = extractDemandPreferenceChanges(outcome);
   const nextActionAt = new Date(Date.now() + nextAction.dueInHours * 60 * 60 * 1000);
   const nextRelationshipScore = Math.min(100, Math.max(0, customer.relationshipScore + nextAction.relationshipDelta));
 
@@ -79,18 +81,66 @@ export async function POST(request: Request) {
     },
   });
 
-  const matchSets = demands.map((demand) => ({
-    demand,
-    results: listings
-      .filter((listing) =>
-        demand.type === "SATIN_ALMA"
-          ? listing.purpose === "SATILIK"
-          : listing.purpose === "KIRALIK",
-      )
-      .map((listing) => calculateMatch(demand, listing))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 50),
-  }));
+  const updatedDemands = demands.map((demand) => {
+    const currentPreferences =
+      demand.preferences && typeof demand.preferences === "object" && !Array.isArray(demand.preferences)
+        ? { ...(demand.preferences as Record<string, unknown>) }
+        : {};
+
+    const nextPreferences = { ...currentPreferences };
+    if (demandChanges.mustHave?.length) {
+      nextPreferences.mustHave = [...new Set([
+        ...(Array.isArray(nextPreferences.mustHave) ? nextPreferences.mustHave.filter((item): item is string => typeof item === "string") : []),
+        ...demandChanges.mustHave,
+      ])];
+    }
+    if (demandChanges.mustNotHave?.length) {
+      nextPreferences.mustNotHave = [...new Set([
+        ...(Array.isArray(nextPreferences.mustNotHave) ? nextPreferences.mustNotHave.filter((item): item is string => typeof item === "string") : []),
+        ...demandChanges.mustNotHave,
+      ])];
+    }
+
+    const changeHistory = Array.isArray(nextPreferences.primePreferenceChanges)
+      ? nextPreferences.primePreferenceChanges.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+      : [];
+    nextPreferences.primePreferenceChanges = [
+      ...changeHistory,
+      {
+        at: new Date().toISOString(),
+        source: "PRIME_BRAIN",
+        summary: demandChanges.summary,
+      },
+    ].slice(-20);
+
+    return {
+      demand,
+      preferences: nextPreferences,
+    };
+  });
+
+  const matchSets = updatedDemands.map(({ demand, preferences }) => {
+    const updatedDemand = {
+      ...demand,
+      preferences,
+      ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
+      ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
+      ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
+    };
+
+    return {
+      demand: updatedDemand,
+      results: listings
+        .filter((listing) =>
+          updatedDemand.type === "SATIN_ALMA"
+            ? listing.purpose === "SATILIK"
+            : listing.purpose === "KIRALIK",
+        )
+        .map((listing) => calculateMatch(updatedDemand, listing))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 50),
+    };
+  });
 
   const activitySummary =
     action === "ARAMA"
@@ -98,6 +148,19 @@ export async function POST(request: Request) {
       : "Prime önerisiyle WhatsApp görüşmesi kaydedildi.";
 
   const result = await prisma.$transaction(async (tx) => {
+    for (const { demand, preferences } of updatedDemands) {
+      if (!demandChanges.summary.length) continue;
+      await tx.demand.update({
+        where: { id: demand.id },
+        data: {
+          ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
+          ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
+          ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
+          preferences: JSON.parse(JSON.stringify(preferences)),
+        },
+      });
+    }
+
     const activity = await tx.activity.create({
       data: {
         customerId,
@@ -110,6 +173,7 @@ export async function POST(request: Request) {
           source: "PRIME_BRAIN",
           workflow: "NEXT_BEST_ACTION",
           nextAction: nextAction.action,
+          demandChanges: demandChanges.summary,
         },
       },
     });
@@ -174,6 +238,7 @@ export async function POST(request: Request) {
           nextAction: nextAction.action,
           nextActionAt,
           rematchedDemands: matchSets.length,
+          demandChanges: demandChanges.summary,
         },
       },
     });
@@ -190,6 +255,7 @@ export async function POST(request: Request) {
     ...result,
     nextAction,
     rematchedDemands: matchSets.length,
+    demandChanges: demandChanges.summary,
     topMatches,
   });
 }
