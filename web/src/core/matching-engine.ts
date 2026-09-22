@@ -1,4 +1,5 @@
 import type { ListingPurpose, ListingStatus, PropertyType } from "@/generated/prisma/client";
+import { readPrimeLearning } from "@/core/prime-learning";
 
 export const MATCH_WEIGHTS = {
   category: 20,
@@ -60,6 +61,7 @@ export type MatchResult = {
     features: number;
     preferences: number;
     availability: number;
+    learning: number;
     penalty: number;
   };
   reasons: MatchReason[];
@@ -138,6 +140,34 @@ function featureScore(demand: MatchingDemand, listing: MatchingListing) {
   return Math.min(1, (matched / required.length) * 0.7 + room * 0.3);
 }
 
+
+
+function learningAdjustment(demand: MatchingDemand, listing: MatchingListing) {
+  const learning = readPrimeLearning(preferencesObject(demand.preferences).primeLearning);
+  if (!learning.positive.length && !learning.negative.length) {
+    return { adjustment: 0, positiveMatches: [], negativeMatches: [] };
+  }
+
+  const available = [
+    ...asStrings(listing.tags),
+    ...asStrings(listing.highlights),
+    listing.property.city,
+    listing.property.district,
+    listing.property.neighborhood,
+    listing.property.rooms ?? "",
+  ].map(normalize);
+
+  const positiveMatches = learning.positive.filter((term) =>
+    available.some((item) => item.includes(normalize(term)) || normalize(term).includes(item)),
+  );
+  const negativeMatches = learning.negative.filter((term) =>
+    available.some((item) => item.includes(normalize(term)) || normalize(term).includes(item)),
+  );
+
+  const adjustment = Math.min(8, positiveMatches.length * 4) - Math.min(12, negativeMatches.length * 6);
+  return { adjustment, positiveMatches, negativeMatches };
+}
+
 function preferenceScore(demand: MatchingDemand, listing: MatchingListing) {
   const prefs = preferencesObject(demand.preferences);
   const desired = asStrings(prefs.preferred).map(normalize);
@@ -155,6 +185,7 @@ export function calculateMatch(demand: MatchingDemand, listing: MatchingListing)
   const features = featureScore(demand, listing);
   const preferences = preferenceScore(demand, listing);
   const availability = listing.status === "AKTIF" ? 1 : 0;
+  const learning = learningAdjustment(demand, listing);
 
   const prefs = preferencesObject(demand.preferences);
   const forbidden = asStrings(prefs.mustNotHave).map(normalize);
@@ -170,12 +201,13 @@ export function calculateMatch(demand: MatchingDemand, listing: MatchingListing)
     features: Math.round(features * MATCH_WEIGHTS.features),
     preferences: Math.round(preferences * MATCH_WEIGHTS.preferences),
     availability: Math.round(availability * MATCH_WEIGHTS.availability),
+    learning: learning.adjustment,
     penalty,
   };
 
   const score = Math.max(0, Math.min(100, Object.entries(breakdown)
     .filter(([key]) => key !== "penalty")
-    .reduce((sum, [, value]) => sum + value, 0) - penalty));
+    .reduce((sum, [, value]) => sum + value, 0) - penalty + learning.adjustment));
 
   const reasons: MatchReason[] = [];
   const mismatches: string[] = [];
@@ -199,6 +231,23 @@ export function calculateMatch(demand: MatchingDemand, listing: MatchingListing)
 
   if (features >= 0.9) reasons.push({ type: "positive", title: "Temel özellikler uyuyor", detail: "Oda ve istenen özelliklerin çoğu karşılanıyor." });
   else if (features < 0.6) { reasons.push({ type: "warning", title: "Özelliklerde eksik var", detail: "Bazı temel özellikler karşılanmıyor." }); mismatches.push("Temel özellikler"); }
+
+  if (learning.positiveMatches.length) {
+    reasons.push({
+      type: "positive",
+      title: "Prime öğrenilen tercih eşleşiyor",
+      detail: learning.positiveMatches.slice(0, 2).join(", ") + " daha önce olumlu geri bildirim aldı.",
+    });
+  }
+
+  if (learning.negativeMatches.length) {
+    reasons.push({
+      type: "negative",
+      title: "Prime öğrenilen tercih ile çakışıyor",
+      detail: learning.negativeMatches.slice(0, 2).join(", ") + " daha önce olumsuz geri bildirim aldı.",
+    });
+    mismatches.push("Öğrenilmiş tercih");
+  }
 
   if (forbiddenMatches.length) {
     reasons.push({ type: "negative", title: "İstenmeyen özellik bulundu", detail: `Must-not-have: ${forbiddenMatches.join(", ")}.` });
