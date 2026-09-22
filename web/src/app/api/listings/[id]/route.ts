@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     where: { id, ...officeListingScope(context) },
     include: { property: true, consultant: { select: { id: true, teamId: true } } },
   });
-  if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
+  if (!listing) return notFound("Portföy bulunamadı.");
 
   const isManager = isManagerRole(context.role);
   const isOwner = listing.consultantUserId === context.userId;
