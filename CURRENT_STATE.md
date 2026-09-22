@@ -51,7 +51,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 ### Main
 `2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
-Bu main commit'i PR #88 merge'idir ve production release-gate smoke kapsamını genişletir.
+Bu main commit'i PR #90 merge commit'idir. PR #90 release-gate dokümantasyonunu ve Foundation State Validation beklentilerini gerçek main ile hizalamıştır. Production runtime doğrulaması uygulama kodunun bulunduğu `2aca0b13...` commit'ine aittir; PR #90 runtime kodu değiştirmemiştir.
 
 ### Son önemli merge'ler
 
