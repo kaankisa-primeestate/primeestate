@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`3846fe23ca59f8e0d5853931f74946184f72bc1f`
+`98c4ab152b8b7b5107b43d99f48f289eb705ff17`
 
 Bu commit PR #80'in merge commitidir:
 
@@ -32,7 +32,7 @@ PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 ### Son merge
 
 PR #82 — Dashboard / Finance live verification — merged.
-PR #83 — documentation reconciliation — merged.
+PR #84 — post-merge documentation reconciliation — merged.
 
 ## 3. Production / Render
 
