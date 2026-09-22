@@ -3,6 +3,26 @@ import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
 import { test, before, after } from "node:test";
 
+async function stopServer(child: ChildProcess | null) {
+  if (!child?.pid) return;
+  if (process.platform === "win32") {
+    child.kill();
+  } else {
+    try { process.kill(-child.pid, "SIGTERM"); } catch {}
+  }
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(() => {
+      if (process.platform !== "win32" && child.pid) {
+        try { process.kill(-child.pid, "SIGKILL"); } catch {}
+      } else {
+        child.kill("SIGKILL");
+      }
+      resolve();
+    }, 5000);
+    child.once("exit", () => { clearTimeout(timer); resolve(); });
+  });
+}
+
 process.env.BETTER_AUTH_SECRET ??= "phase6-api-integration-test-secret";
 process.env.BETTER_AUTH_URL ??= "http://127.0.0.1:4317";
 
@@ -200,16 +220,15 @@ before(async () => {
         NEXT_TELEMETRY_DISABLED: "1",
       },
       stdio: "ignore",
+      detached: process.platform !== "win32",
     },
   );
   await waitForServer();
 });
 
 after(async () => {
-  if (server) {
-    server.kill("SIGTERM");
-    server = null;
-  }
+  await stopServer(server);
+  server = null;
   for (const organizationId of createdOrganizations.splice(0)) {
     await prisma.organization.delete({ where: { id: organizationId } }).catch(() => {});
   }
