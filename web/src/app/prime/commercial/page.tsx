@@ -39,7 +39,13 @@ export default function PrimeCommercialPage() {
     setSales(sp.sales ?? []);
   }
 
-  useEffect(() => { void load().catch((e) => setMessage(e instanceof Error ? e.message : "Veriler alınamadı.")); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    void load().catch((e) => {
+      if (!cancelled) setMessage(e instanceof Error ? e.message : "Veriler alınamadı.");
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   async function post(body: Record<string, unknown>, key: string) {
     setBusy(key);
