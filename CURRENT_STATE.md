@@ -1,145 +1,142 @@
 # PrimeEstate — CURRENT STATE
 
-> Oturumlar arası devralma kaydıdır. Her yeni oturumda bu dosya GitHub'daki gerçek main/branch/PR/CI durumu ile karşılaştırılır.
+> Oturumlar arası devralma kaydıdır. Gerçek kaynak: GitHub `main`, açık PR'lar ve CI.
 
 ## 1. Proje
+
 PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Operating System / SaaS platformudur.
 
 **Ana prensip:** TEK VERİ, ÇOK FONKSİYON
 
 - Ana geliştirme repo: `kaankisa-primeestate/primeestate`
 - Canlı/referans repo: `kaankisa-primeestate/remax-CRM`
-- `remax-CRM` canlı sistemdir; değiştirilmez.
-- PrimeEstate ana geliştirme tabanıdır.
+- `remax-CRM` değiştirilmez.
+- Tüm geliştirme PrimeEstate üzerinde yapılır.
 
 ## 2. Mimari
+
 - Next.js + React + TypeScript
 - Prisma + PostgreSQL/Neon
 - Better Auth
 - Multi-tenant
 - Responsive / mobile-first
-- API seviyesinde tenant + role scope
+- Server-side authentication + authorization scope
 - AI provider bağımsız mimari
 
-## 3. Foundation Recovery durumu
-
-Yeni özellik geliştirme **geçici olarak donduruldu**.
+## 3. Foundation Recovery
 
 ### Tamamlanan
 - Phase 0 — Inventory & freeze
 - Phase 1 — Database / migration integrity
 - Phase 2 — Data model integrity
 - Phase 3 — Authorization foundation
-- Phase 4 — API response helper foundation + kritik auth/validation/not-found error normalization
-- Phase 5 — Runtime & Route Protection:
-  - merkezi sayfa authentication guard
-  - role-aware /users koruması
-  - Better Auth session kontrolü
-  - unauthenticated → /login
-  - authenticated-but-unauthorized → /forbidden
-  - route matcher / production build doğrulaması
-- Phase 6 — ilk test foundation slice:
-  - `npm test`
-  - Node built-in test runner
-  - authorization role matrix
-  - customer ownership/team scope
-  - office listing scope
-  - read-only write denial
-  - route access matrix
-  - Web Quality CI test adımı
-- Phase 6 — database-backed integration slice:
-  - agent customer ownership isolation
-  - cross-office / cross-organization isolation
-  - shared office listing visibility
-  - accepted Offer ↔ Sale linkage
-  - Sale ↔ Listing uniqueness invariant
-  - CI test database migration deployment before integration tests
-- Phase 6 — actual API route integration slice:
-  - protected customer route unauthenticated → 401
-  - agent customer owner isolation through the real HTTP route
-  - Team Leader team-scoped customer visibility through the real HTTP route
-  - OFFICE_ADMIN / ORG_ADMIN customer visibility through the real HTTP route
-  - agent cross-owner assignment denied through the real HTTP route
-  - VIEWER write denial across customer/sales/payments/payment-plan routes
-  - Better Auth session login exercised against the running Next.js app
-- Phase 6 — financial invariant integration slice:
-  - Payment ↔ Ledger office/consultant split consistency
-  - PaymentPlan ↔ Installment currency/total/sequence consistency
-  - duplicate PaymentPlan per Sale denied by database uniqueness
-  - duplicate installment sequence per plan denied by database uniqueness
-- CI — docs-only main merges no longer trigger production deployment smoke
+- Phase 4 — kritik response/auth foundation
+- Phase 5 — Runtime & Route Protection
+- Phase 6 — integration / authorization / financial invariant test foundation
+- Phase 7 — critical HTTP E2E business chain
+- Phase 7 — Dashboard / Finance live-data verification
+- Phase 8 — duplicate matching engine cleanup
 
-### Bilinçli olarak ertelenen
-Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şimdilik uygulanmayacak.
-
-Phase 7'nin kritik HTTP business chain'i ve Dashboard/Finance canlı veri doğrulaması tamamlanmıştır. Dashboard finans özeti aggregate sorgularla beslenir ve başarısız finans yenilemesinde son başarılı finans verisi korunur.
+### Ertelenen teknik borç
+- Phase 4'ün kalan geniş response/error contract hardening kapsamı
+- Fazla geniş API contract suite
+- Açık deletion policy çalışması
+- Release gate sonrası ele alınacak ürün dışı hardening işleri
 
 ### Aktif phase
 **Phase 8 — Codebase cleanup & documentation**
 
+## 4. Doğrulanmış GitHub durumu
 
-## 4. Doğrulanmış main
-Son doğrulanmış main commit:
-`b4d7842e0e43bf6906a3c2407bf0076ab21a429a`
+### Main
+`7c5f9218964ad5d1a669b8e568b7e56a55cd6a3e`
 
-PR #80 — Phase 7 Critical E2E business chain — merged.
+Bu main commit'i PR #86 merge'idir.
 
-PR #80 sonrası:
-- customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment → payment plan/installments
-- CI test zinciri main'e alınmıştır.
+### Son önemli merge'ler
 
-Ayrıca Codex devralma dosyaları main'e eklenmiştir:
-- `AGENTS.md`
-- `CODEX_PROJECT_HANDOFF.md`
+- PR #80 — Phase 7 critical E2E business chain — merged
+- PR #82 — Dashboard / Finance live verification — merged
+- PR #83 — Phase 7 state reconciliation — merged
+- PR #84 — post-merge documentation reconciliation — merged
+- PR #85 — final documentation reconciliation — merged
+- PR #86 — obsolete legacy matching engine cleanup — merged
 
-### Açık iş
-Phase 8 codebase cleanup & documentation aktif. İlk temizlik: kullanılmayan eski `web/src/core/matching.ts` ve `web/src/types/Matching.ts` kaldırıldı; aktif API zaten `web/src/core/matching-engine.ts` kullanıyordu.
-PR #81 stale durumda kapatılmış ve merge edilmemiştir. PR #82 current-main tabanında doğrulanmış ve merge edilmiştir.
-PR #85 docs-only reconcile olarak merge edilmiştir. PR #84 ve PR #85 post-merge dokümantasyon reconcile işlemlerini tamamlamıştır.
+### Açık PR
+Şu anda eski Phase 6 dokümantasyon PR #79 kapatılmıştır. PR #81 ve #82 dahil eski Phase 7 PR'ları da artık kullanılmamaktadır.
 
-## 5. Runtime / production notu
-Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
+## 5. Phase 8 cleanup durumu
 
-## 6. Foundation çalışma sırası
-1. Phase 0 — tamamlandı
-2. Phase 1 — tamamlandı
-3. Phase 2 — tamamlandı
-4. Phase 3 — tamamlandı
-5. Phase 4 — kritik temel tamamlandı; kalan contract hardening ertelendi
-6. Phase 5 — tamamlandı
-7. Phase 6 — integration / authorization / business invariant testleri tamamlandı
-8. Phase 7 — Critical E2E business chain tamamlandı ve PR #80 main'e merge edildi
-9. Phase 7 — Dashboard ve Finance canlı veri doğrulaması — tamamlandı
-10. Phase 8 — Codebase cleanup & documentation — aktif
-11. Phase 9 — Release gate
+Tamamlanan:
+- `web/src/core/matching.ts` kaldırıldı.
+- Kullanılmayan `web/src/types/Matching.ts` kaldırıldı.
+- Repository referansları kontrol edilerek aktif matching route'un `web/src/core/matching-engine.ts` kullandığı doğrulandı.
+- Eski PR #79 kapatıldı.
+- Release/migration prosedürü dokümante edildi.
+- Authorization matrix dokümante edildi.
+- Business status transitions dokümante edildi.
 
-> Yeni ürün özelliği geliştirmeye release gate tamamlanmadan başlanmaz.
+Yeni Phase 8 PR:
+- Branch: `phase8/documentation-and-release-gate`
+- Amaç: CURRENT_STATE, foundation plan, foundation audit ve operasyon dokümantasyonunu gerçek main ile hizalamak.
 
-## 7. Kırmızı çizgiler
-- Canlı `remax-CRM` değiştirilmez.
-- Secret/connection string kullanıcıdan istenmez.
-- Production database reset yapılmaz.
-- Tahmin edilen durum gerçek durum gibi sunulmaz.
-- Seed veri gerçek veri gibi bırakılmaz.
+Kalan:
+- stale branch temizliği (GitHub branch silme yetkisi/işlemi ayrıca yürütülecek)
+- foundation audit remediation kaydını güncelleme
+- final release gate
+
+## 6. Production
+
+Production servis:
+
+`https://primeestate-v9eo.onrender.com`
+
+22.09.2026 tarihinde main commit `7c5f921...` için Production Auth Smoke başarılıdır.
+
+Doğrulananlar:
+- Render deployment commit eşleşmesi
+- authentication
+- session
+- customers
+- sales
+- payments
+- payment plans
+
+Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
+
+## 7. CI
+
+Main commit `7c5f921...` için:
+- PrimeEstate Web Quality ✅
+- Production Auth Smoke ✅
+
+PR #82'nin public repository sonrasında yeniden çalıştırılan CI'sinde:
+- Web Quality ✅
+- Critical Tests ✅
+- Foundation State Validation ✅
+
+Private repository dönemindeki zero-step runner failure problemi artık görülmemektedir.
+
+## 8. Release gate
+
+Yeni ürün özelliği geliştirmeye Release Gate tamamlanmadan başlanmaz.
+
+Release Gate hedefi:
+- Main CI green
+- migration validation green
+- auth smoke green
+- authorization matrix green
+- Critical E2E green
+- runtime health green
+- Dashboard/Finance 500 olmadan çalışır
+- CURRENT_STATE gerçek main ile eşleşir
+
+## 9. Kırmızı çizgiler
+
+- `remax-CRM` değiştirilmez.
+- Production DB reset edilmez.
+- Secret/connection string source code'a yazılmaz.
 - Yetkilendirme frontend'e bırakılmaz.
-- Modüller bağımsız ada şeklinde tasarlanmaz.
-- Çalışan özellikler gereksiz yere kırılmaz.
-- CI yeşil olmadan merge edilmez.
-- Migration uygulanmadan önce migration planı ve geri dönüş etkisi incelenir.
-
-## 8. Çalışma disiplini
-1. main/branch/PR/CI doğrulanır.
-2. O anki hedef phase seçilir.
-3. Ayrı branch açılır.
-4. Kodlanır.
-5. Otomatik doğrulamalar çalıştırılır.
-6. PR açılır.
-7. CI yeşil olmadan merge edilmez.
-8. Merge sonrası main tekrar doğrulanır.
-9. CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md güncellenir.
-10. Sonraki hedefe geçilir.
-
-## 9. Yeni oturum başlangıç komutu
-```
-PrimeEstate'i devral. Önce AGENTS.md, CODEX_PROJECT_HANDOFF.md, CURRENT_STATE.md ve FOUNDATION_RECOVERY_PLAN.md dosyalarını oku. Sonra GitHub main, açık PR'lar ve CI durumunu doğrula. PR #81'in eski branch geçmişini körlemesine kullanma; current main tabanından devam et. remax-CRM reposuna dokunma. Önce Dashboard/Finance live verification ve CI root-cause doğrulamasını tamamla, sonra Phase 8/9'a geç.
-```
+- CI kırmızıysa merge edilmez.
+- Root cause görülmeden blind fix yapılmaz.
+- Migration değişiklikleri plansız uygulanmaz.
