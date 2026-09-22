@@ -72,15 +72,15 @@ Yeni özellik geliştirme **geçici olarak donduruldu**.
 ### Bilinçli olarak ertelenen
 Phase 4'ün kalan conflict/database error normalization ve geniş API contract test kapsamı şimdilik uygulanmayacak.
 
-Phase 7'nin kritik HTTP business chain'i main'e alınmıştır. Ancak Dashboard/Finance ekranlarının bu zinciri canlı verilerle yansıtma doğrulaması henüz release gate kapsamında tamamlanmamıştır.
+Phase 7'nin kritik HTTP business chain'i ve Dashboard/Finance canlı veri doğrulaması tamamlanmıştır. Dashboard finans özeti aggregate sorgularla beslenir ve başarısız finans yenilemesinde son başarılı finans verisi korunur.
 
 ### Aktif phase
-**Phase 7 — Dashboard / Finance live verification**
+**Phase 8 — Codebase cleanup & documentation**
 
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`b4e0d97e73e19f1c85ba220074e7759c51be39ff`
+`c0d440ed27e2d53fd54d35699787f55e5f5c424a`
 
 PR #80 — Phase 7 Critical E2E business chain — merged.
 
@@ -109,7 +109,7 @@ Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Rende
 6. Phase 5 — tamamlandı
 7. Phase 6 — integration / authorization / business invariant testleri tamamlandı
 8. Phase 7 — Critical E2E business chain tamamlandı ve PR #80 main'e merge edildi
-9. Phase 7 — Dashboard ve Finance canlı veri doğrulaması
+9. Phase 7 — Dashboard ve Finance canlı veri doğrulaması — tamamlandı
 10. Phase 8 — Codebase cleanup & documentation
 11. Phase 9 — Release gate
 
