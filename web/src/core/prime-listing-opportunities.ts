@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { customerOwnershipScope, type UserContext } from "@/lib/authz";
-import { calculateMatch } from "@/core/matching-engine";
+import { customerOwnershipScope, type AuthorizationContext } from "@/lib/authz";
+import { calculateMatch, type MatchingListing } from "@/core/matching-engine";
 
-type PrimeListing = {
+type PrimeListing =
   id: string;
   propertyId: string;
   purpose: "SATILIK" | "KIRALIK";
@@ -31,7 +31,7 @@ export type PrimeListingOpportunity = {
   mismatches: string[];
 };
 
-export async function findPrimeListingOpportunities(listing: PrimeListing, context: UserContext, limit = 50) {
+export async function findPrimeListingOpportunities(listing: PrimeListing, context: AuthorizationContext, limit = 50) {
   if (listing.status !== "AKTIF") return [];
 
   const demands = await prisma.demand.findMany({
