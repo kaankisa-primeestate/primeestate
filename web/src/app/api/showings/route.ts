@@ -235,6 +235,7 @@ export async function PATCH(request: Request) {
           customerId: showing.customer.id,
           ownerUserId: context.userId,
           source: "PRIME_BRAIN_SHOWING",
+          title: `Prime: ${showing.customer.name} gösterim teyidi · ${showing.listing.code}`,
           status: { in: ["BEKLIYOR", "GECIKTI"] },
         },
         data: { status: "TAMAMLANDI", completedAt: new Date() },
