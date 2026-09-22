@@ -77,14 +77,9 @@ Tamamlanan:
 - Authorization matrix dokümante edildi.
 - Business status transitions dokümante edildi.
 
-Yeni Phase 8 PR:
-- Branch: `phase8/documentation-and-release-gate`
-- Amaç: CURRENT_STATE, foundation plan, foundation audit ve operasyon dokümantasyonunu gerçek main ile hizalamak.
-
-Kalan:
-- stale branch temizliği (GitHub branch silme yetkisi/işlemi ayrıca yürütülecek)
-- foundation audit remediation kaydını güncelleme
-- final main reconciliation and release-gate declaration
+PR #90: Phase 9 release-gate baseline / documentation reconciliation — merged.
+- Main reconciliation: `2da8953f...` gerçek main olarak doğrulandı.
+- Stale branch temizliği ayrı bakım işidir; ürün geliştirmesini bloklamaz.
 
 ## 6. Production
 
