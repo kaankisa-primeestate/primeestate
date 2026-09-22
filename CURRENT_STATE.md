@@ -77,7 +77,7 @@ Tamamlanan:
 - Authorization matrix dokümante edildi.
 - Business status transitions dokümante edildi.
 
-PR #90: Phase 9 release-gate baseline / documentation reconciliation — merged.
+PR #90 — Phase 9 release-gate baseline — merged.
 - Main reconciliation: `2da8953f...` gerçek main olarak doğrulandı.
 - Stale branch temizliği ayrı bakım işidir; ürün geliştirmesini bloklamaz.
 
