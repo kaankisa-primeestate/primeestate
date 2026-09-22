@@ -80,7 +80,7 @@ Phase 7'nin kritik HTTP business chain'i ve Dashboard/Finance canlı veri doğru
 
 ## 4. Doğrulanmış main
 Son doğrulanmış main commit:
-`c0d440ed27e2d53fd54d35699787f55e5f5c424a`
+`3846fe23ca59f8e0d5853931f74946184f72bc1f`
 
 PR #80 — Phase 7 Critical E2E business chain — merged.
 
@@ -93,9 +93,8 @@ Ayrıca Codex devralma dosyaları main'e eklenmiştir:
 - `CODEX_PROJECT_HANDOFF.md`
 
 ### Açık iş
-PR #81 eski branch tabanına bağlı ve current main'in iki commit gerisindedir. Net ürün diff'i DashboardLive değişikliğidir. CI kayıtları job-level failure göstermektedir; job steps mevcut olmadığından bu ortamda failure body doğrulanamamıştır.
-
-Bu nedenle PR #81 merge edilmemelidir. Temiz current-main tabanlı branch ile aynı Dashboard değişikliği yeniden doğrulanacaktır.
+Phase 8 codebase cleanup & documentation.
+PR #81 stale durumda kapatılmış ve merge edilmemiştir. PR #82 current-main tabanında doğrulanmış ve merge edilmiştir. PR #83 dokümantasyon reconcile işlemini tamamlamıştır.
 
 ## 5. Runtime / production notu
 Production Auth Smoke workflow deployment commit doğrulamasını koruyor. Render UI bu ortamdan doğrudan yönetilemiyor; production deploy durumu yalnızca GitHub smoke çıktısı veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
