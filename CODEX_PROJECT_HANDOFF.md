@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`b4e0d97e73e19f1c85ba220074e7759c51be39ff`
+`c0d440ed27e2d53fd54d35699787f55e5f5c424a`
 
 Bu commit PR #80'in merge commitidir:
 
@@ -29,21 +29,14 @@ Bu commit PR #80'in merge commitidir:
 
 PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 
-### Açık PR
+### Son merge
 
-PR #82:
+PR #82 — Dashboard/Finance live verification — merged (`c0d440ed...`).
 
-- Başlık: Phase 7: connect dashboard and finance live data
-- Base: `main`
-- Amaç: Dashboard'u gerçek sales/payments/payment-plan verilerine bağlamak.
-- PR #81 bu handoff hazırlanırken **açıktır ve merge edilmemelidir.**
-- Son bilinen head: `aa723541bcdffc44d389bc38001c8d9a258466b5`
-- PR'nin net kod değişikliği son durumda yalnızca:
-  - `web/src/components/DashboardLive.tsx`
-- CI: Critical Tests ve Web Quality kırmızıdır.
-- GitHub Actions job log blob'ları bu çalışma ortamından zaman zaman 404/BlobNotFound verdiği için PR #81'in mevcut kırmızı testinin gerçek hata satırı doğrulanmadan yeni değişiklik yapılmamalıdır.
+PR #82 ile Dashboard finans özeti aggregate endpoint'e taşındı ve finans refresh hatasında son başarılı snapshot korunuyor.
+Critical Tests, Web Quality, Foundation State Validation, lint, typecheck ve production build yeşil doğrulandı. Merge sonrası main'de Web Quality ve Production Auth HTTP Smoke Test de yeşil.
 
-**Kural:** PR #81'in CI kök nedeni görülmeden merge etme.
+PR #81 stale durumda kapatılmıştır; merge edilmemiştir.
 
 ## 3. Production / Render
 
@@ -717,7 +710,7 @@ Aynı dashboard'da:
 
 gibi canlı metrikler gösterilebilir.
 
-**Ancak PR #81 bu dashboard canlı bağlantısını genişletmiştir ve CI şu anda kırmızıdır. Bu nedenle PR #81 kodu main'e alınmış değildir.**
+Dashboard finans özeti artık `/api/dashboard/finance-summary` aggregate endpoint'inden beslenir. Tenant/office/ownership scope korunur. Finans yenilemesi başarısız olursa son başarılı finans snapshot'ı korunur.
 
 ## 14. Finance durumu
 
@@ -1009,14 +1002,12 @@ Migration state schema ile uyumlu kalmalıdır.
 
 ### Öncelikli
 
-1. PR #82 CI durumunu current main tabanında doğrula.
-2. PR #82'yi CI tamamen yeşil olmadan merge etme.
-3. Dashboard canlı verisini doğrula.
-4. Finance canlı verisini doğrula.
-5. Render'ın gerçek main commit'ini doğrula.
-6. CURRENT_STATE.md'yi gerçek main ile reconcile et.
-7. Phase 8 cleanup.
-8. Phase 9 release gate.
+1. PR #82 current-main tabanında doğrulandı ve merge edildi.
+2. Dashboard/Finance live verification tamamlandı.
+3. Render'ın main commitini Production Auth Smoke ile doğrula.
+4. CURRENT_STATE.md ve foundation planını gerçek main ile reconcile et.
+5. Phase 8 cleanup.
+6. Phase 9 release gate.
 
 ### Phase 8
 
