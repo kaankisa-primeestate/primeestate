@@ -166,7 +166,18 @@ Foundation recovery sonrasında aşağıdaki sonuçlar doğrulandı:
 
 ### Current remediation status
 
-Foundation başlangıcındaki ana build/route determinism riskleri kapatılmıştır. Kalan işler release gate altında takip edilmektedir:
+Foundation başlangıcındaki ana build/route determinism riskleri kapatılmıştır.
+
+22.09.2026 final release-gate doğrulaması:
+- Main `2aca0b1...` Web Quality ✅
+- Main `2aca0b1...` Production Auth HTTP Smoke ✅
+- Main `2aca0b1...` Prisma Production Migration Status ✅ (`Database schema is up to date!`)
+- Production `/api/health` ✅ (`200`, database `connected`)
+- Production Dashboard ✅ (`200`, no-500)
+- Production Finance ✅ (`200`, no-500)
+- Production Finance Dashboard ✅ (`200`, no-500)
+- Production listings/sales/payments/payment-plans API'leri ✅ (`200`)
+ Kalan işler release gate altında takip edilmektedir:
 
 - final runtime health check
 - Dashboard/Finance production no-500 verification
