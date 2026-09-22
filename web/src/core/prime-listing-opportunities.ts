@@ -7,6 +7,7 @@ type PrimeListing = MatchingListing;
 export type PrimeListingOpportunity = {
   customerId: string;
   customerName: string;
+  phone: string | null;
   ownerUserId: string;
   demandId: string;
   score: number;
@@ -28,7 +29,7 @@ export async function findPrimeListingOpportunities(listing: PrimeListing, conte
       type: listing.purpose === "SATILIK" ? "SATIN_ALMA" : "KIRALAMA",
     },
     include: {
-      customer: { select: { id: true, name: true, ownerUserId: true } },
+      customer: { select: { id: true, name: true, phone: true, ownerUserId: true } },
     },
   });
 
@@ -66,6 +67,7 @@ export async function findPrimeListingOpportunities(listing: PrimeListing, conte
   return matches.slice(0, 10).map(({ demand, result }) => ({
     customerId: demand.customer.id,
     customerName: demand.customer.name,
+    phone: demand.customer.phone,
     ownerUserId: demand.customer.ownerUserId,
     demandId: demand.id,
     score: result.score,
