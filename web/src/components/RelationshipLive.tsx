@@ -28,6 +28,22 @@ type Demand = {
   active: boolean;
 };
 
+type Showing = {
+  id: string;
+  dateTime: string;
+  status: "PLANLANDI" | "GERCEKLESTI" | "IPTAL";
+  attendees: number;
+  note: string | null;
+  listing: {
+    id: string;
+    code: string;
+    title: string;
+    price: number;
+    currency: string;
+    property: { city: string; district: string; neighborhood: string };
+  };
+};
+
 type Customer = {
   id: string;
   name: string;
@@ -44,7 +60,24 @@ type Customer = {
   demands: Demand[];
   activities: Activity[];
   tasks: Task[];
+  showings: Showing[];
   owner: { id: string; name: string | null; email: string | null } | null;
+};
+
+type Opportunity = {
+  id: string;
+  listingId: string;
+  code: string;
+  title: string;
+  matchScore: number;
+  price: number;
+  currency: string;
+  location: string;
+  sizeM2: number | null;
+  rooms: string | null;
+  reason: string;
+  reasons: unknown[];
+  mismatches: unknown[];
 };
 
 type Decision = {
@@ -52,19 +85,42 @@ type Decision = {
   today: { priority: "critical" | "high" | "medium" | "low"; confidence: number };
   reasons: string[];
   talkingPoints: string[];
-  opportunities: Array<{ id: string; title: string; matchScore: number; reason: string }>;
+  opportunities: Opportunity[];
   risks: string[];
   expectedOutcome: string;
   nextStep: string;
   lastContactDays: number | null;
 };
 
+type ShowingDraft = {
+  status: Showing["status"];
+  note: string;
+};
+
 const healthLabel = { risk: "İlişki riski", normal: "Normal", strong: "Güçlü" };
 const priorityLabel = { critical: "Kritik", high: "Yüksek", medium: "Orta", low: "Normal" };
+const showingStatusLabel = {
+  PLANLANDI: "Planlandı",
+  GERCEKLESTI: "Gerçekleşti",
+  IPTAL: "İptal",
+};
 
 function formatDate(value: string | null) {
   if (!value) return "Henüz yok";
   return new Date(value).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatMoney(value: number, currency: string) {
+  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(value) + " " + currency;
 }
 
 function activityLabel(type: string) {
@@ -84,6 +140,9 @@ export default function RelationshipLive({ customerId }: { customerId: string })
   const [decision, setDecision] = useState<Decision | null>(null);
   const [outcome, setOutcome] = useState("");
   const [dueAt, setDueAt] = useState("");
+  const [showingDateTime, setShowingDateTime] = useState("");
+  const [showingListingId, setShowingListingId] = useState("");
+  const [showingDrafts, setShowingDrafts] = useState<Record<string, ShowingDraft>>({});
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -98,8 +157,18 @@ export default function RelationshipLive({ customerId }: { customerId: string })
       const briefData = await briefResponse.json();
       if (!customerResponse.ok) throw new Error(customerData?.message ?? "Müşteri yüklenemedi.");
       if (!briefResponse.ok) throw new Error(briefData?.message ?? "Prime önerisi yüklenemedi.");
-      setCustomer(customerData.customer);
+
+      const nextCustomer = customerData.customer as Customer;
+      setCustomer(nextCustomer);
       setDecision((briefData.decisions ?? []).find((item: Decision) => item.client.id === customerId) ?? null);
+      setShowingDrafts(
+        Object.fromEntries(
+          (nextCustomer.showings ?? []).map((showing) => [
+            showing.id,
+            { status: showing.status, note: showing.note ?? "" },
+          ]),
+        ),
+      );
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Workspace yüklenemedi.");
@@ -176,6 +245,100 @@ export default function RelationshipLive({ customerId }: { customerId: string })
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Görev oluşturulamadı.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function refreshMatches() {
+    if (!customer) return;
+    const activeDemands = customer.demands.filter((demand) => demand.active);
+    if (!activeDemands.length) {
+      setError("Önce bu müşteri için aktif bir talep oluştur.");
+      return;
+    }
+
+    setBusy("matching");
+    setMessage("");
+    setError("");
+    try {
+      for (const demand of activeDemands) {
+        const response = await fetch("/api/matching", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ demandId: demand.id, limit: 20 }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.message ?? "Eşleştirme çalıştırılamadı.");
+      }
+      setMessage("Prime eşleştirmeleri güncellendi.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Eşleştirme güncellenemedi.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function createShowing() {
+    if (!customer || !showingListingId || !showingDateTime) {
+      setError("Gösterim için portföy ve tarih-saat seç.");
+      return;
+    }
+
+    setBusy("showing-create");
+    setMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/showings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: customer.id,
+          listingId: showingListingId,
+          dateTime: new Date(showingDateTime).toISOString(),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.message ?? "Gösterim oluşturulamadı.");
+      setShowingDateTime("");
+      setShowingListingId("");
+      setMessage("Gösterim planlandı. Prime artık bu randevuyu takip edecek.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gösterim oluşturulamadı.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function updateShowing(showingId: string) {
+    const draft = showingDrafts[showingId];
+    if (!draft) return;
+
+    setBusy("showing-" + showingId);
+    setMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/showings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: showingId,
+          status: draft.status,
+          note: draft.note,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.message ?? "Gösterim güncellenemedi.");
+      setMessage(
+        draft.status === "GERCEKLESTI"
+          ? "Gösterim sonucu kaydedildi. Prime bunu hafızasına aldı."
+          : "Gösterim güncellendi.",
+      );
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gösterim güncellenemedi.");
     } finally {
       setBusy("");
     }
@@ -263,6 +426,114 @@ export default function RelationshipLive({ customerId }: { customerId: string })
           </section>
         </div>
 
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime eşleşmeleri</p>
+              <h2 className="mt-1 text-xl font-semibold">Bu müşteriye uygun portföyler</h2>
+              <p className="mt-1 text-sm text-slate-500">Eşleşme; talep, lokasyon, bütçe, m², oda ve özelliklere göre hesaplanıyor.</p>
+            </div>
+            <button type="button" onClick={() => void refreshMatches()} disabled={busy === "matching"} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+              {busy === "matching" ? "Eşleştiriliyor…" : "Eşleşmeleri Yenile"}
+            </button>
+          </div>
+
+          {decision?.opportunities.length ? (
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              {decision.opportunities.map((opportunity) => (
+                <div key={opportunity.id} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400">{opportunity.code}</p>
+                      <p className="mt-1 font-semibold text-slate-900">{opportunity.title}</p>
+                    </div>
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">%{opportunity.matchScore}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-slate-700">{formatMoney(opportunity.price, opportunity.currency)}</p>
+                  {opportunity.location && <p className="mt-1 text-xs text-slate-500">{opportunity.location}</p>}
+                  {(opportunity.rooms || opportunity.sizeM2) && <p className="mt-1 text-xs text-slate-500">{opportunity.rooms ?? "Oda belirtilmemiş"} {opportunity.sizeM2 ? "· " + opportunity.sizeM2 + " m²" : ""}</p>}
+                  {opportunity.reasons.length ? (
+                    <ul className="mt-3 space-y-1 text-xs text-slate-500">
+                      {opportunity.reasons.map((reason, index) => <li key={index}>• {String(reason)}</li>)}
+                    </ul>
+                  ) : null}
+                  {opportunity.mismatches.length ? <p className="mt-3 text-xs text-amber-700">Dikkat: {opportunity.mismatches.map(String).join(", ")}</p> : null}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowingListingId(opportunity.listingId);
+                      setMessage("Gösterim için tarih ve saat seç.");
+                    }}
+                    className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Gösterim Planla
+                  </button>
+                  {showingListingId === opportunity.listingId && (
+                    <div className="mt-3 flex gap-2">
+                      <input type="datetime-local" value={showingDateTime} onChange={(event) => setShowingDateTime(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+                      <button type="button" onClick={() => void createShowing()} disabled={busy === "showing-create"} className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">{busy === "showing-create" ? "…" : "Kaydet"}</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">
+              Henüz eşleşme görünmüyor. <strong>Eşleşmeleri Yenile</strong> ile aktif müşteri taleplerini ofis portföyüyle tekrar eşleştirebilirsin.
+            </div>
+          )}
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Gösterim hafızası</p>
+            <h2 className="mt-1 text-xl font-semibold">Müşteri hangi portföyleri gördü?</h2>
+            <p className="mt-1 text-sm text-slate-500">Gösterim sonucu ve danışman notu kaydedildiğinde Prime bunu sonraki önerilerde kullanabilecek temel hafızaya sahip olur.</p>
+          </div>
+          <div className="mt-5 space-y-4">
+            {customer.showings.length === 0 ? (
+              <p className="rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">Henüz planlanmış veya tamamlanmış gösterim yok.</p>
+            ) : (
+              customer.showings.map((showing) => {
+                const draft = showingDrafts[showing.id] ?? { status: showing.status, note: showing.note ?? "" };
+                return (
+                  <div key={showing.id} className="rounded-2xl border border-slate-200 p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-400">{showing.listing.code} · {formatDateTime(showing.dateTime)}</p>
+                        <p className="mt-1 font-semibold text-slate-900">{showing.listing.title}</p>
+                        <p className="mt-1 text-sm text-slate-500">{showing.listing.property.district} · {showing.listing.property.neighborhood} · {formatMoney(Number(showing.listing.price), showing.listing.currency)}</p>
+                      </div>
+                      <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">{showingStatusLabel[showing.status]}</span>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[180px_1fr_auto]">
+                      <select
+                        value={draft.status}
+                        onChange={(event) => setShowingDrafts((current) => ({ ...current, [showing.id]: { ...draft, status: event.target.value as Showing["status"] } }))}
+                        className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                      >
+                        <option value="PLANLANDI">Planlandı</option>
+                        <option value="GERCEKLESTI">Gerçekleşti</option>
+                        <option value="IPTAL">İptal</option>
+                      </select>
+                      <input
+                        value={draft.note}
+                        onChange={(event) => setShowingDrafts((current) => ({ ...current, [showing.id]: { ...draft, note: event.target.value } }))}
+                        placeholder="Gösterim sonucu: neden beğendi / neden reddetti / hangi özellik önemliydi?"
+                        className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                      />
+                      <button type="button" onClick={() => void updateShowing(showing.id)} disabled={busy === "showing-" + showing.id} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                        {busy === "showing-" + showing.id ? "Kaydediliyor…" : "Sonucu Kaydet"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
+
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime hafızası</p><h2 className="mt-1 text-xl font-semibold">Gerçek ilişki geçmişi</h2></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{customer.activities.length} kayıt</span></div>
@@ -297,21 +568,6 @@ export default function RelationshipLive({ customerId }: { customerId: string })
             </div>
           </section>
         </div>
-
-        {decision?.opportunities.length ? (
-          <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime eşleşmeleri</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {decision.opportunities.map((opportunity) => (
-                <div key={opportunity.id} className="rounded-2xl bg-slate-50 p-4">
-                  <p className="font-semibold text-slate-900">{opportunity.title}</p>
-                  <p className="mt-1 text-sm text-slate-500">%{opportunity.matchScore} eşleşme</p>
-                  {opportunity.reason && <p className="mt-2 text-xs text-slate-500">{opportunity.reason}</p>}
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
     </main>
   );
