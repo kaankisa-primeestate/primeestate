@@ -30,6 +30,22 @@ export async function GET(
       owner: { select: { id: true, name: true, email: true, teamId: true } },
       activities: { orderBy: { occurredAt: "desc" }, take: 20 },
       tasks: { orderBy: { dueAt: "asc" }, take: 20 },
+      showings: {
+        orderBy: { dateTime: "asc" },
+        take: 20,
+        include: {
+          listing: {
+            select: {
+              id: true,
+              code: true,
+              title: true,
+              price: true,
+              currency: true,
+              property: { select: { city: true, district: true, neighborhood: true } },
+            },
+          },
+        },
+      },
     },
   });
 

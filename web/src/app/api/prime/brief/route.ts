@@ -6,6 +6,19 @@ import { can, customerOwnershipScope } from "@/lib/authz";
 
 const DAY = 24 * 60 * 60 * 1000;
 
+function matchReasonText(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 3).map((item) => {
+    if (item && typeof item === "object") {
+      const record = item as { title?: unknown; detail?: unknown };
+      const title = typeof record.title === "string" ? record.title : "";
+      const detail = typeof record.detail === "string" ? record.detail : "";
+      return detail ? title + ": " + detail : title;
+    }
+    return String(item);
+  }).filter(Boolean);
+}
+
 function daysSince(value: Date | null) {
   if (!value) return null;
   return Math.max(0, Math.floor((Date.now() - value.getTime()) / DAY));
@@ -71,7 +84,18 @@ export async function GET() {
               id: true,
               score: true,
               reasons: true,
-              listing: { select: { id: true, code: true, title: true, price: true, currency: true } },
+              mismatches: true,
+              listing: {
+  where: { organizationId: context.organizationId, officeId: context.officeId },
+  select: {
+    id: true,
+    code: true,
+    title: true,
+    price: true,
+    currency: true,
+    property: { select: { city: true, district: true, neighborhood: true, sizeM2: true, rooms: true } },
+  },
+},
             },
           },
         },
@@ -105,9 +129,20 @@ export async function GET() {
             .filter((match) => match.listing)
             .map((match) => ({
               id: match.id,
+              listingId: match.listing!.id,
+              code: match.listing!.code,
               title: match.listing!.title,
               matchScore: match.score,
-              reason: Array.isArray(match.reasons) ? String(match.reasons[0] ?? "") : "",
+              price: Number(match.listing!.price),
+              currency: match.listing!.currency,
+              location: [
+                match.listing!.property?.district,
+                match.listing!.property?.neighborhood,
+              ].filter(Boolean).join(" · "),
+              sizeM2: match.listing!.property?.sizeM2 ? Number(match.listing!.property.sizeM2) : null,
+              rooms: match.listing!.property?.rooms ?? null,
+              reasons: matchReasonText(match.reasons),
+              mismatches: Array.isArray(match.mismatches) ? match.mismatches.map(String) : [],
             })),
         )
         .slice(0, 3);
