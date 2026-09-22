@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import PrimeBriefLive from "@/components/PrimeBriefLive";
 
 type T = { id: string; title: string; dueAt: string; priority: string; status: string; customer: { name: string } | null };
 type L = { id: string; code: string; title: string; price: string | number; currency: string; status: string; property?: { district?: string; neighborhood?: string } };
@@ -126,6 +127,8 @@ export default function DashboardLive() {
           </header>
 
           {err && <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
+
+          <PrimeBriefLive />
 
           <section className="mt-6 rounded-3xl border bg-white p-5 shadow-sm">
             <div>
