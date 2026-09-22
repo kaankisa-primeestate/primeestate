@@ -4,6 +4,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope, officeListingScope } from "@/lib/authz";
+import { applyShowingLearning, readPrimeLearning } from "@/core/prime-learning";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
@@ -75,7 +76,17 @@ export async function PATCH(request: Request) {
     },
     include: {
       customer: { select: { id: true, name: true, ownerUserId: true } },
-      listing: { select: { id: true, title: true, code: true } },
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          code: true,
+          purpose: true,
+          tags: true,
+          highlights: true,
+          property: { select: { propertyType: true, title: true, district: true, neighborhood: true, rooms: true } },
+        },
+      },
     },
   });
 
@@ -119,6 +130,55 @@ export async function PATCH(request: Request) {
       (status === "IPTAL" && showing.status !== "IPTAL");
 
     if (shouldRememberShowing) {
+      let learnedTerms: string[] = [];
+
+      if (status === "GERCEKLESTI") {
+        const demands = await tx.demand.findMany({
+          where: {
+            customerId: showing.customer.id,
+            active: true,
+            type: showing.listing.purpose === "SATILIK" ? "SATIN_ALMA" : "KIRALAMA",
+            propertyType: showing.listing.property.propertyType,
+          },
+          select: { id: true, preferences: true },
+        });
+
+        const listingText = [
+          showing.listing.title,
+          showing.listing.property.title,
+          showing.listing.property.district,
+          showing.listing.property.neighborhood,
+          showing.listing.property.rooms ?? "",
+          ...(Array.isArray(showing.listing.tags) ? showing.listing.tags.map(String) : []),
+          ...(Array.isArray(showing.listing.highlights) ? showing.listing.highlights.map(String) : []),
+        ].join(" | ");
+
+        for (const demand of demands) {
+          const currentLearning = readPrimeLearning(
+            demand.preferences && typeof demand.preferences === "object" && !Array.isArray(demand.preferences)
+              ? (demand.preferences as Record<string, unknown>).primeLearning
+              : null,
+          );
+          const applied = applyShowingLearning(currentLearning, showing.id, "GERCEKLESTI", note, listingText);
+          learnedTerms = [...new Set([...learnedTerms, ...applied.result.learned])];
+
+          const currentPreferences =
+            demand.preferences && typeof demand.preferences === "object" && !Array.isArray(demand.preferences)
+              ? demand.preferences as Record<string, unknown>
+              : {};
+
+          await tx.demand.update({
+            where: { id: demand.id },
+            data: {
+              preferences: {
+                ...currentPreferences,
+                primeLearning: applied.learning,
+              },
+            },
+          });
+        }
+      }
+
       await tx.activity.create({
         data: {
           customerId: showing.customer.id,
@@ -127,7 +187,9 @@ export async function PATCH(request: Request) {
           type: "GOSTERIM",
           occurredAt: new Date(),
           summary: status === "GERCEKLESTI"
-            ? "Gösterim tamamlandı; Prime gösterim geri bildirimini hafızaya aldı."
+            ? learnedTerms.length
+              ? "Gösterim tamamlandı; Prime geri bildirimi hafızasına aldı: " + learnedTerms.join(", ") + "."
+              : "Gösterim tamamlandı; Prime gösterim geri bildirimini hafızaya aldı."
             : "Gösterim iptal edildi.",
           outcome: note,
           metadata: {
@@ -135,6 +197,7 @@ export async function PATCH(request: Request) {
             workspace: "RELATIONSHIP",
             showingId: showing.id,
             showingStatus: status,
+            learnedTerms,
           },
         },
       });

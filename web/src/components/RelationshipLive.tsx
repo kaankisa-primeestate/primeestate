@@ -26,6 +26,7 @@ type Demand = {
   propertyType: string;
   urgency: string;
   active: boolean;
+  preferences: unknown;
 };
 
 type Showing = {
@@ -123,6 +124,23 @@ function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(value) + " " + currency;
 }
 
+function learnedPreferences(demands: Demand[]) {
+  const positive = new Set<string>();
+  const negative = new Set<string>();
+
+  for (const demand of demands) {
+    if (!demand.preferences || typeof demand.preferences !== "object" || Array.isArray(demand.preferences)) continue;
+    const record = demand.preferences as Record<string, unknown>;
+    const learning = record.primeLearning;
+    if (!learning || typeof learning !== "object" || Array.isArray(learning)) continue;
+    const value = learning as Record<string, unknown>;
+    if (Array.isArray(value.positive)) value.positive.filter((item): item is string => typeof item === "string").forEach((item) => positive.add(item));
+    if (Array.isArray(value.negative)) value.negative.filter((item): item is string => typeof item === "string").forEach((item) => negative.add(item));
+  }
+
+  return { positive: [...positive], negative: [...negative] };
+}
+
 function activityLabel(type: string) {
   const labels: Record<string, string> = {
     ARAMA: "Telefon görüşmesi",
@@ -183,6 +201,8 @@ export default function RelationshipLive({ customerId }: { customerId: string })
   }, [customerId]);
 
   const [nowMs] = useState(() => Date.now());
+  const learning = useMemo(() => learnedPreferences(customer?.demands ?? []), [customer?.demands]);
+
   const overdueTasks = useMemo(
     () => customer?.tasks.filter((task) => task.status !== "TAMAMLANDI" && new Date(task.dueAt).getTime() < nowMs).length ?? 0,
     [customer, nowMs],
@@ -333,10 +353,13 @@ export default function RelationshipLive({ customerId }: { customerId: string })
       if (!response.ok) throw new Error(data?.message ?? "Gösterim güncellenemedi.");
       setMessage(
         draft.status === "GERCEKLESTI"
-          ? "Gösterim sonucu kaydedildi. Prime bunu hafızasına aldı."
+          ? "Gösterim sonucu kaydedildi. Prime bunu hafızasına aldı ve sonraki eşleşmeye hazırlıyor."
           : "Gösterim güncellendi.",
       );
       await load();
+      if (draft.status === "GERCEKLESTI") {
+        await refreshMatches();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gösterim güncellenemedi.");
     } finally {
@@ -482,6 +505,31 @@ export default function RelationshipLive({ customerId }: { customerId: string })
               Henüz eşleşme görünmüyor. <strong>Eşleşmeleri Yenile</strong> ile aktif müşteri taleplerini ofis portföyüyle tekrar eşleştirebilirsin.
             </div>
           )}
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime öğreniyor</p>
+              <h2 className="mt-1 text-xl font-semibold">Müşterinin gerçek tercih hafızası</h2>
+              <p className="mt-1 text-sm text-slate-500">Gösterim geri bildirimlerinden açıkça yakalanan tercih sinyalleri burada tutulur ve sonraki eşleşme skoruna küçük bir ağırlık verir.</p>
+            </div>
+            <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">{learning.positive.length + learning.negative.length} öğrenilmiş sinyal</span>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl bg-emerald-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Olumlu</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {learning.positive.length ? learning.positive.map((item) => <span key={item} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700">{item}</span>) : <span className="text-sm text-emerald-700/70">Henüz öğrenilmiş olumlu tercih yok.</span>}
+              </div>
+            </div>
+            <div className="rounded-2xl bg-amber-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Olumsuz</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {learning.negative.length ? learning.negative.map((item) => <span key={item} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-amber-700">{item}</span>) : <span className="text-sm text-amber-700/70">Henüz öğrenilmiş olumsuz tercih yok.</span>}
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
