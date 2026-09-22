@@ -53,16 +53,4 @@ jobs:
         run: npm ci
 
       - name: Run critical test suite
-        run: |
-          set +e
-          npm test 2>&1 | tee /tmp/primeestate-critical-tests.log
-          status=${PIPESTATUS[0]}
-          exit "${status}"
-
-      - name: Upload critical test log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: primeestate-critical-test-log
-          path: /tmp/primeestate-critical-tests.log
-          if-no-files-found: ignore
+        run: npm test
