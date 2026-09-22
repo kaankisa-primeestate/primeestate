@@ -86,6 +86,7 @@ export async function GET() {
               reasons: true,
               mismatches: true,
               listing: {
+  where: { organizationId: context.organizationId, officeId: context.officeId },
   select: {
     id: true,
     code: true,
