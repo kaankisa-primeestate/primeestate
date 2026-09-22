@@ -22,7 +22,7 @@ Son doğrulanmış `main`:
 
 `2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
-Bu commit PR #88'in merge commitidir.
+Bu commit PR #90'ın merge commitidir; PR #90 runtime kodu değiştirmeyen release-gate/state reconciliation çalışmasıdır.
 
 - PR #80 — Phase 7 Critical E2E business chain
 - customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment → payment plan/installments
