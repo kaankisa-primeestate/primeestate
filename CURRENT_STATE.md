@@ -49,9 +49,9 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 ## 4. Doğrulanmış GitHub durumu
 
 ### Main
-`d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+`2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
-Bu main commit'i PR #88 merge'idir ve production release-gate smoke kapsamını genişletir.
+Bu main commit'i PR #90 merge commit'idir. PR #90 release-gate dokümantasyonunu ve Foundation State Validation beklentilerini gerçek main ile hizalamıştır. Production runtime doğrulaması uygulama kodunun bulunduğu `2aca0b13...` commit'ine aittir; PR #90 runtime kodu değiştirmemiştir.
 
 ### Son önemli merge'ler
 
@@ -77,14 +77,9 @@ Tamamlanan:
 - Authorization matrix dokümante edildi.
 - Business status transitions dokümante edildi.
 
-Yeni Phase 8 PR:
-- Branch: `phase8/documentation-and-release-gate`
-- Amaç: CURRENT_STATE, foundation plan, foundation audit ve operasyon dokümantasyonunu gerçek main ile hizalamak.
-
-Kalan:
-- stale branch temizliği (GitHub branch silme yetkisi/işlemi ayrıca yürütülecek)
-- foundation audit remediation kaydını güncelleme
-- final main reconciliation and release-gate declaration
+PR #90 — Phase 9 release-gate baseline — merged.
+- Main reconciliation: `2da8953f...` gerçek main olarak doğrulandı.
+- Stale branch temizliği ayrı bakım işidir; ürün geliştirmesini bloklamaz.
 
 ## 6. Production
 

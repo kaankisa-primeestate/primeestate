@@ -6,7 +6,7 @@ This file is retained as a legacy documentation entry point. The project has pro
 
 ## Current verified baseline
 
-- Main: `d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+- Main: `2da8953f06304e6a2b6f049571a2df991b1e61e9`
 - Phase 7 business chain: complete
 - Dashboard / Finance live verification: complete
 - Phase 8 cleanup: complete
