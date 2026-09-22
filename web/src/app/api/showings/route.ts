@@ -203,6 +203,43 @@ export async function PATCH(request: Request) {
       });
     }
 
+    if (status === "GERCEKLESTI") {
+      await tx.customer.update({
+        where: { id: showing.customer.id },
+        data: {
+          nextAction: "Gösterim geri bildirimini kaydet",
+          nextActionAt: new Date(),
+          lastContactAt: new Date(),
+        },
+      });
+      await tx.task.updateMany({
+        where: {
+          customerId: showing.customer.id,
+          ownerUserId: context.userId,
+          source: "PRIME_BRAIN_SHOWING",
+          status: { in: ["BEKLIYOR", "GECIKTI"] },
+        },
+        data: { status: "TAMAMLANDI", completedAt: new Date() },
+      });
+    } else if (status === "IPTAL") {
+      await tx.customer.update({
+        where: { id: showing.customer.id },
+        data: {
+          nextAction: "Yeni gösterim planla",
+          nextActionAt: new Date(),
+        },
+      });
+      await tx.task.updateMany({
+        where: {
+          customerId: showing.customer.id,
+          ownerUserId: context.userId,
+          source: "PRIME_BRAIN_SHOWING",
+          status: { in: ["BEKLIYOR", "GECIKTI"] },
+        },
+        data: { status: "TAMAMLANDI", completedAt: new Date() },
+      });
+    }
+
     await tx.auditLog.create({
       data: {
         organizationId: context.organizationId,
