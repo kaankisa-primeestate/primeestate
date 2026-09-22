@@ -29,8 +29,8 @@ export async function GET() {
     status: "ODENDI" as const,
     sale: { customer: customerScope },
   };
-  const installmentScope = {
-    sale: { customer: customerScope },
+  const saleScope = {
+    customer: customerScope,
   };
 
   const [openSales, paidByCurrencyRows, pendingInstallments, overdueInstallments, paymentCount, paymentPlanCount] =
@@ -44,13 +44,13 @@ export async function GET() {
         _sum: { amount: true },
       }),
       prisma.paymentInstallment.count({
-        where: { status: "BEKLIYOR", plan: { sale: installmentScope } },
+        where: { status: "BEKLIYOR", plan: { sale: saleScope } },
       }),
       prisma.paymentInstallment.count({
         where: {
           status: "BEKLIYOR",
           dueAt: { lt: new Date() },
-          plan: { sale: installmentScope },
+          plan: { sale: saleScope },
         },
       }),
       prisma.payment.count({
