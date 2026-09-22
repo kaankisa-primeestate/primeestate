@@ -1,13 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
 
-export type CommercialNextAction =
-  | "Teklif takip et"
-  | "Satış sözleşmesini takip et"
-  | "Komisyon bilgisini tamamla"
-  | "Tahsilat bekleniyor"
-  | "Tahsilat planını takip et"
-  | "Satış sonrası ilişkiyi takip et";
-
 export function commercialNextAction(input: {
   event: "OFFER_CREATED" | "OFFER_ACCEPTED" | "SALE_CREATED" | "COMMISSION_UPDATED" | "PAYMENT_PLAN_CREATED" | "PAYMENT_RECEIVED" | "SALE_COMPLETED" | "SALE_CANCELLED";
   remainingAmount?: Prisma.Decimal | number | null;
