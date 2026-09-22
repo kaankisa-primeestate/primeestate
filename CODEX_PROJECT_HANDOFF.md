@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`84ac069c97583cc0698e9e00e330e9ebce4577c9`
+`b4e0d97e73e19f1c85ba220074e7759c51be39ff`
 
 Bu commit PR #80'in merge commitidir:
 
@@ -31,7 +31,7 @@ PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 
 ### Açık PR
 
-PR #81:
+PR #82:
 
 - Başlık: Phase 7: connect dashboard and finance live data
 - Base: `main`
@@ -1009,8 +1009,8 @@ Migration state schema ile uyumlu kalmalıdır.
 
 ### Öncelikli
 
-1. PR #81 CI kök nedenini bul.
-2. PR #81'i CI tamamen yeşil olmadan merge etme.
+1. PR #82 CI durumunu current main tabanında doğrula.
+2. PR #82'yi CI tamamen yeşil olmadan merge etme.
 3. Dashboard canlı verisini doğrula.
 4. Finance canlı verisini doğrula.
 5. Render'ın gerçek main commit'ini doğrula.
@@ -1082,7 +1082,7 @@ Kurallar:
 - secret/connection string isteme veya yazma.
 
 Öncelik:
-PR #81'in mevcut kırmızı CI root cause'unu bul.
+PR #82'nin mevcut CI root cause'unu bul ve gereksiz eski branch geçmişini kullanma.
 Log görünmüyorsa yeni kod değiştirmeden önce failure gözlemleme yöntemini kur.
 Kök neden kanıtlanınca tek, temiz düzeltmeyi yap.
 Critical Tests + Web Quality + typecheck + lint + build yeşil olmadan PR #81'i merge etme.
