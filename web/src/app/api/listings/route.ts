@@ -22,17 +22,6 @@ export async function GET(request: Request) {
   const q = searchParams.get("q")?.trim();
   const purpose = searchParams.get("purpose")?.trim();
   const propertyType = searchParams.get("propertyType")?.trim();
-  const status = searchParams.get("status")?.trim();
-
-  if (purpose && !PURPOSES.includes(purpose as (typeof PURPOSES)[number])) {
-    return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
-  }
-  if (propertyType && !PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) {
-    return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
-  }
-  if (status && !STATUSES.includes(status as (typeof STATUSES)[number])) {
-    return NextResponse.json({ message: "Geçerli bir portföy durumu seçin." }, { status: 400 });
-  }
 
   const listings = await prisma.listing.findMany({
     where: {
@@ -46,7 +35,6 @@ export async function GET(request: Request) {
       ] } : {}),
       ...(purpose ? { purpose: purpose as never } : {}),
       ...(propertyType ? { property: { propertyType: propertyType as never } } : {}),
-      ...(status ? { status: status as never } : {}),
     },
     include: {
       property: { select: {
