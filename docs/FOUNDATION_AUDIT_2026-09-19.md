@@ -148,3 +148,30 @@ Bir deploy'un "başarılı" sayılması için:
 zincirinin her halkası doğrulanacak.
 
 Sadece Render'ın "Live" demesi başarı kriteri değildir.
+
+## 22.09.2026 remediation update
+
+Foundation recovery sonrasında aşağıdaki sonuçlar doğrulandı:
+
+- Phase 5 route protection tamamlandı.
+- Phase 6 authorization, API integration ve financial invariant testleri tamamlandı.
+- Phase 7 gerçek HTTP business chain E2E ile tamamlandı.
+- Dashboard ve Finance canlı veri zinciri doğrulandı.
+- Eski duplicate matching engine repository-wide reference audit sonrasında kaldırıldı:
+  - `web/src/core/matching.ts`
+  - `web/src/types/Matching.ts`
+- Main commit `7c5f9218964ad5d1a669b8e568b7e56a55cd6a3e` üzerinde Web Quality ve Production Auth Smoke başarılıdır.
+- Production Auth Smoke, Render'ın aynı main commitini çalıştırdığını doğrulamış; login/session/customer/sales/payments/payment-plans endpoint'leri başarıyla yanıt vermiştir.
+- GitHub repository public'a çevrildikten sonra daha önce görülen zero-step Actions runner problemi ortadan kalkmış; PR #82'nin yeniden çalıştırılan Web Quality, Critical Tests ve Foundation State Validation kontrolleri başarılı olmuştur.
+
+### Current remediation status
+
+Foundation başlangıcındaki ana build/route determinism riskleri kapatılmıştır. Kalan işler release gate altında takip edilmektedir:
+
+- final runtime health check
+- Dashboard/Finance production no-500 verification
+- final migration-status verification when migration files change
+- final documentation reconciliation
+- release gate declaration
+
+Bu audit, yeni ürün özelliği geliştirmeden önce teknik temel doğrulaması için referans dokümandır.

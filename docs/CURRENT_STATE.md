@@ -1,57 +1,21 @@
-# PrimeEstate Current State
+# PrimeEstate — Current State
 
-## Foundation V1
+> **Authoritative state document:** repository root `CURRENT_STATE.md`.
 
-**Aşama:** PostgreSQL + Authentication + Production Build Hardening
+This file is retained as a legacy documentation entry point. The project has progressed beyond the original Foundation V1 checklist recorded here.
 
-### Çalışan/kurulu parçalar
+## Current verified baseline
 
-- Next.js App Router
-- PostgreSQL + Prisma 7
-- Better Auth + Prisma adapter
-- Organization → Office → Team → User hiyerarşisi
-- Customer / Demand / Property / Listing / Match temel modeli
-- Activity / Task / Showing / Offer temel modeli
-- tenant-aware user context
-- staging migration workflow
-- Render Web Service
+- Main: `7c5f9218964ad5d1a669b8e568b7e56a55cd6a3e`
+- Phase 7 business chain: complete
+- Dashboard / Finance live verification: complete
+- Phase 8 cleanup: active
+- Phase 9 release gate: pending final runtime/production checks
 
-### Foundation güvenlik durumu
+## Rules
 
-Authentication foundation hazır.
-
-Authorization enforcement henüz tamamlanmadı.
-
-Agent isolation backend query katmanında sonraki kritik iş kalemidir.
-
-### Production build
-
-- Webpack production build
-- temiz `.next` build
-- build-time route manifest verification
-- lint
-- typecheck
-- dependency lock synchronization
-
-## Bir sonraki teknik sıra
-
-1. Production route serving doğrulaması
-2. İlk Office/Admin bootstrap
-3. Login/logout/session
-4. Authorization policy layer
-5. Customer persistence
-6. Demand persistence
-7. Property/Listing persistence
-8. Matching persistence
-9. Activity/Task/Showing/Offer persistence
-10. Cross-module transaction flow
-11. Tests + tenant isolation tests
-
-## Kırmızı çizgiler
-
-- live CRM repo'ya dokunulmayacak
-- production DB reset edilmeyecek
-- frontend-only authorization yapılmayacak
-- aynı veri ikinci kez tutulmayacak
-- AI critical fields'e sessizce yazmayacak
-- lisans incelemesi olmadan open-source kod kopyalanmayacak
+- `kaankisa-primeestate/remax-CRM` is not modified.
+- Production database reset is forbidden.
+- Authorization is enforced server-side.
+- CI must be green before merge.
+- Secrets remain outside source code.
