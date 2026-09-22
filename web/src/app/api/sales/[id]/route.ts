@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { assertCan, customerOwnershipScope } from "@/lib/authz";
+import { commercialNextAction } from "@/core/prime-commercial";
 
 type SaleStatus = "ACIK" | "TAMAMLANDI" | "IPTAL";
 const STATUSES = new Set<SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
@@ -86,6 +87,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         await tx.listing.update({ where: { id: sale.listingId }, data: { status: finalListingStatus } });
       } else if (cancelling) {
         await tx.listing.updateMany({ where: { id: sale.listingId, status: "REZERVE" }, data: { status: "AKTIF" } });
+      }
+
+      const primeEvent = closing ? "SALE_COMPLETED" : cancelling ? "SALE_CANCELLED" : commissionChanged ? "COMMISSION_UPDATED" : null;
+      if (primeEvent) {
+        const next = commercialNextAction({ event: primeEvent });
+        await tx.customer.update({
+          where: { id: existing.customerId },
+          data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) },
+        });
       }
 
       await tx.auditLog.create({
