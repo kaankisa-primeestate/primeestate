@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!context) return authenticationRequired();
   if (!can(context.role, "customers", "update")) return forbidden();
 
-  let body: { customerId?: unknown; action?: unknown; outcome?: unknown };
+  let body: { customerId?: unknown; listingId?: unknown; action?: unknown; outcome?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
   }
 
   const customerId = typeof body.customerId === "string" ? body.customerId.trim() : "";
+  const listingId = typeof body.listingId === "string" ? body.listingId.trim() : "";
   const action = typeof body.action === "string" ? body.action.trim() : "";
   const outcome = typeof body.outcome === "string" ? body.outcome.trim() : "";
 
@@ -43,6 +44,15 @@ export async function POST(request: Request) {
   });
 
   if (!customer) return notFound("Müşteri bulunamadı veya erişim yetkiniz yok.");
+
+  const listing = listingId
+    ? await prisma.listing.findFirst({
+        where: { id: listingId, ...officeListingScope(context) },
+        select: { id: true, code: true, title: true, price: true, currency: true },
+      })
+    : null;
+
+  if (listingId && !listing) return notFound("Portföy bulunamadı veya erişim yetkiniz yok.");
 
   const nextAction = deriveNextAction(outcome || null, action as PrimeActionType);
   const demandChanges = extractDemandPreferenceChanges(outcome);
@@ -104,19 +114,19 @@ export async function POST(request: Request) {
     const changeHistory = Array.isArray(nextPreferences.primePreferenceChanges)
       ? nextPreferences.primePreferenceChanges.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
       : [];
-    nextPreferences.primePreferenceChanges = [
-      ...changeHistory,
-      {
-        at: new Date().toISOString(),
-        source: "PRIME_BRAIN",
-        summary: demandChanges.summary,
-      },
-    ].slice(-20);
 
-    return {
-      demand,
-      preferences: nextPreferences,
-    };
+    if (demandChanges.summary.length) {
+      nextPreferences.primePreferenceChanges = [
+        ...changeHistory,
+        {
+          at: new Date().toISOString(),
+          source: "PRIME_BRAIN",
+          summary: demandChanges.summary,
+        },
+      ].slice(-20);
+    }
+
+    return { demand, preferences: nextPreferences };
   });
 
   const matchSets = updatedDemands.map(({ demand, preferences }) => {
@@ -131,21 +141,25 @@ export async function POST(request: Request) {
     return {
       demand: updatedDemand,
       results: listings
-        .filter((listing) =>
+        .filter((candidate) =>
           updatedDemand.type === "SATIN_ALMA"
-            ? listing.purpose === "SATILIK"
-            : listing.purpose === "KIRALIK",
+            ? candidate.purpose === "SATILIK"
+            : candidate.purpose === "KIRALIK",
         )
-        .map((listing) => calculateMatch(updatedDemand, listing))
+        .map((candidate) => calculateMatch(updatedDemand, candidate))
         .sort((a, b) => b.score - a.score)
         .slice(0, 50),
     };
   });
 
   const activitySummary =
-    action === "ARAMA"
-      ? "Prime önerisiyle telefon görüşmesi kaydedildi."
-      : "Prime önerisiyle WhatsApp görüşmesi kaydedildi.";
+    listing && action === "WHATSAPP"
+      ? `Prime önerisiyle ${listing.code} portföyü WhatsApp üzerinden paylaşıldı.`
+      : listing && action === "ARAMA"
+        ? `Prime önerisiyle ${listing.code} portföyü hakkında müşteri arandı.`
+        : action === "ARAMA"
+          ? "Prime önerisiyle telefon görüşmesi kaydedildi."
+          : "Prime önerisiyle WhatsApp görüşmesi kaydedildi.";
 
   const result = await prisma.$transaction(async (tx) => {
     for (const { demand, preferences } of updatedDemands) {
@@ -164,6 +178,7 @@ export async function POST(request: Request) {
     const activity = await tx.activity.create({
       data: {
         customerId,
+        listingId: listing?.id ?? null,
         ownerUserId: context.userId,
         type: action as never,
         occurredAt: new Date(),
@@ -171,7 +186,8 @@ export async function POST(request: Request) {
         outcome: outcome || null,
         metadata: {
           source: "PRIME_BRAIN",
-          workflow: "NEXT_BEST_ACTION",
+          workflow: listing ? "PROACTIVE_LISTING" : "NEXT_BEST_ACTION",
+          listingId: listing?.id ?? null,
           nextAction: nextAction.action,
           demandChanges: demandChanges.summary,
         },
@@ -229,12 +245,13 @@ export async function POST(request: Request) {
       data: {
         organizationId: context.organizationId,
         actorUserId: context.userId,
-        action: "PRIME_NEXT_BEST_ACTION",
+        action: listing ? "PRIME_PROACTIVE_LISTING_ACTION" : "PRIME_NEXT_BEST_ACTION",
         entityType: "Customer",
         entityId: customerId,
         metadata: {
           activityId: activity.id,
           action,
+          listingId: listing?.id ?? null,
           nextAction: nextAction.action,
           nextActionAt,
           rematchedDemands: matchSets.length,
@@ -253,6 +270,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ...result,
+    listing,
     nextAction,
     rematchedDemands: matchSets.length,
     demandChanges: demandChanges.summary,
