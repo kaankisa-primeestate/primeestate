@@ -17,6 +17,12 @@ type Listing = {
   };
 };
 
+async function readJson(response: Response) {
+  const text = await response.text();
+  if (!text) return null;
+  try { return JSON.parse(text) as Record<string, unknown>; } catch { return null; }
+}
+
 export default function PortfolioEditModal({ item, onClose, onSaved }: { item: Listing; onClose: () => void; onSaved: () => Promise<void> }) {
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
@@ -29,8 +35,8 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
     setSaving(true); setMessage("");
     try {
       const res = await fetch("/api/listings/" + item.id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload.message || "Portföy güncellenemedi.");
+      const payload = await readJson(res);
+      if (!res.ok) throw new Error(typeof payload?.message === "string" ? payload.message : "Portföy güncellenemedi.");
       await onSaved();
       onClose();
     } catch (error) {
@@ -43,8 +49,8 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
     setSaving(true); setMessage("");
     try {
       const res = await fetch("/api/listings/" + item.id + "/images", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: imageUrl.trim() }) });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload.message || "Fotoğraf eklenemedi.");
+      const payload = await readJson(res);
+      if (!res.ok) throw new Error(typeof payload?.message === "string" ? payload.message : "Fotoğraf eklenemedi.");
       setImageUrl("");
       await onSaved();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Fotoğraf eklenemedi."); }
@@ -53,9 +59,10 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
 
   async function removeImage(imageId: string) {
     setSaving(true);
+    setMessage("");
     try {
       const res = await fetch("/api/listings/" + item.id + "/images?imageId=" + encodeURIComponent(imageId), { method: "DELETE" });
-      if (!res.ok) { const payload = await res.json(); throw new Error(payload.message || "Fotoğraf silinemedi."); }
+      if (!res.ok) { const payload = await readJson(res); throw new Error(typeof payload?.message === "string" ? payload.message : "Fotoğraf silinemedi."); }
       await onSaved();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Fotoğraf silinemedi."); }
     finally { setSaving(false); }
@@ -81,7 +88,32 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
         <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">Adres</span><input name="address" defaultValue={item.property.address ?? ""} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
         <div className="sm:col-span-2 flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button disabled={saving} type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? "Kaydediliyor…" : "Değişiklikleri Kaydet"}</button></div>
       </form>
-      <div className="mt-7 border-t border-slate-200 pt-6"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Fotoğraf yönetimi</p><div className="mt-3 flex gap-2"><input value={imageUrl} onChange={e=>setImageUrl(e.target.value)} placeholder="https://... fotoğraf URL'si" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-3 text-sm"/><button type="button" disabled={saving} onClick={()=>void addImage()} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Ekle</button></div><p className="mt-2 text-xs text-slate-400">V1 de fotoğraf kaynağı URL olarak saklanır; dosya depolama katmanını sonraki adımda bağlayabiliriz.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{item.images.map(image=><div key={image.id} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"><img src={image.url} alt={image.alt || item.title} className="h-full w-full object-cover"/><button type="button" disabled={saving} onClick={()=>void removeImage(image.id)} className="absolute right-2 top-2 rounded-lg bg-slate-950/75 px-2 py-1 text-xs font-semibold text-white">Sil</button></div>)}</div></div>
+
+      <div className="mt-7 border-t border-slate-200 pt-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Fotoğraf yönetimi</p>
+            <p className="mt-1 text-sm text-slate-500">Fotoğraf yükleme altyapısı sonraki aşamada bağlanacak.</p>
+          </div>
+          <span className="text-xs font-semibold text-slate-400">{item.images.length} / 30 fotoğraf</span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">🖼️ Galeriden Seç · Yakında</button>
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">📷 Kamera · Yakında</button>
+          <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-400">☁️ Bulut yükleme · Yakında</button>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <input value={imageUrl} onChange={e=>setImageUrl(e.target.value)} placeholder="Harici fotoğraf URL'si (isteğe bağlı)" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-3 text-sm"/>
+          <button type="button" disabled={saving || !imageUrl.trim()} onClick={()=>void addImage()} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Ekle</button>
+        </div>
+        <p className="mt-3 text-xs leading-5 text-slate-400">URL ile ekleme mevcut. Galeri, kamera ve bulut depolama bağlantısı ayrı bir altyapı adımı olarak ele alınacak.</p>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {item.images.map(image=><div key={image.id} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100"><img src={image.url} alt={image.alt || item.title} className="h-full w-full object-cover"/><button type="button" disabled={saving} onClick={()=>void removeImage(image.id)} className="absolute right-2 top-2 rounded-lg bg-slate-950/75 px-2 py-1 text-xs font-semibold text-white">Sil</button></div>)}
+        </div>
+      </div>
     </div>
   </div>;
 }
