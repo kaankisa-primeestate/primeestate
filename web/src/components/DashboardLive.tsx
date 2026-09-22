@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 
 type T = { id: string; title: string; dueAt: string; priority: string; status: string; customer: { name: string } | null };
-type L = { id: string; code: string; title: string; price: string | number; currency: string; property?: { district?: string; neighborhood?: string } };
+type L = { id: string; code: string; title: string; price: string | number; currency: string; status: string; property?: { district?: string; neighborhood?: string } };
 type A = { id: string; occurredAt: string; summary: string; customer: { name: string } };
 type S = { id: string; dateTime: string; customer: { name: string }; listing: { code: string; title: string } };
 type C = { id: string; name: string };
@@ -110,7 +110,7 @@ export default function DashboardLive() {
 
   const openT = t.filter((x) => x.status !== "TAMAMLANDI");
   const openO = o.filter((x) => !["KABUL", "REDDEDILDI"].includes(x.status));
-  const activeListings = l.filter((x) => (x as L & { status?: string }).status === undefined || (x as L & { status?: string }).status === "AKTIF");
+  const activeListings = l.filter((x) => x.status === "AKTIF");
   const paidByCurrency = payments.filter((payment) => payment.status === "ODENDI").reduce<Record<string, number>>((acc, payment) => {
     acc[payment.currency] = (acc[payment.currency] ?? 0) + Number(payment.amount);
     return acc;
