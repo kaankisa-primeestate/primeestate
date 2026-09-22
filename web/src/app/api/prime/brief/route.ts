@@ -3,6 +3,7 @@ import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
+import { readPrimeLearning } from "@/core/prime-learning";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,24 @@ function matchReasonText(value: unknown) {
     }
     return String(item);
   }).filter(Boolean);
+}
+
+function learnedReasonText(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item === "object" && typeof (item as { title?: unknown }).title === "string" && String((item as { title: string }).title).toLocaleLowerCase("tr-TR").includes("öğrenilen"))
+    .map((item) => {
+      const record = item as { title?: unknown; detail?: unknown };
+      const title = typeof record.title === "string" ? record.title : "";
+      const detail = typeof record.detail === "string" ? record.detail : "";
+      return detail ? title + ": " + detail : title;
+    })
+    .filter(Boolean)
+    .slice(0, 2);
+}
+
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
 
 function daysSince(value: Date | null) {
@@ -77,6 +96,7 @@ export async function GET() {
         take: 2,
         select: {
           title: true,
+          preferences: true,
           matches: {
             orderBy: { score: "desc" },
             take: 3,
@@ -123,27 +143,49 @@ export async function GET() {
       const health = relationshipHealth(customer.relationshipScore, days);
       const action = actionFor(customer, days, overdueTasks);
       const priorityValue = priority(customer.relationshipScore, days, overdueTasks, customer.nextActionAt);
+      const learning = customer.demands.reduce(
+        (acc, demand) => {
+          const demandPreferences =
+            demand.preferences && typeof demand.preferences === "object" && !Array.isArray(demand.preferences)
+              ? (demand.preferences as Record<string, unknown>)
+              : {};
+          const demandLearning = readPrimeLearning(demandPreferences.primeLearning);
+          acc.positive.push(...demandLearning.positive);
+          acc.negative.push(...demandLearning.negative);
+          return acc;
+        },
+        { positive: [] as string[], negative: [] as string[] },
+      );
+      const learnedPositive = uniqueStrings(learning.positive).slice(-6);
+      const learnedNegative = uniqueStrings(learning.negative).slice(-6);
+
       const opportunities = customer.demands
         .flatMap((demand) =>
           demand.matches
             .filter((match) => match.listing)
-            .map((match) => ({
-              id: match.id,
-              listingId: match.listing!.id,
-              code: match.listing!.code,
-              title: match.listing!.title,
-              matchScore: match.score,
-              price: Number(match.listing!.price),
-              currency: match.listing!.currency,
-              location: [
-                match.listing!.property?.district,
-                match.listing!.property?.neighborhood,
-              ].filter(Boolean).join(" · "),
-              sizeM2: match.listing!.property?.sizeM2 ? Number(match.listing!.property.sizeM2) : null,
-              rooms: match.listing!.property?.rooms ?? null,
-              reasons: matchReasonText(match.reasons),
-              mismatches: Array.isArray(match.mismatches) ? match.mismatches.map(String) : [],
-            })),
+            .map((match) => {
+              const reasons = matchReasonText(match.reasons);
+              const learningReasons = learnedReasonText(match.reasons);
+              return {
+                id: match.id,
+                listingId: match.listing!.id,
+                code: match.listing!.code,
+                title: match.listing!.title,
+                matchScore: match.score,
+                price: Number(match.listing!.price),
+                currency: match.listing!.currency,
+                location: [
+                  match.listing!.property?.district,
+                  match.listing!.property?.neighborhood,
+                ].filter(Boolean).join(" · "),
+                sizeM2: match.listing!.property?.sizeM2 ? Number(match.listing!.property.sizeM2) : null,
+                rooms: match.listing!.property?.rooms ?? null,
+                reasons,
+                learningReasons,
+                whyThisListing: uniqueStrings([...learningReasons, ...reasons]).slice(0, 4),
+                mismatches: Array.isArray(match.mismatches) ? match.mismatches.map(String) : [],
+              };
+            }),
         )
         .slice(0, 3);
 
@@ -154,11 +196,13 @@ export async function GET() {
         customer.nextAction ? "Kayıtlı sonraki aksiyon: " + customer.nextAction + "." : null,
       ].filter((value): value is string => Boolean(value));
 
-      const talkingPoints = [
-        customer.demands[0]?.title ?? null,
-        customer.nextAction ?? null,
-        customer.activities[0]?.summary ?? null,
-      ].filter((value): value is string => Boolean(value));
+      const talkingPoints = uniqueStrings([
+        learnedPositive.length ? "Daha önce olumlu sinyal: " + learnedPositive.join(", ") + "." : "",
+        learnedNegative.length ? "Daha önce sorun olan: " + learnedNegative.join(", ") + ". Bu özellikleri özellikle teyit et." : "",
+        customer.demands[0]?.title ?? "",
+        customer.nextAction ?? "",
+        customer.activities[0]?.summary ?? "",
+      ]);
 
       return {
         client: { id: customer.id, name: customer.name, phone: customer.phone, relationshipHealth: health },
@@ -170,6 +214,10 @@ export async function GET() {
         },
         reasons,
         talkingPoints,
+        learning: {
+          positive: learnedPositive,
+          negative: learnedNegative,
+        },
         opportunities,
         risks: health === "risk" ? ["İlişki temas aralığı uzamış olabilir."] : [],
         expectedOutcome:
