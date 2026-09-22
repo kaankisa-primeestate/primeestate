@@ -36,13 +36,12 @@ export async function POST(request: Request) {
   if (!customer) return notFound("Müşteri bulunamadı veya erişim yetkiniz yok.");
   if (!listing) return notFound("Portföy bulunamadı veya erişim yetkiniz yok.");
 
-  const next = showingNextAction(dateTime);
+  const reminderAt = new Date(Math.max(Date.now(), dateTime.getTime() - 24 * 60 * 60 * 1000));
+  const next = showingNextAction(reminderAt);
   const confirmationMessage = buildShowingConfirmationMessage({ customerName: customer.name, listingTitle: listing.title, dateTime });
   const whatsappUrl = customer.phone
     ? `https://wa.me/${customer.phone.replace(/\D/g, "").replace(/^0/, "90")}?text=${encodeURIComponent(confirmationMessage)}`
     : null;
-  const reminderAt = new Date(Math.max(Date.now(), dateTime.getTime() - 24 * 60 * 60 * 1000));
-
   const result = await prisma.$transaction(async (tx) => {
     const showing = await tx.showing.create({
       data: { customerId, listingId, dateTime, attendees, note },
