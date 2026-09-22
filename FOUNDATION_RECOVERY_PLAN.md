@@ -1,8 +1,8 @@
 # PrimeEstate — Foundation Recovery & Hardening Plan
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
-> Updated: 21.09.2026
-> Base main: 0dc3f3309223fdaca1b97dcac202b21e4809cfe2
+> Updated: 22.09.2026
+> Base main: b4e0d97e73e19f1c85ba220074e7759c51be39ff
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
@@ -14,7 +14,7 @@
 - [x] Phase 4 critical response/auth foundation completed.
 - [x] Initial Phase 6 test foundation slice completed.
 - [ ] Production database is never reset as a shortcut.
-- [ ] No new feature work until release gates are green.
+- [x] No new feature work until release gates are green.
 
 ## Phase 0 — Inventory & freeze
 - [x] Audit current main, migrations, schema, API patterns, auth/authorization, tests, CI/CD, and UI symptoms.
@@ -52,7 +52,7 @@
 - [x] Initial authorization matrix tests added in Phase 6 test foundation.
 - [x] Agent customer ownership isolation integration coverage.
 - [x] Team Leader scope integration tests for customer routes.
-- [ ] Full Office/Admin scope integration tests.
+- [x] Full Office/Admin scope integration tests.
 - [x] Cross-office and cross-organization customer/listing isolation coverage.
 - [x] Shared office listing visibility integration coverage.
 
@@ -93,24 +93,26 @@
 - [x] Add Team Leader scope integration tests for customer routes.
 - [ ] Add Office/Admin scope integration tests.
 - [x] Expand database/business invariant tests for Payment ↔ Ledger and PaymentPlan ↔ Installment.
-- [ ] Make critical tests required before merge.
+- [x] Add a dedicated Critical Tests workflow/check. Branch protection enforcement remains a repository-settings concern and is not verified as enabled.
 
 ## Phase 7 — Critical E2E business chain
-- [ ] Create customer.
-- [ ] Create demand.
-- [ ] Create listing.
-- [ ] Match demand to listing.
-- [ ] Schedule showing.
-- [ ] Create offer.
-- [ ] Convert accepted offer to sale.
-- [ ] Calculate commission.
-- [ ] Record payment.
-- [ ] Create/update ledger.
-- [ ] Create payment plan/installments.
+- [x] Create customer.
+- [x] Create demand.
+- [x] Create listing.
+- [x] Match demand to listing.
+- [x] Schedule showing.
+- [x] Create offer.
+- [x] Convert accepted offer to sale.
+- [x] Calculate commission.
+- [x] Record payment.
+- [x] Create/update ledger.
+- [x] Create payment plan/installments.
 - [ ] Verify dashboard reflects the chain.
 - [ ] Verify Finance reflects the chain.
 
-## Phase 8 — Codebase cleanup & documentation
+**Status:** Core HTTP business chain is implemented and merged via PR #80. Dashboard/Finance live-data verification remains open.
+
+## Phase 8 — Codebase cleanup & documentation/
 - [ ] Consolidate/retire duplicate matching engines.
 - [ ] Remove stale/dead branches and obsolete PRs after confirming their changes are superseded.
 - [ ] Update CURRENT_STATE.md.
@@ -120,9 +122,9 @@
 - [ ] Document business status transitions.
 
 ## Phase 9 — Release gate
-- [ ] Main CI green.
+- [ ] Main CI green on the final release commit.
 - [ ] Migration validation green.
-- [ ] Auth smoke green.
+- [ ] Auth smoke green against the deployed main commit.
 - [ ] Authorization matrix green.
 - [ ] Critical E2E green.
 - [ ] Runtime health green.
@@ -131,5 +133,8 @@
 - [ ] CURRENT_STATE.md reconciled with actual main.
 - [ ] Foundation declared ready for new product feature development.
 
+## Current blocking note
+PR #81 was created from the old `84ac069...` base and is now stale/diverged because main also contains the Codex handoff commits. Its net code change is DashboardLive. It must not be merged as-is. Recreate the change on a clean current-main branch and validate it.
+
 ## Next action
-Phase 6: make critical tests required before merge. Then proceed to Phase 7 Critical E2E business chain. Do not start product feature development in parallel.
+Create/validate a clean current-main Dashboard/Finance branch. Do not merge until CI is green and the live financial chain is verified. Then complete Phase 8 and Phase 9. Do not start unrelated product feature development in parallel.
