@@ -207,7 +207,7 @@ export function calculateMatch(demand: MatchingDemand, listing: MatchingListing)
 
   const score = Math.max(0, Math.min(100, Object.entries(breakdown)
     .filter(([key]) => key !== "penalty")
-    .reduce((sum, [, value]) => sum + value, 0) - penalty + learning.adjustment));
+    .reduce((sum, [, value]) => sum + value, 0) - penalty));
 
   const reasons: MatchReason[] = [];
   const mismatches: string[] = [];
