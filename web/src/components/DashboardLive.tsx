@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 
 type T = { id: string; title: string; dueAt: string; priority: string; status: string; customer: { name: string } | null };
-type L = { id: string; code: string; title: string; price: string | number; currency: string; property?: { district?: string; neighborhood?: string } };
+type L = { id: string; code: string; title: string; price: string | number; currency: string; status: string; property?: { district?: string; neighborhood?: string } };
 type A = { id: string; occurredAt: string; summary: string; customer: { name: string } };
 type S = { id: string; dateTime: string; customer: { name: string }; listing: { code: string; title: string } };
 type C = { id: string; name: string };
 type O = { id: string; status: string };
-type Sale = { id: string; status: string };
+type Sale = { id: string; status: string; amount: string | number; currency: string };
+type Payment = { id: string; saleId: string; amount: string | number; currency: string; status: string };
+type Plan = { id: string; installments: { id: string; amount: string | number; currency: string; dueAt: string; status: string }[] };
 
 async function g<T>(u: string): Promise<T> {
   const r = await fetch(u, { cache: "no-store" });
@@ -50,6 +52,8 @@ export default function DashboardLive() {
   const [s, setS] = useState<S[]>([]);
   const [o, setO] = useState<O[]>([]);
   const [sale, setSale] = useState<Sale[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -65,10 +69,12 @@ export default function DashboardLive() {
       g<{ showings: S[] }>("/api/showings"),
       g<{ offers: O[] }>("/api/offers"),
       g<{ sales: Sale[] }>("/api/sales"),
+      g<{ payments: Payment[] }>("/api/payments"),
+      g<{ plans: Plan[] }>("/api/payment-plans"),
     ] as const;
 
     const results = await Promise.allSettled(requests);
-    const [x, y, z, q, w, n, m] = results;
+    const [x, y, z, q, w, n, m, p, pp] = results;
     const failed = results
       .map((result, index) => (result.status === "rejected" ? { index, reason: result.reason } : null))
       .filter((item): item is { index: number; reason: unknown } => item !== null);
@@ -80,6 +86,8 @@ export default function DashboardLive() {
     setS(w.status === "fulfilled" ? w.value.showings : []);
     setO(n.status === "fulfilled" ? n.value.offers : []);
     setSale(m.status === "fulfilled" ? m.value.sales : []);
+    setPayments(p.status === "fulfilled" ? p.value.payments : []);
+    setPlans(pp.status === "fulfilled" ? pp.value.plans : []);
     setLastUpdated(new Date());
 
     if (failed.length) {
@@ -102,6 +110,13 @@ export default function DashboardLive() {
 
   const openT = t.filter((x) => x.status !== "TAMAMLANDI");
   const openO = o.filter((x) => !["KABUL", "REDDEDILDI"].includes(x.status));
+  const activeListings = l.filter((x) => x.status === "AKTIF");
+  const paidByCurrency = payments.filter((payment) => payment.status === "ODENDI").reduce<Record<string, number>>((acc, payment) => {
+    acc[payment.currency] = (acc[payment.currency] ?? 0) + Number(payment.amount);
+    return acc;
+  }, {});
+  const pendingInstallments = plans.flatMap((plan) => plan.installments).filter((item) => item.status === "BEKLIYOR");
+  const overdueInstallments = pendingInstallments.filter((item) => Date.parse(item.dueAt) < Date.now());
   const today = new Date().toDateString();
   const todayS = s.filter((x) => new Date(x.dateTime).toDateString() === today);
 
@@ -148,9 +163,9 @@ export default function DashboardLive() {
           <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               ["👥", "Müşteriler", c.length, "/relationships"],
-              ["🏡", "Aktif Portföy", l.length, "/portfolio"],
-              ["🎯", "Açık Görev", openT.length, "/sales"],
+              ["🏡", "Aktif Portföy", activeListings.length, "/portfolio"],
               ["🔥", "Açık Fırsat", openO.length, "/sales"],
+              ["💼", "Açık Satış", sale.filter((x) => x.status === "ACIK").length, "/finance"],
             ].map(([e, n, v, h]) => (
               <Link key={String(n)} href={String(h)} className="rounded-2xl border bg-white p-5 shadow-sm">
                 <span className="text-2xl">{e}</span>
@@ -158,6 +173,23 @@ export default function DashboardLive() {
                 <p className="mt-1 text-3xl font-bold">{busy ? "—" : v}</p>
               </Link>
             ))}
+          </section>
+
+          <section className="mt-6 rounded-3xl border bg-white p-5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[.16em] text-slate-400">Finans Özeti</p>
+                <h2 className="mt-1 text-xl font-semibold">Satıştan tahsilata canlı görünüm</h2>
+              </div>
+              <Link href="/finance" className="text-sm font-semibold">Finans →</Link>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Açık satış</p><p className="mt-1 text-2xl font-semibold">{sale.filter((x) => x.status === "ACIK").length}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Tahsil edilen</p><div className="mt-1 space-y-1">{Object.entries(paidByCurrency).length ? Object.entries(paidByCurrency).map(([currency, value]) => <p key={currency} className="text-lg font-semibold">{money(value, currency)}</p>) : <p className="text-2xl font-semibold">0</p>}</div></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Bekleyen taksit</p><p className="mt-1 text-2xl font-semibold">{pendingInstallments.length}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Vadesi geçen</p><p className="mt-1 text-2xl font-semibold">{overdueInstallments.length}</p></div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500"><span className="rounded-full bg-slate-100 px-3 py-1.5">{payments.length} tahsilat</span><span className="rounded-full bg-slate-100 px-3 py-1.5">{plans.length} ödeme planı</span></div>
           </section>
 
           <section className="mt-6 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
