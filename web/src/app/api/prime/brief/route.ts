@@ -53,6 +53,7 @@ export async function GET() {
     select: {
       id: true,
       name: true,
+      phone: true,
       relationshipScore: true,
       lastContactAt: true,
       nextAction: true,
@@ -125,7 +126,7 @@ export async function GET() {
       ].filter((value): value is string => Boolean(value));
 
       return {
-        client: { id: customer.id, name: customer.name, relationshipHealth: health },
+        client: { id: customer.id, name: customer.name, phone: customer.phone, relationshipHealth: health },
         objective: action === "maintain" ? "İlişkiyi sıcak tutmak" : "Bir sonraki doğru teması gerçekleştirmek",
         today: {
           action,
