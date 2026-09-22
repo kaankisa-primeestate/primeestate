@@ -6,6 +6,7 @@ export type PrimeLearning = {
     status: "GERCEKLESTI" | "IPTAL";
     note: string | null;
     learned: string[];
+    direction: "positive" | "negative" | "neutral";
     at: string;
   }>;
 };
@@ -103,6 +104,7 @@ export function applyShowingLearning(current: unknown, showingId: string, status
       status,
       note,
       learned: result.learned,
+      direction: result.direction,
       at: new Date().toISOString(),
     },
   ].slice(-20);
