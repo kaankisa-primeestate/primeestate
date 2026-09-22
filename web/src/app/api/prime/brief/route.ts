@@ -71,6 +71,7 @@ export async function GET() {
               id: true,
               score: true,
               reasons: true,
+              mismatches: true,
               listing: {
   select: {
     id: true,
