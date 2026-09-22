@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Decision = {
-  client: { id: string; name: string; relationshipHealth: "strong" | "normal" | "risk" };
+  client: { id: string; name: string; phone: string | null; relationshipHealth: "strong" | "normal" | "risk" };
   objective: string;
   today: { action: string; priority: "critical" | "high" | "medium" | "low"; confidence: number };
   reasons: string[];
@@ -149,8 +149,7 @@ export default function PrimeBriefLive() {
           <div className="rounded-2xl bg-slate-50 p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bugünün önerisi</p>
             <p className="mt-2 text-lg font-semibold text-slate-900">{lead.nextStep}</p>
-            {lead.talkingPoints.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {lead.client.phone ? (
                 <>
                   <a
@@ -190,7 +189,8 @@ export default function PrimeBriefLive() {
               </div>
             </div>
 
-            <div className="mt-4">
+            {lead.talkingPoints.length > 0 && (
+              <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Konuşma noktaları</p>
                 <ul className="mt-2 space-y-2 text-sm text-slate-600">
                   {lead.talkingPoints.slice(0, 3).map((point) => <li key={point}>• {point}</li>)}
