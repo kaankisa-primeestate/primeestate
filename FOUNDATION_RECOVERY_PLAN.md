@@ -2,7 +2,7 @@
 
 > Master checklist for rebuilding the technical foundation before adding new product features.
 > Updated: 22.09.2026
-> Base main: c0d440ed27e2d53fd54d35699787f55e5f5c424a
+> Base main: 3846fe23ca59f8e0d5853931f74946184f72bc1f
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
