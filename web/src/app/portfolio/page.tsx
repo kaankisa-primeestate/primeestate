@@ -76,7 +76,7 @@ export default function PortfolioPage() {
       const res = await fetch("/api/listings", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data) });
       const payload = await res.json(); if(!res.ok) throw new Error(payload.message || "Portföy eklenemedi.");
       setShowCreate(false); form.reset(); await load(); setSelectedId(payload.listing?.id ?? null);
-      setPrimeNotice(Array.isArray(payload.primeOpportunities) ? payload.primeOpportunities.slice(0, 5).map((item: { customerId?: string; customerName?: string; ownerUserId?: string; score?: number }) => ({ customerId: item.customerId ?? "", customerName: item.customerName ?? "Müşteri", phone: null, score: Number(item.score ?? 0), listingId: payload.listing?.id ?? "" })).filter((item: { customerId: string }) => item.customerId) : []);
+      setPrimeNotice(Array.isArray(payload.primeOpportunities) ? payload.primeOpportunities.slice(0, 5).map((item: { customerId?: string; customerName?: string; phone?: string | null; score?: number }) => ({ customerId: item.customerId ?? "", customerName: item.customerName ?? "Müşteri", phone: item.phone ?? null, score: Number(item.score ?? 0), listingId: payload.listing?.id ?? "" })).filter((item: { customerId: string }) => item.customerId) : []);
       setPrimeOutcome("");
       setPrimeDueAt("");
       setPrimeSuccess("");
@@ -118,11 +118,11 @@ export default function PortfolioPage() {
     {primeNotice.map((item)=><div key={item.customerId+item.score} className="rounded-2xl bg-white/10 p-4">
       <div className="flex items-center justify-between gap-3">
         <div><p className="font-semibold">{item.customerName}</p><p className="mt-1 text-xs text-slate-300">%{item.score} eşleşme</p></div>
-        <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-300">Prime</span>
+        <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-300">{item.phone ? "Telefon kayıtlı" : "Telefon yok"}</span>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" disabled={primeBusy===item.customerId+"-ARAMA"} onClick={()=>void handlePrimeListingAction(item,"ARAMA","call")} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50">{primeBusy===item.customerId+"-ARAMA"?"Kaydediliyor…":"📞 Ara"}</button>
-        <button type="button" disabled={primeBusy===item.customerId+"-WHATSAPP"} onClick={()=>void handlePrimeListingAction(item,"WHATSAPP","whatsapp")} className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{primeBusy===item.customerId+"-WHATSAPP"?"Kaydediliyor…":"WhatsApp'tan Gönder"}</button>
+        <button type="button" disabled={!item.phone || primeBusy===item.customerId+"-ARAMA"} onClick={()=>void handlePrimeListingAction(item,"ARAMA","call")} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50">{primeBusy===item.customerId+"-ARAMA"?"Kaydediliyor…":"📞 Ara"}</button>
+        <button type="button" disabled={!item.phone || primeBusy===item.customerId+"-WHATSAPP"} onClick={()=>void handlePrimeListingAction(item,"WHATSAPP","whatsapp")} className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{primeBusy===item.customerId+"-WHATSAPP"?"Kaydediliyor…":"WhatsApp'tan Gönder"}</button>
         <button type="button" disabled={primeBusy===item.customerId+"-TASK"} onClick={()=>void handlePrimeListingTask(item)} className="rounded-xl bg-indigo-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{primeBusy===item.customerId+"-TASK"?"Kaydediliyor…":"Görev Oluştur"}</button>
       </div>
     </div>)}
