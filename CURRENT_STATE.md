@@ -49,7 +49,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 ## 4. Doğrulanmış GitHub durumu
 
 ### Main
-`d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+`2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
 Bu main commit'i PR #88 merge'idir ve production release-gate smoke kapsamını genişletir.
 
