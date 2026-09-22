@@ -20,7 +20,7 @@
 
 Son doğrulanmış `main`:
 
-`d8b95168d7b2e0d7580795eb8cf989a52e86ed25`
+`2da8953f06304e6a2b6f049571a2df991b1e61e9`
 
 Bu commit PR #88'in merge commitidir.
 
