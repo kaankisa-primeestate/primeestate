@@ -156,7 +156,7 @@ export async function POST(request: Request) {
           ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
           ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
           ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
-          preferences,
+          preferences: JSON.parse(JSON.stringify(preferences)),
         },
       });
     }
