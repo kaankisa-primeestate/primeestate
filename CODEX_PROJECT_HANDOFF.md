@@ -20,9 +20,9 @@
 
 Son doğrulanmış `main`:
 
-`b4d7842e0e43bf6906a3c2407bf0076ab21a429a`
+`2aca0b13ef7def2636fd5aa2226d0558ea246cca`
 
-Bu commit PR #80'in merge commitidir:
+Bu commit PR #88'in merge commitidir.
 
 - PR #80 — Phase 7 Critical E2E business chain
 - customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment → payment plan/installments
@@ -34,6 +34,7 @@ PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 PR #82 — Dashboard / Finance live verification — merged.
 PR #84 — post-merge documentation reconciliation — merged.
 PR #85 — final main state reconciliation — merged.
+PR #88 — production release-gate smoke hardening — merged.
 
 ## 3. Production / Render
 
@@ -1113,14 +1114,14 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 
 # Son durum özeti
 
-**Main:** `84ac069c97583cc0698e9e00e330e9ebce4577c9`
+**Main:** `2aca0b13ef7def2636fd5aa2226d0558ea246cca`
 
 **PR #80:** merged ✅
 
-**PR #81:** open / not merged ⏸️
+**PR #81:** closed / obsolete
 
-**Production Render:** ayrıca doğrulanmalı.
+**Production Render:** `2aca0b1` üzerinde auth, session, customers, health, Dashboard, Finance, listings, sales, payments ve payment plans doğrulandı.
 
 **remax-CRM:** dokunulmayacak.
 
-**Yeni ürün özelliği geliştirme:** release gate tamamlanana kadar ertelenmeli.
+**Yeni ürün özelliği geliştirme:** foundation release gate koşulları doğrulandıktan sonra açılabilir.
