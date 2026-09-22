@@ -38,7 +38,10 @@ export default function PrimeBriefLive() {
   }
 
   useEffect(() => {
-    void load();
+    const loadInitial = async () => {
+      await load();
+    };
+    void loadInitial();
     const interval = setInterval(() => void load(), 60000);
     return () => clearInterval(interval);
   }, []);
@@ -70,13 +73,13 @@ export default function PrimeBriefLive() {
             <h3 className="mt-1 text-2xl font-semibold">{lead.client.name}</h3>
             <p className="mt-2 text-sm text-slate-300">{lead.objective}</p>
             <div className="mt-5 rounded-2xl bg-white/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime'ın gerekçesi</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime&apos;ın gerekçesi</p>
               <ul className="mt-2 space-y-1 text-sm text-slate-200">
                 {lead.reasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}
               </ul>
             </div>
             <Link href={"/relationship/" + lead.client.id} className="mt-4 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950">
-              Müşteri Workspace'ini Aç →
+              Müşteri Workspace&apos;ini Aç →
             </Link>
           </div>
 
