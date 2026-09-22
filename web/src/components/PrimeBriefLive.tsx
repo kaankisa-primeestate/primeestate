@@ -23,6 +23,10 @@ export default function PrimeBriefLive() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [outcome, setOutcome] = useState("");
+  const [dueAt, setDueAt] = useState("");
+  const [busyAction, setBusyAction] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function load() {
     try {
@@ -46,6 +50,64 @@ export default function PrimeBriefLive() {
     return () => clearInterval(interval);
   }, []);
 
+  async function recordActivity(customerId: string, type: "ARAMA" | "WHATSAPP", summary: string) {
+    setBusyAction(type);
+    setSuccess("");
+    try {
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          type,
+          summary,
+          outcome: outcome.trim() || null,
+          metadata: { source: "PRIME_BRAIN" },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.message ?? "Aktivite kaydedilemedi.");
+      setOutcome("");
+      setSuccess("Temas Prime hafızasına kaydedildi.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Aktivite kaydedilemedi.");
+    } finally {
+      setBusyAction("");
+    }
+  }
+
+  async function createTask(customerId: string, customerName: string, nextStep: string) {
+    if (!dueAt) {
+      setError("Görev için bir tarih ve saat seç.");
+      return;
+    }
+    setBusyAction("task");
+    setSuccess("");
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          title: "Prime: " + nextStep,
+          dueAt: new Date(dueAt).toISOString(),
+          priority: "YUKSEK",
+          source: "PRIME_BRAIN",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.message ?? "Görev oluşturulamadı.");
+      setDueAt("");
+      setSuccess(customerName + " için görev oluşturuldu.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Görev oluşturulamadı.");
+    } finally {
+      setBusyAction("");
+    }
+  }
+
   const lead = decisions[0];
 
   return (
@@ -60,6 +122,7 @@ export default function PrimeBriefLive() {
       </div>
 
       {error && <div className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
+      {success && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{success}</div>}
 
       {!error && lead && (
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
@@ -87,7 +150,47 @@ export default function PrimeBriefLive() {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bugünün önerisi</p>
             <p className="mt-2 text-lg font-semibold text-slate-900">{lead.nextStep}</p>
             {lead.talkingPoints.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap gap-2">
+              {lead.client.phone ? (
+                <>
+                  <a
+                    href={"tel:" + lead.client.phone}
+                    onClick={() => { void recordActivity(lead.client.id, "ARAMA", "Prime önerisiyle telefon görüşmesi başlatıldı."); }}
+                    className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+                  >
+                    📞 Ara
+                  </a>
+                  <a
+                    href={"https://wa.me/" + lead.client.phone.replace(/\D/g, "").replace(/^0/, "90")}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => { void recordActivity(lead.client.id, "WHATSAPP", "Prime önerisiyle WhatsApp teması başlatıldı."); }}
+                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
+                  >
+                    WhatsApp
+                  </a>
+                </>
+              ) : (
+                <span className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700">Telefon kaydı yok</span>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-2xl border bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Temas sonucu</p>
+              <input value={outcome} onChange={(event) => setOutcome(event.target.value)} placeholder="Örn. Yeni portföy ilgisini koruyor." className="mt-2 w-full rounded-xl border px-3 py-2.5 text-sm" />
+            </div>
+
+            <div className="mt-4 rounded-2xl border bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Sonraki adımı göreve çevir</p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} className="min-w-0 flex-1 rounded-xl border px-3 py-2.5 text-sm" />
+                <button type="button" disabled={busyAction === "task"} onClick={() => void createTask(lead.client.id, lead.client.name, lead.nextStep)} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                  {busyAction === "task" ? "Kaydediliyor…" : "Görev Oluştur"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Konuşma noktaları</p>
                 <ul className="mt-2 space-y-2 text-sm text-slate-600">
                   {lead.talkingPoints.slice(0, 3).map((point) => <li key={point}>• {point}</li>)}
