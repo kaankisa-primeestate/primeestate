@@ -2,24 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { customerOwnershipScope, type AuthorizationContext } from "@/lib/authz";
 import { calculateMatch, type MatchingListing } from "@/core/matching-engine";
 
-type PrimeListing =
-  id: string;
-  propertyId: string;
-  purpose: "SATILIK" | "KIRALIK";
-  status: "AKTIF" | "REZERVE" | "PASIF" | "SATILDI" | "KIRALANDI";
-  price: unknown;
-  currency: string;
-  tags: unknown;
-  highlights: unknown;
-  property: {
-    propertyType: Parameters<typeof calculateMatch>[0]["propertyType"];
-    city: string;
-    district: string;
-    neighborhood: string;
-    sizeM2: unknown;
-    rooms: string | null;
-  };
-};
+type PrimeListing = MatchingListing;
 
 export type PrimeListingOpportunity = {
   customerId: string;
