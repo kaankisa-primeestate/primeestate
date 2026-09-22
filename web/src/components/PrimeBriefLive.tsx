@@ -9,7 +9,15 @@ type Decision = {
   today: { action: string; priority: "critical" | "high" | "medium" | "low"; confidence: number };
   reasons: string[];
   talkingPoints: string[];
-  opportunities: Array<{ id: string; title: string; matchScore: number; reason: string }>;
+  learning: { positive: string[]; negative: string[] };
+  opportunities: Array<{
+    id: string;
+    title: string;
+    matchScore: number;
+    reasons: string[];
+    learningReasons: string[];
+    whyThisListing: string[];
+  }>;
   risks: string[];
   expectedOutcome: string;
   nextStep: string;
@@ -189,6 +197,16 @@ export default function PrimeBriefLive() {
               </div>
             </div>
 
+            {lead.learning && (lead.learning.positive.length > 0 || lead.learning.negative.length > 0) && (
+              <div className="mt-4 rounded-2xl border bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime&apos;ın öğrendiği</p>
+                <div className="mt-2 space-y-2 text-sm">
+                  {lead.learning.positive.length > 0 && <p className="text-emerald-700">✓ Olumlu: {lead.learning.positive.join(", ")}</p>}
+                  {lead.learning.negative.length > 0 && <p className="text-amber-700">! Dikkat: {lead.learning.negative.join(", ")}</p>}
+                </div>
+              </div>
+            )}
+
             {lead.talkingPoints.length > 0 && (
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Konuşma noktaları</p>
@@ -204,6 +222,14 @@ export default function PrimeBriefLive() {
                   <div key={opportunity.id} className="mt-2 rounded-xl border bg-white p-3">
                     <p className="text-sm font-semibold">{opportunity.title}</p>
                     <p className="mt-1 text-xs text-slate-500">%{opportunity.matchScore} eşleşme</p>
+                    {opportunity.whyThisListing.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-slate-500">Neden bu portföy?</p>
+                        <ul className="mt-1 space-y-1 text-xs text-slate-600">
+                          {opportunity.whyThisListing.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
