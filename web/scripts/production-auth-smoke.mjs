@@ -38,10 +38,26 @@ async function main() {
       ok: false,
       present: false,
     },
+    health: {
+      status: null,
+      ok: false,
+      database: null,
+      healthy: false,
+    },
     customers: {
       status: null,
       ok: false,
       authenticated: false,
+    },
+    dashboardPage: {
+      status: null,
+      ok: false,
+      no500: false,
+    },
+    financeDashboardPage: {
+      status: null,
+      ok: false,
+      no500: false,
     },
     sales: {
       status: null,
@@ -110,6 +126,24 @@ async function main() {
   const sessionBody = await readJson(sessionResponse);
   result.session.present = Boolean(sessionBody?.session?.id && sessionBody?.user?.id);
 
+  const healthResponse = await fetch(`${baseUrl}/api/health`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Origin: baseUrl,
+      Referer: `${baseUrl}/dashboard`,
+    },
+  });
+  const healthBody = await readJson(healthResponse);
+
+  result.health.status = healthResponse.status;
+  result.health.ok = healthResponse.ok;
+  result.health.database = healthBody?.database ?? null;
+  result.health.healthy =
+    healthResponse.ok &&
+    healthBody?.status === "ok" &&
+    healthBody?.database === "connected";
+
   const customersResponse = await fetch(`${baseUrl}/api/customers?limit=1`, {
     method: "GET",
     headers: {
@@ -123,10 +157,53 @@ async function main() {
   result.customers.ok = customersResponse.ok;
   result.customers.authenticated = customersResponse.status !== 401;
 
+  const [dashboardResponse, financePageResponse] = await Promise.all([
+    fetch(`${baseUrl}/dashboard`, {
+      headers: {
+        Cookie: cookies,
+        Origin: baseUrl,
+        Referer: `${baseUrl}/dashboard`,
+      },
+    }),
+    fetch(`${baseUrl}/finance/dashboard`, {
+      headers: {
+        Cookie: cookies,
+        Origin: baseUrl,
+        Referer: `${baseUrl}/finance/dashboard`,
+      },
+    }),
+  ]);
+
+  result.dashboardPage.status = dashboardResponse.status;
+  result.dashboardPage.ok = dashboardResponse.ok;
+  result.dashboardPage.no500 = dashboardResponse.status !== 500;
+
+  result.financeDashboardPage.status = financePageResponse.status;
+  result.financeDashboardPage.ok = financePageResponse.ok;
+  result.financeDashboardPage.no500 = financePageResponse.status !== 500;
+
   const [salesResponse, paymentsResponse, paymentPlansResponse] = await Promise.all([
-    fetch(`${baseUrl}/api/sales`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
-    fetch(`${baseUrl}/api/payments`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
-    fetch(`${baseUrl}/api/payment-plans`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
+    fetch(`${baseUrl}/api/sales`, {
+      headers: {
+        Cookie: cookies,
+        Origin: baseUrl,
+        Referer: `${baseUrl}/dashboard`,
+      },
+    }),
+    fetch(`${baseUrl}/api/payments`, {
+      headers: {
+        Cookie: cookies,
+        Origin: baseUrl,
+        Referer: `${baseUrl}/finance`,
+      },
+    }),
+    fetch(`${baseUrl}/api/payment-plans`, {
+      headers: {
+        Cookie: cookies,
+        Origin: baseUrl,
+        Referer: `${baseUrl}/finance/dashboard`,
+      },
+    }),
   ]);
 
   result.sales.status = salesResponse.status;
@@ -143,13 +220,28 @@ async function main() {
     return;
   }
 
-  if (!result.customers.authenticated) {
+  if (!result.health.healthy) {
     process.exitCode = 5;
     return;
   }
 
-  if (!result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) {
+  if (!result.customers.authenticated) {
     process.exitCode = 6;
+    return;
+  }
+
+  if (
+    !result.dashboardPage.ok ||
+    !result.dashboardPage.no500 ||
+    !result.financeDashboardPage.ok ||
+    !result.financeDashboardPage.no500
+  ) {
+    process.exitCode = 7;
+    return;
+  }
+
+  if (!result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) {
+    process.exitCode = 8;
   }
 }
 
