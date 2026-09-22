@@ -107,12 +107,16 @@ export default function RelationshipLive({ customerId }: { customerId: string })
   }
 
   useEffect(() => {
-    void load();
+    const loadInitial = async () => {
+      await load();
+    };
+    void loadInitial();
   }, [customerId]);
 
+  const [nowMs] = useState(() => Date.now());
   const overdueTasks = useMemo(
-    () => customer?.tasks.filter((task) => task.status !== "TAMAMLANDI" && new Date(task.dueAt).getTime() < Date.now()).length ?? 0,
-    [customer],
+    () => customer?.tasks.filter((task) => task.status !== "TAMAMLANDI" && new Date(task.dueAt).getTime() < nowMs).length ?? 0,
+    [customer, nowMs],
   );
 
   async function recordActivity(type: "ARAMA" | "WHATSAPP") {
@@ -228,7 +232,7 @@ export default function RelationshipLive({ customerId }: { customerId: string })
               {decision && <span className="rounded-full bg-white/10 px-3 py-1 text-xs">{healthLabel[decision.client.relationshipHealth]}</span>}
               {decision && <span className="rounded-full bg-white/10 px-3 py-1 text-xs">%{decision.today.confidence} güven</span>}
             </div>
-            <p className="mt-5 text-xs uppercase tracking-wide text-slate-400">Prime'ın önerisi</p>
+            <p className="mt-5 text-xs uppercase tracking-wide text-slate-400">Prime&apos;ın önerisi</p>
             <h2 className="mt-2 text-2xl font-semibold">{decision?.nextStep ?? "Bu müşteri için henüz otomatik bir sonraki adım oluşmadı."}</h2>
             {decision?.expectedOutcome && <p className="mt-3 text-sm text-slate-300">Beklenen sonuç: {decision.expectedOutcome}</p>}
             {decision?.reasons.length ? (
