@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     const task = await tx.task.create({
       data: {
-        customerId, ownerUserId: context.userId, title: `Prime: ${customer.name} gösterim teyidi`,
+        customerId, ownerUserId: context.userId, title: `Prime: ${customer.name} gösterim teyidi · ${listing.code}`,
         dueAt: reminderAt, priority: "YUKSEK", source: "PRIME_BRAIN_SHOWING",
       },
     });
