@@ -6,6 +6,8 @@ const PUBLIC_PAGE_PREFIXES = [
   "/reset-password",
   "/forbidden",
   "/health",
+  "/office-application",
+  "/consultant-application",
 ];
 
 const MANAGER_ROLES = new Set<UserRole>([
@@ -20,18 +22,38 @@ export function isPublicPagePath(pathname: string): boolean {
   );
 }
 
-export function requiredRoleForPage(pathname: string): "manager" | null {
-  if (pathname === "/users" || pathname.startsWith("/users/")) {
+export function requiredRoleForPage(pathname: string): "manager" | "super_admin" | null {
+  if (
+    pathname === "/platform" ||
+    pathname.startsWith("/platform/")
+  ) {
+    return "super_admin";
+  }
+
+  if (
+    pathname === "/users" ||
+    pathname.startsWith("/users/") ||
+    pathname === "/consultant-applications" ||
+    pathname.startsWith("/consultant-applications/")
+  ) {
     return "manager";
   }
+
   return null;
 }
 
+const SUPER_ADMIN_ROLES = new Set<UserRole>(["SUPER_ADMIN"]);
+
 export function canAccessPageRole(
   role: UserRole | null | undefined,
-  requirement: "manager" | null,
+  requirement: "manager" | "super_admin" | null,
 ): boolean {
   if (!requirement) return true;
   if (!role) return false;
-  return requirement === "manager" && MANAGER_ROLES.has(role);
+
+  if (requirement === "super_admin") {
+    return SUPER_ADMIN_ROLES.has(role);
+  }
+
+  return MANAGER_ROLES.has(role);
 }
