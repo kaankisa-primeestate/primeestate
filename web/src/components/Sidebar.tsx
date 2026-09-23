@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const menu = [
   { name: "Dashboard", href: "/", icon: "🏠" },
@@ -14,7 +18,47 @@ const menu = [
   { name: "Kullanıcılar & Ekip", href: "/users", icon: "👥" },
 ];
 
+type SessionUser = { name?: string | null; email?: string | null; role?: string | null };
+
 export default function Sidebar() {
+  const router = useRouter();
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/auth/get-session", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data?.user ?? null;
+      })
+      .then(setUser)
+      .catch(() => setUser(null));
+  }, []);
+
+  async function logout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  }
+
+  const displayName = user?.name || user?.email || "Aktif kullanıcı";
+  const initials = displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <aside className="flex w-64 flex-col border-r border-slate-200 bg-white">
       <div className="border-b border-slate-200 p-6">
@@ -33,10 +77,31 @@ export default function Sidebar() {
           ))}
         </ul>
       </nav>
-      <div className="border-t border-slate-200 p-5">
-        <div className="rounded-xl bg-slate-100 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Prime01</p>
-          <p className="mt-2 font-semibold text-slate-900">Relationship First</p>
+      <div className="border-t border-slate-200 p-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+              {initials || "PE"}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
+              <p className="truncate text-xs text-slate-500">{user?.role || "PrimeEstate hesabı"}</p>
+            </div>
+          </div>
+          {user?.email ? <p className="mt-3 truncate text-xs text-slate-500">{user.email}</p> : null}
+          <div className="mt-4 flex gap-2">
+            <Link href="/login" className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100">
+              Giriş
+            </Link>
+            <button
+              type="button"
+              onClick={logout}
+              disabled={loggingOut}
+              className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              {loggingOut ? "Çıkılıyor…" : "Çıkış Yap"}
+            </button>
+          </div>
         </div>
       </div>
     </aside>
