@@ -73,7 +73,7 @@ export async function GET() {
       teamId: true,
       createdAt: true,
       office: {
-        select: { id: true, name: true },
+        select: { id: true, name: true, slug: true },
       },
       team: {
         select: { id: true, name: true },
@@ -86,15 +86,20 @@ export async function GET() {
       ? await prisma.office.findMany({
           where: { organizationId: context.organizationId },
           orderBy: { name: "asc" },
-          select: { id: true, name: true },
+          select: { id: true, name: true, slug: true },
         })
       : await prisma.office.findMany({
           where: {
             organizationId: context.organizationId,
             id: context.officeId,
           },
-          select: { id: true, name: true },
+          select: { id: true, name: true, slug: true },
         });
+
+  const currentOffice = await prisma.office.findUnique({
+    where: { id: context.officeId },
+    select: { slug: true },
+  });
 
   const teams = await prisma.team.findMany({
     where: {
@@ -117,6 +122,7 @@ export async function GET() {
       id: context.userId,
       role: context.role,
       officeId: context.officeId,
+      officeSlug: currentOffice?.slug ?? null,
     },
   });
 }
