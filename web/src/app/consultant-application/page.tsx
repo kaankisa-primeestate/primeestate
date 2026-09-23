@@ -2,16 +2,15 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 export default function ConsultantApplicationPage() {
-  const params = useSearchParams();
-  const officeSlug = params.get("office") ?? "";
+  const [officeSlug,setOfficeSlug]=useState("");
   const [office,setOffice]=useState<{name:string;organizationName:string}|null>(null);
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(false);
   const [submitted,setSubmitted]=useState(false);
 
+  useEffect(()=>{ const value=new URLSearchParams(window.location.search).get("office") ?? ""; setOfficeSlug(value); },[]);
   useEffect(()=>{ if(!officeSlug) return; void fetch("/api/consultant-applications?officeSlug="+encodeURIComponent(officeSlug)).then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message); setOffice(d.office);}).catch(e=>setError(e instanceof Error?e.message:"Ofis bilgisi alınamadı.")); },[officeSlug]);
 
   async function submit(event:FormEvent<HTMLFormElement>) {
