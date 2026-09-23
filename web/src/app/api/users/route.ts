@@ -78,8 +78,62 @@ export async function GET() {
       team: {
         select: { id: true, name: true },
       },
+      consultantProfile: {
+        select: {
+          firstName: true,
+          lastName: true,
+          phone: true,
+          tcIdentityLast4: true,
+        },
+      },
+      consultantCompany: {
+        select: {
+          name: true,
+          title: true,
+          taxNumber: true,
+          phone: true,
+          email: true,
+        },
+      },
+      consultantCommissionPlan: {
+        select: {
+          model: true,
+          officeShareRate: true,
+          consultantShareRate: true,
+          active: true,
+          effectiveFrom: true,
+          effectiveTo: true,
+        },
+      },
     },
   });
+
+  const consultantApplications = await prisma.consultantApplication.findMany({
+    where:
+      context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN"
+        ? { organizationId: context.organizationId }
+        : { organizationId: context.organizationId, officeId: context.officeId },
+    orderBy: [{ createdAt: "desc" }],
+    select: {
+      email: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+
+  const latestApplicationByEmail = new Map<string, {
+    status: string;
+    createdAt: Date;
+  }>();
+
+  for (const application of consultantApplications) {
+    if (!latestApplicationByEmail.has(application.email)) {
+      latestApplicationByEmail.set(application.email, {
+        status: application.status,
+        createdAt: application.createdAt,
+      });
+    }
+  }
 
   const offices =
     context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN"
@@ -115,7 +169,39 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    users,
+    users: users.map((user) => {
+      const application = latestApplicationByEmail.get(user.email);
+
+      return {
+        ...user,
+        consultantProfile: user.consultantProfile
+          ? {
+              ...user.consultantProfile,
+            }
+          : null,
+        consultantCompany: user.consultantCompany
+          ? {
+              ...user.consultantCompany,
+            }
+          : null,
+        consultantCommissionPlan: user.consultantCommissionPlan
+          ? {
+              ...user.consultantCommissionPlan,
+              officeShareRate: user.consultantCommissionPlan.officeShareRate?.toString() ?? null,
+              consultantShareRate:
+                user.consultantCommissionPlan.consultantShareRate?.toString() ?? null,
+              effectiveFrom: user.consultantCommissionPlan.effectiveFrom.toISOString(),
+              effectiveTo: user.consultantCommissionPlan.effectiveTo?.toISOString() ?? null,
+            }
+          : null,
+        consultantApplication: application
+          ? {
+              status: application.status,
+              createdAt: application.createdAt.toISOString(),
+            }
+          : null,
+      };
+    }),
     offices,
     teams,
     currentUser: {
