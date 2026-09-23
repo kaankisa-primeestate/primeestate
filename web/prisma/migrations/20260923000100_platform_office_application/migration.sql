@@ -7,7 +7,7 @@ CREATE TABLE "OfficeApplication" (
   "ownerLastName" TEXT NOT NULL,
   "ownerEmail" TEXT NOT NULL,
   "ownerPhone" TEXT NOT NULL,
-  "passwordHash" TEXT NOT NULL,
+  "passwordHash" TEXT,
   "status" "OfficeApplicationStatus" NOT NULL DEFAULT 'BEKLEMEDE',
   "rejectionNote" TEXT,
   "reviewedAt" TIMESTAMP(3),
