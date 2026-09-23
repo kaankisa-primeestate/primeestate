@@ -29,7 +29,7 @@ export default function OfficeApplicationPage() {
       <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Ofis Başvurusu</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500">Ofisinizi PrimeEstate'e bağlamak için önce temel bilgileri gönderin. Başvurunuz PrimeEstate tarafından incelenir.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Ofisinizi PrimeEstate&apos;e bağlamak için önce temel bilgileri gönderin. Başvurunuz PrimeEstate tarafından incelenir.</p>
         <form onSubmit={submit} className="mt-8 space-y-5">
           <div><h2 className="font-semibold text-slate-900">Ofis</h2>
             <label className="mt-3 block text-sm font-medium text-slate-700">Ofis adı<input required value={form.officeName} onChange={e=>update("officeName",e.target.value)} className="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3" /></label>
