@@ -15,10 +15,11 @@ const menu = [
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
   { name: "Finans", href: "/finance/dashboard", icon: "💰" },
-  { name: "Kullanıcılar & Ekip", href: "/users", icon: "👥" },
 ];
 
 type SessionUser = { name?: string | null; email?: string | null; role?: string | null };
+
+const managerRoles = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
 
 export default function Sidebar() {
   const router = useRouter();
@@ -58,6 +59,7 @@ export default function Sidebar() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const canManageTeam = managerRoles.has(user?.role ?? "");
 
   return (
     <aside className="flex w-64 flex-col border-r border-slate-200 bg-white">
@@ -65,6 +67,7 @@ export default function Sidebar() {
         <h1 className="text-2xl font-bold text-slate-900">🏡 PrimeEstate</h1>
         <p className="mt-2 text-sm text-slate-500">Relationship Workspace</p>
       </div>
+
       <nav className="flex-1 px-4 py-6">
         <ul className="space-y-2">
           {menu.map((item) => (
@@ -75,8 +78,30 @@ export default function Sidebar() {
               </Link>
             </li>
           ))}
+
+          <li className="pt-1">
+            <Link href="/users" className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900">
+              <span className="text-lg">👥</span>
+              <span className="font-medium">Kullanıcılar &amp; Ekip</span>
+            </Link>
+            {canManageTeam ? (
+              <ul className="ml-7 mt-1 space-y-1 border-l border-slate-200 pl-3">
+                <li>
+                  <Link href="/users" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                    Kullanıcılar
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/consultant-applications" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                    Danışman Başvuruları
+                  </Link>
+                </li>
+              </ul>
+            ) : null}
+          </li>
         </ul>
       </nav>
+
       <div className="border-t border-slate-200 p-4">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center gap-3">
@@ -93,12 +118,7 @@ export default function Sidebar() {
             <Link href="/login" className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100">
               Giriş
             </Link>
-            <button
-              type="button"
-              onClick={logout}
-              disabled={loggingOut}
-              className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-            >
+            <button type="button" onClick={logout} disabled={loggingOut} className="flex-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
               {loggingOut ? "Çıkılıyor…" : "Çıkış Yap"}
             </button>
           </div>
