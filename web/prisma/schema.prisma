@@ -108,7 +108,7 @@ model OfficeApplication {
   ownerLastName  String
   ownerEmail     String
   ownerPhone     String
-  passwordHash   String
+  passwordHash   String?
   status         OfficeApplicationStatus @default(BEKLEMEDE)
   rejectionNote  String?
   reviewedAt     DateTime?
