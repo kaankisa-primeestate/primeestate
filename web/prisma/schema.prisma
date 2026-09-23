@@ -192,6 +192,7 @@ model Office {
   customers    Customer[]
   properties   Property[]
   listings     Listing[]
+  consultantApplications ConsultantApplication[]
 
   @@unique([organizationId, slug])
   @@unique([id, organizationId])
