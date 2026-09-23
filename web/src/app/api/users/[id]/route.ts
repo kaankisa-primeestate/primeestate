@@ -151,6 +151,148 @@ export async function PATCH(
     });
   }
 
+  if (action === "UPDATE_CONSULTANT") {
+    if (existing.role !== "AGENT") {
+      return NextResponse.json(
+        { message: "Bu kullanıcı aktif bir danışman hesabı değil." },
+        { status: 400 },
+      );
+    }
+
+    const profile = body?.profile && typeof body.profile === "object" ? body.profile : {};
+    const company = body?.company && typeof body.company === "object" ? body.company : {};
+    const commission = body?.commission && typeof body.commission === "object" ? body.commission : {};
+
+    const firstName = typeof profile.firstName === "string" ? profile.firstName.trim() : "";
+    const lastName = typeof profile.lastName === "string" ? profile.lastName.trim() : "";
+    const phone = typeof profile.phone === "string" ? profile.phone.trim() : "";
+    const companyName = typeof company.name === "string" ? company.name.trim() : "";
+    const companyTitle = typeof company.title === "string" ? company.title.trim() : "";
+    const companyTaxNumber = typeof company.taxNumber === "string" ? company.taxNumber.trim() : "";
+    const companyPhone = typeof company.phone === "string" ? company.phone.trim() : "";
+    const companyEmail = typeof company.email === "string" ? company.email.trim().toLowerCase() : "";
+    const commissionModel = typeof commission.model === "string" ? commission.model.trim() : "";
+    const officeShareRate =
+      commission.officeShareRate === "" || commission.officeShareRate == null
+        ? null
+        : Number(commission.officeShareRate);
+    const consultantShareRate =
+      commission.consultantShareRate === "" || commission.consultantShareRate == null
+        ? null
+        : Number(commission.consultantShareRate);
+
+    if (!firstName || !lastName || !phone || !companyName || !commissionModel) {
+      return NextResponse.json(
+        { message: "Danışman adı, soyadı, telefon, şirket ve komisyon modeli zorunludur." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      (officeShareRate !== null &&
+        (!Number.isFinite(officeShareRate) || officeShareRate < 0 || officeShareRate > 100)) ||
+      (consultantShareRate !== null &&
+        (!Number.isFinite(consultantShareRate) || consultantShareRate < 0 || consultantShareRate > 100))
+    ) {
+      return NextResponse.json(
+        { message: "Komisyon oranları 0-100 arasında olmalıdır." },
+        { status: 400 },
+      );
+    }
+
+    if (companyEmail && !/^\S+@\S+\.\S+$/.test(companyEmail)) {
+      return NextResponse.json(
+        { message: "Şirket e-posta adresi geçerli değil." },
+        { status: 400 },
+      );
+    }
+
+    const [existingProfile, existingCompany, existingCommission] = await Promise.all([
+      prisma.consultantProfile.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+      prisma.consultantCompany.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+      prisma.consultantCommissionPlan.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!existingProfile || !existingCompany || !existingCommission) {
+      return NextResponse.json(
+        { message: "Bu danışman hesabının resmi profil kayıtları eksik. Önce onboarding kaydını tamamlayın." },
+        { status: 409 },
+      );
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const nextProfile = await tx.consultantProfile.update({
+        where: { userId: existing.id },
+        data: { firstName, lastName, phone },
+      });
+
+      const nextCompany = await tx.consultantCompany.update({
+        where: { userId: existing.id },
+        data: {
+          name: companyName,
+          title: companyTitle || null,
+          taxNumber: companyTaxNumber || null,
+          phone: companyPhone || null,
+          email: companyEmail || null,
+        },
+      });
+
+      const nextCommission = await tx.consultantCommissionPlan.update({
+        where: { userId: existing.id },
+        data: {
+          model: commissionModel,
+          officeShareRate,
+          consultantShareRate,
+          active: true,
+          effectiveTo: null,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: existing.id },
+        data: { name: `${firstName} ${lastName}` },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          organizationId: context.organizationId,
+          actorUserId: context.userId,
+          action: "CONSULTANT_PROFILE_UPDATED",
+          entityType: "User",
+          entityId: existing.id,
+          metadata: {
+            officeId: existing.officeId,
+            commissionModel,
+            officeShareRate,
+            consultantShareRate,
+          },
+        },
+      });
+
+      return { nextProfile, nextCompany, nextCommission };
+    });
+
+    return NextResponse.json({
+      consultantProfile: updated.nextProfile,
+      consultantCompany: updated.nextCompany,
+      consultantCommissionPlan: {
+        ...updated.nextCommission,
+        officeShareRate: updated.nextCommission.officeShareRate?.toString() ?? null,
+        consultantShareRate: updated.nextCommission.consultantShareRate?.toString() ?? null,
+      },
+      message: "Danışman bilgileri güncellendi.",
+    });
+  }
+
   if (action !== "UPDATE") {
     return NextResponse.json(
       { message: "Geçersiz kullanıcı işlemi." },

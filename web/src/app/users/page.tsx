@@ -231,6 +231,37 @@ export default function UsersPage() {
         throw new Error(data.message || "Kullanıcı kaydedilemedi.");
       }
 
+      if (editing?.role === "AGENT") {
+        const consultantResponse = await fetch("/api/users/" + editing.id, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "UPDATE_CONSULTANT",
+            profile: {
+              firstName: form.get("consultantFirstName"),
+              lastName: form.get("consultantLastName"),
+              phone: form.get("consultantPhone"),
+            },
+            company: {
+              name: form.get("companyName"),
+              title: form.get("companyTitle"),
+              taxNumber: form.get("companyTaxNumber"),
+              phone: form.get("companyPhone"),
+              email: form.get("companyEmail"),
+            },
+            commission: {
+              model: form.get("commissionModel"),
+              officeShareRate: form.get("officeShareRate"),
+              consultantShareRate: form.get("consultantShareRate"),
+            },
+          }),
+        });
+        const consultantData = await consultantResponse.json();
+        if (!consultantResponse.ok) {
+          throw new Error(consultantData.message || "Danışman bilgileri güncellenemedi.");
+        }
+      }
+
       setNotice(data.message || "Kullanıcı kaydedildi.");
       setShowCreate(false);
       setEditing(null);
@@ -609,6 +640,76 @@ export default function UsersPage() {
                     ))}
                 </select>
               </label>
+
+              {editing?.role === "AGENT" && editing.consultantProfile && editing.consultantCompany && editing.consultantCommissionPlan ? (
+                <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      Danışman profili
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Ad *</span>
+                        <input name="consultantFirstName" required defaultValue={editing.consultantProfile.firstName} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Soyad *</span>
+                        <input name="consultantLastName" required defaultValue={editing.consultantProfile.lastName} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                    </div>
+                    <label className="mt-3 block">
+                      <span className="text-sm font-semibold text-slate-700">Telefon *</span>
+                      <input name="consultantPhone" required defaultValue={editing.consultantProfile.phone} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                    </label>
+                    <p className="mt-2 text-xs text-slate-400">T.C. kimlik no değiştirilemez. Kayıt: ****{editing.consultantProfile.tcIdentityLast4}</p>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Şirket bilgileri</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <label className="block sm:col-span-2">
+                        <span className="text-sm font-semibold text-slate-700">Şirket adı *</span>
+                        <input name="companyName" required defaultValue={editing.consultantCompany.name} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Ünvan</span>
+                        <input name="companyTitle" defaultValue={editing.consultantCompany.title ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Vergi No</span>
+                        <input name="companyTaxNumber" defaultValue={editing.consultantCompany.taxNumber ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Şirket telefonu</span>
+                        <input name="companyPhone" defaultValue={editing.consultantCompany.phone ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Şirket e-postası</span>
+                        <input name="companyEmail" type="email" defaultValue={editing.consultantCompany.email ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Komisyon planı</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="block sm:col-span-3">
+                        <span className="text-sm font-semibold text-slate-700">Model *</span>
+                        <input name="commissionModel" required defaultValue={editing.consultantCommissionPlan.model} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Ofis payı %</span>
+                        <input name="officeShareRate" type="number" min="0" max="100" step="0.01" defaultValue={editing.consultantCommissionPlan.officeShareRate ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Danışman payı %</span>
+                        <input name="consultantShareRate" type="number" min="0" max="100" step="0.01" defaultValue={editing.consultantCommissionPlan.consultantShareRate ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
+                      </label>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">Bu alan oranları kaydeder. REP / maksimum modelinin hesaplama kuralını ayrıca netleştirip uygulayacağız.</p>
+                  </div>
+                </div>
+              ) : null}
 
               {!editing ? (
                 <div className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">
