@@ -172,12 +172,14 @@ export async function PATCH(
     const companyPhone = typeof company.phone === "string" ? company.phone.trim() : "";
     const companyEmail = typeof company.email === "string" ? company.email.trim().toLowerCase() : "";
     const commissionModel = typeof commission.model === "string" ? commission.model.trim() : "";
-    const officeShareRate = commission.officeShareRate === "" || commission.officeShareRate == null
-      ? null
-      : Number(commission.officeShareRate);
-    const consultantShareRate = commission.consultantShareRate === "" || commission.consultantShareRate == null
-      ? null
-      : Number(commission.consultantShareRate);
+    const officeShareRate =
+      commission.officeShareRate === "" || commission.officeShareRate == null
+        ? null
+        : Number(commission.officeShareRate);
+    const consultantShareRate =
+      commission.consultantShareRate === "" || commission.consultantShareRate == null
+        ? null
+        : Number(commission.consultantShareRate);
 
     if (!firstName || !lastName || !phone || !companyName || !commissionModel) {
       return NextResponse.json(
@@ -187,8 +189,10 @@ export async function PATCH(
     }
 
     if (
-      (officeShareRate !== null && (!Number.isFinite(officeShareRate) || officeShareRate < 0 || officeShareRate > 100)) ||
-      (consultantShareRate !== null && (!Number.isFinite(consultantShareRate) || consultantShareRate < 0 || consultantShareRate > 100))
+      (officeShareRate !== null &&
+        (!Number.isFinite(officeShareRate) || officeShareRate < 0 || officeShareRate > 100)) ||
+      (consultantShareRate !== null &&
+        (!Number.isFinite(consultantShareRate) || consultantShareRate < 0 || consultantShareRate > 100))
     ) {
       return NextResponse.json(
         { message: "Komisyon oranları 0-100 arasında olmalıdır." },
@@ -203,18 +207,20 @@ export async function PATCH(
       );
     }
 
-    const existingProfile = await prisma.consultantProfile.findUnique({
-      where: { userId: existing.id },
-      select: { id: true },
-    });
-    const existingCompany = await prisma.consultantCompany.findUnique({
-      where: { userId: existing.id },
-      select: { id: true },
-    });
-    const existingCommission = await prisma.consultantCommissionPlan.findUnique({
-      where: { userId: existing.id },
-      select: { id: true },
-    });
+    const [existingProfile, existingCompany, existingCommission] = await Promise.all([
+      prisma.consultantProfile.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+      prisma.consultantCompany.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+      prisma.consultantCommissionPlan.findUnique({
+        where: { userId: existing.id },
+        select: { id: true },
+      }),
+    ]);
 
     if (!existingProfile || !existingCompany || !existingCommission) {
       return NextResponse.json(
@@ -230,41 +236,27 @@ export async function PATCH(
       });
 
       const nextCompany = await tx.consultantCompany.update({
-        ? await tx.consultantCompany.update({
-            where: { userId: existing.id },
-            data: {
-              name: companyName,
-              title: companyTitle || null,
-              taxNumber: companyTaxNumber || null,
-              phone: companyPhone || null,
-              email: companyEmail || null,
-            },
-          })
-        : await tx.consultantCompany.create({
-            data: {
-              userId: existing.id,
-              organizationId: context.organizationId,
-              officeId: existing.officeId,
-              name: companyName,
-              title: companyTitle || null,
-              taxNumber: companyTaxNumber || null,
-              phone: companyPhone || null,
-              email: companyEmail || null,
-            },
-          });
+        where: { userId: existing.id },
+        data: {
+          name: companyName,
+          title: companyTitle || null,
+          taxNumber: companyTaxNumber || null,
+          phone: companyPhone || null,
+          email: companyEmail || null,
+        },
+      });
 
-      const nextCommission = existingCommission
-        ? await tx.consultantCommissionPlan.update({
-            where: { userId: existing.id },
-            data: {
-              model: commissionModel,
-              officeShareRate,
-              consultantShareRate,
-              active: true,
-              effectiveTo: null,
-            },
-          })
-      
+      const nextCommission = await tx.consultantCommissionPlan.update({
+        where: { userId: existing.id },
+        data: {
+          model: commissionModel,
+          officeShareRate,
+          consultantShareRate,
+          active: true,
+          effectiveTo: null,
+        },
+      });
+
       await tx.user.update({
         where: { id: existing.id },
         data: { name: `${firstName} ${lastName}` },
