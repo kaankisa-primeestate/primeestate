@@ -96,6 +96,11 @@ export async function GET() {
           select: { id: true, name: true, slug: true },
         });
 
+  const currentOffice = await prisma.office.findUnique({
+    where: { id: context.officeId },
+    select: { slug: true },
+  });
+
   const teams = await prisma.team.findMany({
     where: {
       office: {
@@ -117,9 +122,9 @@ export async function GET() {
       id: context.userId,
       role: context.role,
       officeId: context.officeId,
-      },
-      select: { id: true, name: true, slug: true },
-    });
+      officeSlug: currentOffice?.slug ?? null,
+    },
+  });
 }
 
 export async function POST(request: Request) {
