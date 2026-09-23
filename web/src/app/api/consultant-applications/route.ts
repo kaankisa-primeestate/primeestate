@@ -237,6 +237,44 @@ export async function PATCH(request: Request) {
         data: { status: "ONAYLANDI", reviewedByUserId: context.userId, reviewedAt: new Date(), passwordHash: null },
         select: { id: true, status: true, reviewedAt: true },
       });
+
+      await tx.consultantProfile.create({
+        data: {
+          userId: user.id,
+          organizationId: application.organizationId,
+          officeId: application.officeId,
+          firstName: application.firstName,
+          lastName: application.lastName,
+          phone: application.phone,
+          tcIdentityEncrypted: application.tcIdentityEncrypted,
+          tcIdentityHash: application.tcIdentityHash,
+          tcIdentityLast4: application.tcIdentityLast4,
+        },
+      });
+
+      await tx.consultantCompany.create({
+        data: {
+          userId: user.id,
+          organizationId: application.organizationId,
+          officeId: application.officeId,
+          name: application.companyName,
+          title: application.companyTitle,
+          taxNumber: application.companyTaxNumber,
+          phone: application.companyPhone,
+          email: application.companyEmail,
+        },
+      });
+
+      await tx.consultantCommissionPlan.create({
+        data: {
+          userId: user.id,
+          organizationId: application.organizationId,
+          officeId: application.officeId,
+          model: application.commissionModel,
+          officeShareRate: application.officeShareRate,
+          consultantShareRate: application.consultantShareRate,
+        },
+      });
       await tx.auditLog.create({
         data: {
           organizationId: context.organizationId,
