@@ -209,13 +209,33 @@ export async function PATCH(request: Request) {
     return { organization, office, user, updatedApplication };
   });
 
+  if (!application.passwordHash) {
+    return NextResponse.json({ message: "Başvurunun giriş bilgisi bulunamadı." }, { status: 500 });
+  }
+
   const contextAuth = await auth.$context;
-  await contextAuth.internalAdapter.linkAccount({
-    accountId: result.user.id,
-    providerId: "credential",
-    userId: result.user.id,
-    password: application.passwordHash,
-  });
+  try {
+    await contextAuth.internalAdapter.linkAccount({
+      accountId: result.user.id,
+      providerId: "credential",
+      userId: result.user.id,
+      password: application.passwordHash,
+    });
+    await prisma.officeApplication.update({
+      where: { id: application.id },
+      data: { passwordHash: null },
+    });
+  } catch (error) {
+    console.error("PrimeEstate broker credential creation failed.", error);
+    await prisma.user.delete({ where: { id: result.user.id } }).catch(() => undefined);
+    await prisma.office.delete({ where: { id: result.office.id } }).catch(() => undefined);
+    await prisma.organization.delete({ where: { id: result.organization.id } }).catch(() => undefined);
+    await prisma.officeApplication.update({
+      where: { id: application.id },
+      data: { status: "BEKLIYOR" as never, reviewedAt: null },
+    }).catch(() => undefined);
+    return NextResponse.json({ message: "Broker hesabı oluşturulamadı. Başvuru tekrar incelenebilir." }, { status: 500 });
+  }
 
   return NextResponse.json({
     application: {
