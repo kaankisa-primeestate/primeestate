@@ -116,6 +116,16 @@ export default function LoginPage() {
               {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </button>
 
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-sm font-semibold text-slate-800">Ofisiniz için PrimeEstate kullanmak ister misiniz?</p>
+              <Link
+                href="/office-application"
+                className="mt-2 inline-block text-sm font-semibold text-slate-900 underline underline-offset-4"
+              >
+                Ofis Başvurusu Yap
+              </Link>
+            </div>
+
             <p className="text-center text-xs leading-5 text-slate-400">
               Giriş bilgileriniz doğru değilse e-posta adresinizi kontrol edin
               veya şifrenizi yenileyin.
