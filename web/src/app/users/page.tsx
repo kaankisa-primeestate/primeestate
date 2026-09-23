@@ -14,6 +14,31 @@ type UserItem = {
   createdAt: string;
   office: { id: string; name: string };
   team: { id: string; name: string } | null;
+  consultantProfile: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    tcIdentityLast4: string;
+  } | null;
+  consultantCompany: {
+    name: string;
+    title: string | null;
+    taxNumber: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  consultantCommissionPlan: {
+    model: string;
+    officeShareRate: string | null;
+    consultantShareRate: string | null;
+    active: boolean;
+    effectiveFrom: string;
+    effectiveTo: string | null;
+  } | null;
+  consultantApplication: {
+    status: string;
+    createdAt: string;
+  } | null;
 };
 
 type Office = { id: string; name: string };
@@ -121,7 +146,6 @@ export default function UsersPage() {
         setTeams(data.teams ?? []);
         setCurrentRole(data.currentUser?.role ?? "");
         setCurrentUserId(data.currentUser?.id ?? "");
-        setOfficeSlug(data.currentUser?.officeSlug ?? null);
         setOfficeSlug(data.currentUser?.officeSlug ?? null);
       } catch (loadError) {
         if (!cancelled) {
@@ -395,6 +419,68 @@ export default function UsersPage() {
                             <span>Ekip: {user.team?.name ?? "Atanmamış"}</span>
                             <span>{roleDescriptions[user.role] ?? ""}</span>
                           </div>
+
+                          {user.role === "AGENT" ? (
+                            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                              <div className="rounded-xl bg-slate-50 p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                                  Danışman profili
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-slate-800">
+                                  {user.consultantProfile
+                                    ? `${user.consultantProfile.firstName} ${user.consultantProfile.lastName}`
+                                    : "Profil bekleniyor"}
+                                </p>
+                                {user.consultantProfile ? (
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    {user.consultantProfile.phone} · T.C. ****{user.consultantProfile.tcIdentityLast4}
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              <div className="rounded-xl bg-slate-50 p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                                  Şirket
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-slate-800">
+                                  {user.consultantCompany?.name ?? "Şirket bilgisi bekleniyor"}
+                                </p>
+                                {user.consultantCompany ? (
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    {user.consultantCompany.title ?? "Ünvan belirtilmemiş"}
+                                    {user.consultantCompany.taxNumber ? ` · VKN ${user.consultantCompany.taxNumber}` : ""}
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              <div className="rounded-xl bg-slate-50 p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                                  Komisyon
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-slate-800">
+                                  {user.consultantCommissionPlan?.model ?? "Plan bekleniyor"}
+                                </p>
+                                {user.consultantCommissionPlan ? (
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    Ofis %{user.consultantCommissionPlan.officeShareRate ?? "—"} · Danışman %{user.consultantCommissionPlan.consultantShareRate ?? "—"}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {user.role === "AGENT" && user.consultantApplication ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                              <span className="text-slate-400">Başvuru durumu:</span>
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
+                                {user.consultantApplication.status === "ONAYLANDI"
+                                  ? "Onaylandı"
+                                  : user.consultantApplication.status === "REDDEDILDI"
+                                    ? "Reddedildi"
+                                    : "Beklemede"}
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
 
