@@ -4,15 +4,12 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function ConsultantApplicationPage() {
-  const [officeSlug,setOfficeSlug]=useState("");
+  const [officeSlug]=useState(()=>typeof window==="undefined" ? "" : new URLSearchParams(window.location.search).get("office") ?? "");
   const [office,setOffice]=useState<{name:string;organizationName:string}|null>(null);
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(false);
   const [submitted,setSubmitted]=useState(false);
 
-  useEffect(()=>{ const value=new URLSearchParams(window.location.search).get("office") ?? ""; setOfficeSlug(value); },[]);
-  // The office lookup is intentionally stateful: the result arrives asynchronously from the public office endpoint.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(()=>{ if(!officeSlug) return; void fetch("/api/consultant-applications?officeSlug="+encodeURIComponent(officeSlug)).then(async r=>{const d=await r.json(); if(!r.ok) throw new Error(d.message); setOffice(d.office);}).catch(e=>setError(e instanceof Error?e.message:"Ofis bilgisi alınamadı.")); },[officeSlug]);
 
   async function submit(event:FormEvent<HTMLFormElement>) {
