@@ -232,7 +232,7 @@ export async function PATCH(request: Request) {
     await prisma.organization.delete({ where: { id: result.organization.id } }).catch(() => undefined);
     await prisma.officeApplication.update({
       where: { id: application.id },
-      data: { status: "BEKLIYOR" as never, reviewedAt: null },
+      data: { status: "BEKLEMEDE", reviewedAt: null },
     }).catch(() => undefined);
     return NextResponse.json({ message: "Broker hesabı oluşturulamadı. Başvuru tekrar incelenebilir." }, { status: 500 });
   }
