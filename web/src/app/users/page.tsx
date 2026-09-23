@@ -19,6 +19,8 @@ type UserItem = {
 type Office = { id: string; name: string };
 type Team = { id: string; name: string; officeId: string };
 
+const managerRoles = new Set(["SUPER_ADMIN", "ORG_ADMIN", "OFFICE_ADMIN"]);
+
 const roleLabels: Record<string, string> = {
   SUPER_ADMIN: "Süper Yönetici",
   ORG_ADMIN: "Organizasyon Yöneticisi",
@@ -62,6 +64,8 @@ export default function UsersPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentRole, setCurrentRole] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
+  const [officeSlug, setOfficeSlug] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("Tümü");
   const [loading, setLoading] = useState(true);
@@ -117,6 +121,8 @@ export default function UsersPage() {
         setTeams(data.teams ?? []);
         setCurrentRole(data.currentUser?.role ?? "");
         setCurrentUserId(data.currentUser?.id ?? "");
+        setOfficeSlug(data.currentUser?.officeSlug ?? null);
+        setOfficeSlug(data.currentUser?.officeSlug ?? null);
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -285,6 +291,41 @@ export default function UsersPage() {
             <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               {notice}
             </div>
+          ) : null}
+
+          {currentRole && managerRoles.has(currentRole) && officeSlug ? (
+            <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    Danışman katılım bağlantısı
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-950">
+                    Danışmanlarınız bu bağlantıdan başvursun
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Başvuru formu ofisinize özel açılır. Başvuran kişi, Broker onayından sonra hesabını kullanabilir.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const url = `${window.location.origin}/consultant-application?office=${encodeURIComponent(officeSlug)}`;
+                    await navigator.clipboard.writeText(url);
+                    setInviteCopied(true);
+                    window.setTimeout(() => setInviteCopied(false), 1800);
+                  }}
+                  className="shrink-0 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  {inviteCopied ? "Kopyalandı ✓" : "Bağlantıyı Kopyala"}
+                </button>
+              </div>
+              <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3 font-mono text-xs text-slate-600 break-all">
+                {typeof window !== "undefined"
+                  ? `${window.location.origin}/consultant-application?office=${officeSlug}`
+                  : `/consultant-application?office=${officeSlug}`}
+              </div>
+            </section>
           ) : null}
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
