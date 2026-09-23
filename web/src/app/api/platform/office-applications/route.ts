@@ -155,6 +155,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Bu e-posta zaten aktif bir kullanıcıya ait." }, { status: 409 });
   }
 
+  if (!application.passwordHash) {
+    return NextResponse.json({ message: "Başvurunun giriş bilgisi bulunamadı." }, { status: 500 });
+  }
+
   const baseSlug = slugify(application.officeName);
   const organizationSlug = baseSlug + "-" + randomUUID().slice(0, 8);
   const officeSlug = baseSlug + "-" + randomUUID().slice(0, 8);
@@ -209,10 +213,6 @@ export async function PATCH(request: Request) {
     return { organization, office, user, updatedApplication };
   });
 
-  if (!application.passwordHash) {
-    return NextResponse.json({ message: "Başvurunun giriş bilgisi bulunamadı." }, { status: 500 });
-  }
-
   const contextAuth = await auth.$context;
   try {
     await contextAuth.internalAdapter.linkAccount({
@@ -227,9 +227,12 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("PrimeEstate broker credential creation failed.", error);
-    await prisma.user.delete({ where: { id: result.user.id } }).catch(() => undefined);
-    await prisma.office.delete({ where: { id: result.office.id } }).catch(() => undefined);
-    await prisma.organization.delete({ where: { id: result.organization.id } }).catch(() => undefined);
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.deleteMany({ where: { organizationId: result.organization.id } });
+      await tx.user.delete({ where: { id: result.user.id } });
+      await tx.office.delete({ where: { id: result.office.id } });
+      await tx.organization.delete({ where: { id: result.organization.id } });
+    }).catch(() => undefined);
     await prisma.officeApplication.update({
       where: { id: application.id },
       data: { status: "BEKLEMEDE", reviewedAt: null },
