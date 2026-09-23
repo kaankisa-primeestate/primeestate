@@ -57,12 +57,3 @@ export function canAccessPageRole(
 
   return MANAGER_ROLES.has(role);
 }
-
-export function canAccessPageRole(
-  role: UserRole | null | undefined,
-  requirement: "manager" | null,
-): boolean {
-  if (!requirement) return true;
-  if (!role) return false;
-  return requirement === "manager" && MANAGER_ROLES.has(role);
-}
