@@ -101,6 +101,12 @@ enum OfficeApplicationStatus {
   REDDEDILDI
 }
 
+enum ConsultantApplicationStatus {
+  BEKLEMEDE
+  ONAYLANDI
+  REDDEDILDI
+}
+
 model OfficeApplication {
   id             String                  @id @default(uuid())
   officeName     String
@@ -119,6 +125,41 @@ model OfficeApplication {
   @@index([ownerEmail])
 }
 
+model ConsultantApplication {
+  id                    String   @id @default(uuid())
+  organizationId        String
+  officeId              String
+  firstName             String
+  lastName              String
+  tcIdentityEncrypted   String
+  tcIdentityHash        String
+  tcIdentityLast4       String
+  email                 String
+  phone                 String
+  companyName           String
+  companyTitle          String?
+  companyTaxNumber      String?
+  companyPhone          String?
+  companyEmail          String?
+  commissionModel       String
+  officeShareRate       Decimal? @db.Decimal(7, 4)
+  consultantShareRate   Decimal? @db.Decimal(7, 4)
+  passwordHash          String?
+  status                ConsultantApplicationStatus @default(BEKLEMEDE)
+  rejectionNote         String?
+  reviewedByUserId      String?
+  reviewedAt            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+
+  @@unique([officeId, tcIdentityHash])
+  @@index([organizationId, officeId, status, createdAt])
+  @@index([officeId, email])
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -132,6 +173,7 @@ model Organization {
   properties Property[]
   listings  Listing[]
   auditLogs AuditLog[]
+  consultantApplications ConsultantApplication[]
 
   @@index([slug])
 }
@@ -150,6 +192,7 @@ model Office {
   customers    Customer[]
   properties   Property[]
   listings     Listing[]
+  consultantApplications ConsultantApplication[]
 
   @@unique([organizationId, slug])
   @@unique([id, organizationId])
