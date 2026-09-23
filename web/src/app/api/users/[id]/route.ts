@@ -216,27 +216,20 @@ export async function PATCH(
       select: { id: true },
     });
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const nextProfile = existingProfile
-        ? await tx.consultantProfile.update({
-            where: { userId: existing.id },
-            data: { firstName, lastName, phone },
-          })
-        : await tx.consultantProfile.create({
-            data: {
-              userId: existing.id,
-              organizationId: context.organizationId,
-              officeId: existing.officeId,
-              firstName,
-              lastName,
-              phone,
-              tcIdentityEncrypted: "",
-              tcIdentityHash: `manual-${existing.id}`,
-              tcIdentityLast4: "—",
-            },
-          });
+    if (!existingProfile || !existingCompany || !existingCommission) {
+      return NextResponse.json(
+        { message: "Bu danışman hesabının resmi profil kayıtları eksik. Önce onboarding kaydını tamamlayın." },
+        { status: 409 },
+      );
+    }
 
-      const nextCompany = existingCompany
+    const updated = await prisma.$transaction(async (tx) => {
+      const nextProfile = await tx.consultantProfile.update({
+        where: { userId: existing.id },
+        data: { firstName, lastName, phone },
+      });
+
+      const nextCompany = await tx.consultantCompany.update({
         ? await tx.consultantCompany.update({
             where: { userId: existing.id },
             data: {
@@ -271,17 +264,7 @@ export async function PATCH(
               effectiveTo: null,
             },
           })
-        : await tx.consultantCommissionPlan.create({
-            data: {
-              userId: existing.id,
-              organizationId: context.organizationId,
-              officeId: existing.officeId,
-              model: commissionModel,
-              officeShareRate,
-              consultantShareRate,
-            },
-          });
-
+      
       await tx.user.update({
         where: { id: existing.id },
         data: { name: `${firstName} ${lastName}` },
