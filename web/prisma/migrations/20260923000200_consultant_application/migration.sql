@@ -33,7 +33,7 @@ CREATE TABLE "ConsultantApplication" (
 );
 
 CREATE UNIQUE INDEX "ConsultantApplication_officeId_tcIdentityHash_key" ON "ConsultantApplication"("officeId", "tcIdentityHash");
-CREATE INDEX "ConsultantApplication_organizationId_officeId_status_createdAt_idx" ON "ConsultantApplication"("organizationId", "officeId", "status", "createdAt");
+CREATE INDEX "ConsultantApplication_organizationId_officeId_status_create_idx" ON "ConsultantApplication"("organizationId", "officeId", "status", "createdAt");
 CREATE INDEX "ConsultantApplication_officeId_email_idx" ON "ConsultantApplication"("officeId", "email");
 
 ALTER TABLE "ConsultantApplication" ADD CONSTRAINT "ConsultantApplication_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
