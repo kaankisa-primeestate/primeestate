@@ -86,7 +86,7 @@ export default function PortfolioPage() {
     } catch(e){setError(e instanceof Error?e.message:"Portföyler yüklenemedi.");} finally{setLoading(false);}
   }
   useEffect(()=>{const t=window.setTimeout(()=>void load(),250);return()=>window.clearTimeout(t);},[query,purpose,type]);
-  useEffect(()=>{void loadConsultants();},[]);
+  useEffect(()=>{const t=window.setTimeout(()=>void loadConsultants(),0);return()=>window.clearTimeout(t);},[]);
   async function createPortfolio(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError("");
     const form = event.currentTarget; const data = Object.fromEntries(new FormData(form).entries());
