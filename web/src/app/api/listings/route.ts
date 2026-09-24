@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { can, officeListingScope } from "@/lib/authz";
+import { can, isManagerRole, officeListingScope } from "@/lib/authz";
 import { findPrimeListingOpportunities } from "@/core/prime-listing-opportunities";
 
 const PROPERTY_TYPES = ["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"] as const;
@@ -78,6 +78,28 @@ export async function POST(request: Request) {
   const address = body.address ? String(body.address).trim() : null;
   const ownerName = body.ownerName ? String(body.ownerName).trim() : null;
   const currency = body.currency ? String(body.currency).trim().toUpperCase() : "TRY";
+  const requestedConsultantUserId = body.consultantUserId ? String(body.consultantUserId).trim() : null;
+  let consultantUserId = context.userId;
+
+  if (requestedConsultantUserId) {
+    if (!isManagerRole(context.role)) {
+      return NextResponse.json({ message: "Danışman atamasını yalnızca ofis yönetimi yapabilir." }, { status: 403 });
+    }
+    const consultant = await prisma.user.findFirst({
+      where: {
+        id: requestedConsultantUserId,
+        organizationId: context.organizationId,
+        officeId: context.officeId,
+        role: "AGENT",
+        active: true,
+      },
+      select: { id: true },
+    });
+    if (!consultant) {
+      return NextResponse.json({ message: "Seçilen danışman bu ofiste aktif değil." }, { status: 400 });
+    }
+    consultantUserId = consultant.id;
+  }
 
   if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
   if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
@@ -93,7 +115,7 @@ export async function POST(request: Request) {
       data: {
         organizationId: context.organizationId,
         officeId: context.officeId,
-        consultantUserId: context.userId,
+        consultantUserId,
         propertyType: propertyType as never,
         title,
         city,
@@ -112,7 +134,7 @@ export async function POST(request: Request) {
         propertyId: property.id,
         organizationId: context.organizationId,
         officeId: context.officeId,
-        consultantUserId: context.userId,
+        consultantUserId,
         code,
         title,
         purpose: purpose as never,
