@@ -4,7 +4,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { can, isManagerRole } from "@/lib/authz";
+import { can, isManagerRole, officeListingScope } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const ROLE_VALUES = [
