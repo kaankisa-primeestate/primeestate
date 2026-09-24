@@ -39,6 +39,14 @@ type UserItem = {
     status: string;
     createdAt: string;
   } | null;
+  performance: {
+    customerCount: number;
+    listingCount: number;
+    activeListingCount: number;
+    saleCount: number;
+    closedSaleCount: number;
+    closedSalesVolume: number;
+  };
 };
 
 type Office = { id: string; name: string };
@@ -450,6 +458,33 @@ export default function UsersPage() {
                             <span>Ekip: {user.team?.name ?? "Atanmamış"}</span>
                             <span>{roleDescriptions[user.role] ?? ""}</span>
                           </div>
+
+                          {user.role === "AGENT" ? (
+                            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                              <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Müşteri</p>
+                                <p className="mt-1 text-lg font-semibold text-slate-900">{user.performance.customerCount}</p>
+                                <p className="text-xs text-slate-400">kendi müşteri kaydı</p>
+                              </div>
+                              <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Portföy</p>
+                                <p className="mt-1 text-lg font-semibold text-slate-900">{user.performance.activeListingCount}</p>
+                                <p className="text-xs text-slate-400">{user.performance.listingCount} toplam ilan</p>
+                              </div>
+                              <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Satış</p>
+                                <p className="mt-1 text-lg font-semibold text-slate-900">{user.performance.closedSaleCount}</p>
+                                <p className="text-xs text-slate-400">{user.performance.saleCount} satış kaydı</p>
+                              </div>
+                              <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Satış hacmi</p>
+                                <p className="mt-1 text-lg font-semibold text-slate-900">
+                                  {new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(user.performance.closedSalesVolume)} ₺
+                                </p>
+                                <p className="text-xs text-slate-400">tamamlanan satışlar</p>
+                              </div>
+                            </div>
+                          ) : null}
 
                           {user.role === "AGENT" ? (
                             <div className="mt-4 grid gap-2 sm:grid-cols-3">

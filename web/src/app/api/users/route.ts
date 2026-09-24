@@ -4,7 +4,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
-import { can, isManagerRole } from "@/lib/authz";
+import { can, isManagerRole, officeListingScope } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 const ROLE_VALUES = [
@@ -108,6 +108,65 @@ export async function GET() {
     },
   });
 
+  const [customerCounts, listingRows, salesRows] = await Promise.all([
+    prisma.customer.groupBy({
+      by: ["ownerUserId"],
+      where: userScope(context).officeId
+        ? { organizationId: context.organizationId, officeId: context.officeId }
+        : { organizationId: context.organizationId },
+      _count: { _all: true },
+    }),
+    prisma.listing.findMany({
+      where: officeListingScope(context),
+      select: {
+        consultantUserId: true,
+        status: true,
+      },
+    }),
+    prisma.sale.findMany({
+      where: {
+        listing: officeListingScope(context),
+      },
+      select: {
+        amount: true,
+        status: true,
+        listing: { select: { consultantUserId: true } },
+      },
+    }),
+  ]);
+
+  const customerCountByUser = new Map(customerCounts.map((item) => [item.ownerUserId, item._count._all]));
+  const listingCountByUser = new Map<string, number>();
+  const activeListingCountByUser = new Map<string, number>();
+
+  for (const listing of listingRows) {
+    if (!listing.consultantUserId) continue;
+    listingCountByUser.set(
+      listing.consultantUserId,
+      (listingCountByUser.get(listing.consultantUserId) ?? 0) + 1,
+    );
+    if (listing.status === "AKTIF") {
+      activeListingCountByUser.set(
+        listing.consultantUserId,
+        (activeListingCountByUser.get(listing.consultantUserId) ?? 0) + 1,
+      );
+    }
+  }
+
+  const salesByUser = new Map<string, { count: number; closedCount: number; volume: number }>();
+  for (const sale of salesRows) {
+    const consultantUserId = sale.listing.consultantUserId;
+    if (!consultantUserId) continue;
+
+    const current = salesByUser.get(consultantUserId) ?? { count: 0, closedCount: 0, volume: 0 };
+    current.count += 1;
+    if (sale.status === "TAMAMLANDI") {
+      current.closedCount += 1;
+      current.volume += Number(sale.amount);
+    }
+    salesByUser.set(consultantUserId, current);
+  }
+
   const consultantApplications = await prisma.consultantApplication.findMany({
     where:
       context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN"
@@ -172,8 +231,18 @@ export async function GET() {
     users: users.map((user) => {
       const application = latestApplicationByEmail.get(user.email);
 
+      const sales = salesByUser.get(user.id) ?? { count: 0, closedCount: 0, volume: 0 };
+
       return {
         ...user,
+        performance: {
+          customerCount: customerCountByUser.get(user.id) ?? 0,
+          listingCount: listingCountByUser.get(user.id) ?? 0,
+          activeListingCount: activeListingCountByUser.get(user.id) ?? 0,
+          saleCount: sales.count,
+          closedSaleCount: sales.closedCount,
+          closedSalesVolume: sales.volume,
+        },
         consultantProfile: user.consultantProfile
           ? {
               ...user.consultantProfile,
