@@ -411,6 +411,7 @@ model Property {
   floor          String?
   ownerName      String?
   ownerCustomerId String?
+  details        Json?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
