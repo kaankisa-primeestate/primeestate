@@ -94,10 +94,10 @@ export default function PortfolioPage() {
     const details = Object.fromEntries(detailKeys.filter((key) => data[key] !== undefined && String(data[key]).trim() !== "").map((key) => [key, String(data[key]).trim()]));
     const payload = { ...data, details };
     try {
-      const res = await fetch("/api/listings", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-      const payload = await res.json(); if(!res.ok) throw new Error(payload.message || "Portföy eklenemedi.");
-      setShowCreate(false); form.reset(); await load(); setSelectedId(payload.listing?.id ?? null);
-      setPrimeNotice(Array.isArray(payload.primeOpportunities) ? payload.primeOpportunities.slice(0, 5).map((item: { customerId?: string; customerName?: string; phone?: string | null; score?: number }) => ({ customerId: item.customerId ?? "", customerName: item.customerName ?? "Müşteri", phone: item.phone ?? null, score: Number(item.score ?? 0), listingId: payload.listing?.id ?? "" })).filter((item: { customerId: string }) => item.customerId) : []);
+      const response = await fetch("/api/listings", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const result = await response.json(); if(!response.ok) throw new Error(result.message || "Portföy eklenemedi.");
+      setShowCreate(false); form.reset(); await load(); setSelectedId(result.listing?.id ?? null);
+      setPrimeNotice(Array.isArray(result.primeOpportunities) ? result.primeOpportunities.slice(0, 5).map((item: { customerId?: string; customerName?: string; phone?: string | null; score?: number }) => ({ customerId: item.customerId ?? "", customerName: item.customerName ?? "Müşteri", phone: item.phone ?? null, score: Number(item.score ?? 0), listingId: result.listing?.id ?? "" })).filter((item: { customerId: string }) => item.customerId) : []);
       setPrimeOutcome("");
       setPrimeDueAt("");
       setPrimeSuccess("");
