@@ -286,6 +286,14 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
       rooms: "3+1",
       floor: "5",
       currency: "TRY",
+      details: {
+        buildingAge: "5",
+        heating: "Doğalgaz",
+        bathrooms: "2",
+        furnished: "Hayır",
+        balcony: "Var",
+        parking: "Kapalı",
+      },
     },
     "POST",
   );

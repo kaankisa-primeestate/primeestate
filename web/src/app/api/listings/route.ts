@@ -78,6 +78,10 @@ export async function POST(request: Request) {
   const address = body.address ? String(body.address).trim() : null;
   const ownerName = body.ownerName ? String(body.ownerName).trim() : null;
   const currency = body.currency ? String(body.currency).trim().toUpperCase() : "TRY";
+  const details =
+    body.details && typeof body.details === "object" && !Array.isArray(body.details)
+      ? body.details
+      : {};
   const requestedConsultantUserId = body.consultantUserId ? String(body.consultantUserId).trim() : null;
   let consultantUserId = context.userId;
 
@@ -108,6 +112,20 @@ export async function POST(request: Request) {
   if (sizeM2 !== null && (!Number.isFinite(sizeM2) || sizeM2 <= 0)) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
   if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
 
+  const requiredDetailFields: Record<string, string[]> = {
+    DAIRE: ["buildingAge", "heating"],
+    VILLA: ["landSize", "heating"],
+    ARSA: ["zoning"],
+    IS_YERI: ["commercialType"],
+    BINA: ["landSize", "totalFloors"],
+    DEVRE_MULK: ["period", "season"],
+  };
+  for (const field of requiredDetailFields[propertyType] ?? []) {
+    if (details[field] == null || String(details[field]).trim() === "") {
+      return NextResponse.json({ message: `Seçilen portföy tipi için "${field}" bilgisi zorunludur.` }, { status: 400 });
+    }
+  }
+
   const code = `PR-${Date.now().toString(36).toUpperCase()}`;
 
   const created = await prisma.$transaction(async (tx) => {
@@ -126,6 +144,7 @@ export async function POST(request: Request) {
         rooms,
         floor,
         ownerName,
+        details,
       },
     });
 
