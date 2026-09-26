@@ -13,7 +13,7 @@ type Listing = {
   images: { id: string; url: string; alt: string | null; sortOrder: number }[];
   property: {
     propertyType: string; city: string; district: string; neighborhood: string;
-    address: string | null; sizeM2: string | number | null; rooms: string | null; floor: string | null; ownerName: string | null;
+    address: string | null; sizeM2: string | number | null; rooms: string | null; floor: string | null; ownerName: string | null; details?: Record<string, unknown> | null;
   };
 };
 
@@ -32,7 +32,7 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    const data: Record<string, unknown> = Object.fromEntries(formData.entries());
     const detailKeys = ["buildingAge","heating","bathrooms","furnished","balcony","parking","elevator","site","dues","facade","usageStatus","titleDeed","creditEligible","investmentSuitable","description","highlights","tags","landSize","pool","garden","zoning","parcel","island","kaks","taks","roadFrontage","commercialType","floorCount","totalFloors","units","period","season","siteName","term"];
     data.details = Object.fromEntries(detailKeys.filter((key) => data[key] !== undefined && String(data[key]).trim() !== "").map((key) => [key, String(data[key]).trim()]));
     setSaving(true); setMessage("");
