@@ -54,33 +54,29 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current phase
 
-**Prime Brain — Outcome Learning**
+**Mobile UX / Navigation Shell**
 
 ### Current objective
 
-Make Prime genuinely learn from consultant contact outcomes instead of merely storing `Activity.outcome`.
-
-Target chain:
-
-**Contact outcome → Prime memory → Demand preference/learning update → rematch → changed recommendation**
+Fix the shared application shell so mobile navigation behaves as a real drawer instead of rendering the desktop sidebar above the page.
 
 ### Active branch
 
-`feat/prime-outcome-learning`
+None — PR #127 was merged into main.
 
 ### Base main commit
 
-`aada04149ec15fcded1fc9927ee4c3780a396ec4`
+`24c777602b00f5cadad2ac531522da52de7f1206`
 
 ### Branch state
 
-The active branch contains the outcome-learning implementation plus focused test changes. **No PR has been created yet.**
+PR #127 — **Fix responsive mobile navigation shell** — merged.
 
 ### Immediate next steps
 
-1. Verify the merged main code and automated checks. ✅
-2. Verify the end-to-end behavior: outcome → memory → rematch → changed Prime recommendation.
-3. Then continue with the next Prime Brain improvement.
+1. Verify main CI after the merge.
+2. Test the mobile navigation on a real phone/browser: open, close, backdrop, Escape, navigation, and page scrolling.
+3. Continue with the next incomplete product task.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -100,6 +96,8 @@ Recent main milestones:
 - PR #119 — Prime daily priority workspace
 - PR #120 — explainable Prime recommendations
 - PR #121 — improved Prime outcome capture
+- PR #126 — practical photo upload and listing preview
+- PR #127 — responsive mobile navigation shell
 
 Latest main before the active outcome-learning branch:
 
@@ -249,6 +247,16 @@ When a new development session begins with **“PrimeEstate”**:
 8. Do not ask the user to re-explain the project unless repository state is genuinely insufficient.
 9. Before ending a work session, update `PROJECT_STATE.md` with the new snapshot.
 
+### Current mobile navigation implementation
+
+- Desktop sidebar is hidden below `md`.
+- Mobile uses a dedicated header and fixed drawer.
+- Drawer closes on navigation, backdrop click, close button, or Escape.
+- Body scrolling is locked while the drawer is open.
+- Mobile drawer content is independently scrollable.
+- Role-based Users & Team links are preserved.
+- No database or migration change was made.
+
 ### Important: this file is a snapshot, not a diary
 
 We do **not** continuously append every small code change to this file.
@@ -269,16 +277,16 @@ This gives us **one current source of truth without duplicating Git's history**.
 
 Keep these fields current:
 
-- CURRENT_PHASE:
-- CURRENT_TASK:
-- ACTIVE_BRANCH:
-- BASE_MAIN_COMMIT:
-- ACTIVE_PR:
-- LAST_GREEN_CHECKS:
-- PRODUCTION_MIGRATION:
-- NEXT_STEP:
-- BLOCKERS:
-- LAST_UPDATED_UTC:
+- CURRENT_PHASE: Mobile UX / Navigation Shell
+- CURRENT_TASK: Responsive mobile navigation shell
+- ACTIVE_BRANCH: none
+- BASE_MAIN_COMMIT: 24c777602b00f5cadad2ac531522da52de7f1206
+- ACTIVE_PR: none (PR #127 merged)
+- LAST_GREEN_CHECKS: PR #127 Critical Tests ✅; Web Quality ✅; Typecheck ✅; Production build ✅
+- PRODUCTION_MIGRATION: No schema change; no migration required
+- NEXT_STEP: Real mobile/browser verification of the drawer behavior
+- BLOCKERS: None
+- LAST_UPDATED_UTC: 2026-09-26
 
 ### End-of-session rule
 
