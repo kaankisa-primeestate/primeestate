@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import type { ActivityType, OfferStatus, ShowingStatus, TaskStatus } from "@/types/SalesOps";
+import type { ActivityType, OfferStatus, ShowingStatus } from "@/types/SalesOps";
 
 type ApiOffer = {
   id: string;
