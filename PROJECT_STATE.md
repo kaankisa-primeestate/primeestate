@@ -277,29 +277,13 @@ This gives us **one current source of truth without duplicating Git's history**.
 
 Keep these fields current:
 
-- CURRENT_PHASE: Mobile UX / Navigation Shell
-- CURRENT_TASK: Responsive mobile navigation shell
+- CURRENT_PHASE: Phase 6 — Sales Operations / İş Akışı UX
+- CURRENT_TASK: İş Akışı ekranlarını full-page çalışma alanına geçirmek ve bozuk aksiyonları gerçek akışlara bağlamak
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 24c777602b00f5cadad2ac531522da52de7f1206
-- ACTIVE_PR: none (PR #127 merged)
-- LAST_GREEN_CHECKS: PR #127 Critical Tests ✅; Web Quality ✅; Typecheck ✅; Production build ✅
+- BASE_MAIN_COMMIT: e6b9b6d88c6292682defc9cb1502a11fb6e02e25
+- ACTIVE_PR: none
+- LAST_GREEN_CHECKS: PR #134 Critical Tests #158 ✅; Web Quality #922 ✅; Lint ✅; Typecheck ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: Real mobile/browser verification of the drawer behavior
+- NEXT_STEP: İş Akışı mevcut sayfalarını ve action route'larını incele; Hızlı Aksiyon, Aktivite, Görev ve Gösterim akışlarını fazlara bölerek ilk kırık akışı düzelt
 - BLOCKERS: None
-- LAST_UPDATED_UTC: 2026-09-26
-
-### End-of-session rule
-
-Before stopping a development session, update this file when any of the following changed:
-
-- current task
-- active branch or PR
-- latest meaningful commit
-- CI result
-- production migration state
-- blocker
-- next step
-
-The update should be concise and factual. Never record an intended change as completed until the repository/CI confirms it.
-
-_Last updated during canonical project-memory setup._
+- LAST_UPDATED_UTC: 2026-09-27
