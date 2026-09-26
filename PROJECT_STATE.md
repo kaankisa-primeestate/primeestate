@@ -243,17 +243,35 @@ After merge:
 
 ## 14. STANDARD HANDOFF PROTOCOL
 
+**“PrimeEstate” is the canonical resume command.**
+
 When a new development session begins with **“PrimeEstate”**:
 
 1. Read `PROJECT_STATE.md`.
-2. Read `CURRENT_STATE.md` only for historical/context reconciliation.
-3. Check GitHub `main`.
-4. Check active branches and open PRs.
-5. Check CI for the relevant commit/PR.
-6. Inspect the code around `CURRENT_TASK`.
+2. Check GitHub `main`.
+3. Check active branches and open PRs.
+4. Check CI for the relevant commit/PR.
+5. Inspect the code around `CURRENT_TASK`.
+6. Reconcile the document with the actual repository state.
 7. Continue from the first incomplete step.
 8. Do not ask the user to re-explain the project unless repository state is genuinely insufficient.
-9. Before ending a work session, update `PROJECT_STATE.md` so the next session can resume from one source of truth.
+9. Before ending a work session, update `PROJECT_STATE.md` with the new snapshot.
+
+### Important: this file is a snapshot, not a diary
+
+We do **not** continuously append every small code change to this file.
+
+- Git commits are the detailed technical history.
+- Pull requests are the feature/change history.
+- CI runs are the verification history.
+- `PROJECT_STATE.md` is the **current handoff snapshot**: where we are now, what is active, what is blocked, and exactly what to do next.
+- Therefore, tomorrow we do **not** need to reconstruct today's work from memory. We read this file, then verify the actual GitHub state and continue.
+- At the end of a meaningful work session, this file is updated so its CURRENT_* fields describe the new reality.
+- If a change is committed but not yet merged, the active branch/PR section records that explicitly.
+- If a PR is merged, the snapshot moves to the new main commit and the next task.
+- If work is abandoned, blocked, or rolled back, that is recorded as well.
+
+This gives us **one current source of truth without duplicating Git's history**.
 
 ## 15. STATE UPDATE TEMPLATE
 
@@ -269,5 +287,19 @@ Keep these fields current:
 - NEXT_STEP:
 - BLOCKERS:
 - LAST_UPDATED_UTC:
+
+### End-of-session rule
+
+Before stopping a development session, update this file when any of the following changed:
+
+- current task
+- active branch or PR
+- latest meaningful commit
+- CI result
+- production migration state
+- blocker
+- next step
+
+The update should be concise and factual. Never record an intended change as completed until the repository/CI confirms it.
 
 _Last updated during canonical project-memory setup._
