@@ -7,6 +7,7 @@ const assert = {
 };
 
 const { deriveNextAction } = await import("../src/core/prime-next-action");
+const { applyOutcomeLearning } = await import("../src/core/prime-learning");
 const { calculateMatch } = await import("../src/core/matching-engine");
 
 test("Prime next action turns showing feedback into a concrete follow-up", () => {
@@ -56,4 +57,19 @@ test("Prime learning adjustment is counted once in the match score", () => {
   const result = calculateMatch(demand as never, listing as never);
   assert.equal(result.breakdown.learning, 4);
   assert.equal(result.score, 100);
+});
+
+
+test("Prime contact outcome learning persists learned positive attributes", () => {
+  const result = applyOutcomeLearning(undefined, "activity-1", "Müşteri otoparkı çok beğendi.");
+  assert.equal(result.result.direction, "positive");
+  assert.equal(result.learning.positive.includes("otopark"), true);
+  assert.equal(result.learning.history.length, 1);
+  assert.equal(result.learning.history[0].showingId, "activity-1");
+});
+
+test("Prime contact outcome learning persists learned negative attributes", () => {
+  const result = applyOutcomeLearning(undefined, "activity-2", "Müşteri otopark istemiyor.");
+  assert.equal(result.result.direction, "negative");
+  assert.equal(result.learning.negative.includes("otopark"), true);
 });
