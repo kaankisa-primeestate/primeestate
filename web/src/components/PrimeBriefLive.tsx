@@ -35,6 +35,7 @@ export default function PrimeBriefLive() {
   const [dueAt, setDueAt] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [success, setSuccess] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   async function load() {
     try {
@@ -42,6 +43,7 @@ export default function PrimeBriefLive() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message ?? "Prime Brief alınamadı.");
       setDecisions(data.decisions ?? []);
+      setSelectedIndex((current) => Math.min(current, Math.max(0, (data.decisions ?? []).length - 1)));
       setGeneratedAt(data.generatedAt ?? null);
       setError("");
     } catch (err) {
@@ -128,7 +130,8 @@ export default function PrimeBriefLive() {
     }
   }
 
-  const lead = decisions[0];
+  const lead = decisions[selectedIndex] ?? decisions[0];
+  const priorityCount = decisions.filter((item) => item.today.priority === "critical" || item.today.priority === "high").length;
 
   return (
     <section className="mt-6 rounded-3xl border bg-white p-5 shadow-sm">
@@ -144,8 +147,44 @@ export default function PrimeBriefLive() {
       {error && <div className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
       {success && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{success}</div>}
 
-      {!error && lead && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      {!error && decisions.length > 0 && (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime öncelikleri</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{decisions.length}</p>
+              <p className="mt-1 text-xs text-slate-500">Bugün için sıralanan müşteri</p>
+            </div>
+            <div className="rounded-2xl border bg-amber-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Dikkat isteyen</p>
+              <p className="mt-1 text-2xl font-bold text-amber-900">{priorityCount}</p>
+              <p className="mt-1 text-xs text-amber-700">Yüksek veya kritik öncelik</p>
+            </div>
+            <div className="rounded-2xl border bg-emerald-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Fırsat</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-900">{decisions.reduce((sum, item) => sum + item.opportunities.length, 0)}</p>
+              <p className="mt-1 text-xs text-emerald-700">Önerilen portföy eşleşmesi</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            {decisions.slice(0, 3).map((item, index) => (
+              <button
+                key={item.client.id}
+                type="button"
+                onClick={() => setSelectedIndex(index)}
+                className={`rounded-2xl border p-4 text-left transition ${index === selectedIndex ? "border-slate-900 bg-slate-950 text-white shadow-lg" : "bg-white hover:border-slate-300"}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${index === selectedIndex ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}>{priorityLabel[item.today.priority]}</span>
+                  <span className={`text-xs ${index === selectedIndex ? "text-slate-300" : "text-slate-400"}`}>%{item.today.confidence}</span>
+                </div>
+                <p className="mt-4 text-base font-semibold">{item.client.name}</p>
+                <p className={`mt-1 text-xs ${index === selectedIndex ? "text-slate-300" : "text-slate-500"}`}>{item.nextStep}</p>
+                {item.opportunities.length > 0 && <p className={`mt-3 text-xs font-medium ${index === selectedIndex ? "text-emerald-300" : "text-emerald-700"}`}>{item.opportunities.length} uygun portföy fırsatı</p>}
+              </button>
+            ))}
+          </div>
+          {lead && <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-2xl bg-slate-950 p-5 text-white">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{priorityLabel[lead.today.priority]}</span>
@@ -245,7 +284,8 @@ export default function PrimeBriefLive() {
               </div>
             )}
           </div>
-        </div>
+          </div>}
+        </>
       )}
 
       {!error && !lead && (
