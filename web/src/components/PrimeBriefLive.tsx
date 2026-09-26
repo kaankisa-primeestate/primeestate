@@ -195,9 +195,18 @@ export default function PrimeBriefLive() {
             <h3 className="mt-1 text-2xl font-semibold">{lead.client.name}</h3>
             <p className="mt-2 text-sm text-slate-300">{lead.objective}</p>
             <div className="mt-5 rounded-2xl bg-white/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime&apos;ın gerekçesi</p>
-              <ul className="mt-2 space-y-1 text-sm text-slate-200">
-                {lead.reasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Prime neden bunu öneriyor?</p>
+                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-slate-300">%{lead.today.confidence} güven</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-200">Prime bu öneriyi tek bir sinyale göre değil, müşterinin ilişki durumu, mevcut talebi, temas zamanı ve ofis portföyündeki fırsatları birlikte değerlendirerek oluşturuyor.</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-200">
+                {lead.reasons.slice(0, 4).map((reason) => (
+                  <li key={reason} className="flex gap-2">
+                    <span className="mt-0.5 text-indigo-300">●</span>
+                    <span>{reason}</span>
+                  </li>
+                ))}
               </ul>
             </div>
             <Link href={"/relationship/" + lead.client.id} className="mt-4 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950">
