@@ -1,6 +1,8 @@
 # PrimeEstate — CURRENT STATE
 
-> Oturumlar arası devralma kaydıdır. Gerçek kaynak: GitHub `main`, açık PR'lar ve CI.
+> **Canonical handoff:** `PROJECT_STATE.md`
+>
+> This file remains the compatibility/state-validation document. The canonical cross-session project memory is `PROJECT_STATE.md`. For a new development session, read `PROJECT_STATE.md` first, then verify GitHub `main`, open PRs, CI and relevant code.
 
 ## 1. Proje
 
@@ -26,6 +28,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 ## 3. Foundation Recovery
 
 ### Tamamlanan
+
 - Phase 0 — Inventory & freeze
 - Phase 1 — Database / migration integrity
 - Phase 2 — Data model integrity
@@ -38,17 +41,20 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 - Phase 8 — duplicate matching engine cleanup
 
 ### Ertelenen teknik borç
+
 - Phase 4'ün kalan geniş response/error contract hardening kapsamı
 - Fazla geniş API contract suite
 - Açık deletion policy çalışması
 - Release gate sonrası ele alınacak ürün dışı hardening işleri
 
 ### Aktif phase
+
 **Phase 9 — Release Gate / next feature-development baseline**
 
 ## 4. Doğrulanmış GitHub durumu
 
 ### Main / Release-gate baseline
+
 Current main tip is the latest merge commit. The verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
 PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
@@ -64,11 +70,13 @@ PR #90 established the release-gate documentation baseline. Production runtime v
 - PR #88 — production release-gate smoke hardening — merged
 
 ### Açık PR
+
 Şu anda eski Phase 6 dokümantasyon PR #79 kapatılmıştır. PR #81 ve #82 dahil eski Phase 7 PR'ları da artık kullanılmamaktadır.
 
 ## 5. Phase 8 cleanup durumu
 
 Tamamlanan:
+
 - `web/src/core/matching.ts` kaldırıldı.
 - Kullanılmayan `web/src/types/Matching.ts` kaldırıldı.
 - Repository referansları kontrol edilerek aktif matching route'un `web/src/core/matching-engine.ts` kullandığı doğrulandı.
@@ -139,3 +147,23 @@ Release Gate hedefi:
 - CI kırmızıysa merge edilmez.
 - Root cause görülmeden blind fix yapılmaz.
 - Migration değişiklikleri plansız uygulanmaz.
+
+## 10. Canonical handoff — current product work
+
+- Active phase: **Prime Brain — Outcome Learning**
+- Active branch: `feat/prime-outcome-learning`
+- Base main commit: `373b39b0e676ce2eafc4d02f513fb03781814c10`
+- Active PR: **not created yet**
+- Immediate goal: outcome → Prime memory → rematch → changed recommendation
+
+### Standard handoff
+
+Future sessions begin with:
+
+1. Read `PROJECT_STATE.md`.
+2. Verify `main`, active branches, open PRs and CI.
+3. Inspect the code named by the current task.
+4. Continue from the first incomplete step.
+5. Update `PROJECT_STATE.md` when the meaningful state changes.
+
+_Last reconciled as part of the canonical project-memory setup._
