@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     include: {
       property: { select: {
         id: true, propertyType: true, city: true, district: true, neighborhood: true,
-        address: true, sizeM2: true, rooms: true, floor: true, ownerName: true,
+        address: true, sizeM2: true, rooms: true, floor: true, ownerName: true, details: true,
       } },
       consultant: { select: { id: true, name: true, email: true } },
       _count: { select: { matches: true, showings: true, offers: true } },
