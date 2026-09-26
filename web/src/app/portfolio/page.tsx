@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import PortfolioEditModal from "@/components/PortfolioEditModal";
+import Link from "next/link";
 type ApiListing = {
   id: string; code: string; title: string; purpose: string; status: string;
   price: string | number; currency: string; tags: unknown; highlights: unknown;
@@ -61,8 +62,6 @@ function Detail({ item, onEdit, onPreview }: { item: ApiListing; onEdit: () => v
 
 export default function PortfolioPage() {
   const [items,setItems]=useState<ApiListing[]>([]);
-  const [consultants,setConsultants]=useState<{ id: string; name: string; email: string; role: string; active: boolean }[]>([]);
-  const [currentRole,setCurrentRole]=useState<string | null>(null);
   const [primeNotice,setPrimeNotice]=useState<{ customerId: string; customerName: string; phone: string | null; score: number; listingId: string }[]>([]);
   const [primeOutcome,setPrimeOutcome]=useState("");
   const [primeDueAt,setPrimeDueAt]=useState("");
@@ -70,20 +69,7 @@ export default function PortfolioPage() {
   const [primeConfirmationUrl,setPrimeConfirmationUrl]=useState<string|null>(null);
   const [primeBusy,setPrimeBusy]=useState("");
   const [primeSuccess,setPrimeSuccess]=useState("");
-  const [showPreview,setShowPreview]=useState(false); const [query,setQuery]=useState(""); const [purpose,setPurpose]=useState<(typeof purposeFilters)[number]>("Tümü"); const [type,setType]=useState<(typeof typeFilters)[number]>("Tümü"); const [createPropertyType,setCreatePropertyType]=useState("DAIRE"); const [selectedId,setSelectedId]=useState<string|null>(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [showCreate,setShowCreate]=useState(false); const [showEdit,setShowEdit]=useState(false); const [saving,setSaving]=useState(false);
-  async function loadConsultants() {
-    try {
-      const res = await fetch("/api/users", { cache: "no-store" });
-      const data = await res.json();
-      if (res.ok) {
-        setCurrentRole(data.currentUser?.role ?? null);
-        setConsultants((data.users ?? []).filter((user: { role?: string; active?: boolean }) => user.role === "AGENT" && user.active));
-      }
-    } catch {
-      // Consultant selection is additive; listing loading remains independent.
-    }
-  }
-
+  const [showPreview,setShowPreview]=useState(false); const [query,setQuery]=useState(""); const [purpose,setPurpose]=useState<(typeof purposeFilters)[number]>("Tümü"); const [type,setType]=useState<(typeof typeFilters)[number]>("Tümü"); const [selectedId,setSelectedId]=useState<string|null>(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [showEdit,setShowEdit]=useState(false);
   async function load() {
     setLoading(true); setError("");
     try {
@@ -92,23 +78,6 @@ export default function PortfolioPage() {
     } catch(e){setError(e instanceof Error?e.message:"Portföyler yüklenemedi.");} finally{setLoading(false);}
   }
   useEffect(()=>{const t=window.setTimeout(()=>void load(),250);return()=>window.clearTimeout(t);},[query,purpose,type]);
-  useEffect(()=>{const t=window.setTimeout(()=>void loadConsultants(),0);return()=>window.clearTimeout(t);},[]);
-  async function createPortfolio(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setSaving(true); setError("");
-    const form = event.currentTarget; const data = Object.fromEntries(new FormData(form).entries());
-    const detailKeys = ["buildingAge","heating","bathrooms","furnished","balcony","parking","elevator","site","dues","facade","usageStatus","titleDeed","creditEligible","investmentSuitable","description","highlights","tags","landSize","pool","garden","zoning","parcel","island","kaks","taks","roadFrontage","commercialType","floorCount","totalFloors","units","period","season","siteName","term"];
-    const details = Object.fromEntries(detailKeys.filter((key) => data[key] !== undefined && String(data[key]).trim() !== "").map((key) => [key, String(data[key]).trim()]));
-    const payload = { ...data, details };
-    try {
-      const response = await fetch("/api/listings", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-      const result = await response.json(); if(!response.ok) throw new Error(result.message || "Portföy eklenemedi.");
-      setShowCreate(false); form.reset(); await load(); setSelectedId(result.listing?.id ?? null);
-      setPrimeNotice(Array.isArray(result.primeOpportunities) ? result.primeOpportunities.slice(0, 5).map((item: { customerId?: string; customerName?: string; phone?: string | null; score?: number }) => ({ customerId: item.customerId ?? "", customerName: item.customerName ?? "Müşteri", phone: item.phone ?? null, score: Number(item.score ?? 0), listingId: result.listing?.id ?? "" })).filter((item: { customerId: string }) => item.customerId) : []);
-      setPrimeOutcome("");
-      setPrimeDueAt("");
-      setPrimeSuccess("");
-    } catch(e) { setError(e instanceof Error ? e.message : "Portföy eklenemedi."); } finally { setSaving(false); }
-  }
   async function handlePrimeListingAction(item: { customerId: string; customerName: string; phone: string | null; score: number; listingId: string }, action: "ARAMA" | "WHATSAPP", destination: "call" | "whatsapp") {
     const key=item.customerId+"-"+action;
     setPrimeBusy(key); setPrimeSuccess(""); setError("");
@@ -148,7 +117,7 @@ export default function PortfolioPage() {
   }
   const selected=useMemo(()=>items.find(x=>x.id===selectedId)??null,[items,selectedId]);
   const activeCount=items.filter(x=>x.status==="AKTIF").length, saleCount=items.filter(x=>x.purpose==="SATILIK").length, rentCount=items.filter(x=>x.purpose==="KIRALIK").length, matchCount=items.reduce((s,x)=>s+x._count.matches,0);
-  return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-7xl"><header className="mb-6"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate Workspace</p><div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Portföyler</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Gerçek ofis portföylerini, ilanlarını, sorumlu danışmanlarını ve eşleşme sinyallerini tek çalışma alanında yönetin.</p></div><button type="button" onClick={()=>setShowCreate(true)} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Yeni Portföy</button></div></header>{error&&<div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}{primeNotice.length>0&&<div className="mb-5 rounded-2xl border border-slate-200 bg-slate-950 px-5 py-4 text-white shadow-sm">
+  return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-7xl"><header className="mb-6"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate Workspace</p><div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Portföyler</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Gerçek ofis portföylerini, ilanlarını, sorumlu danışmanlarını ve eşleşme sinyallerini tek çalışma alanında yönetin.</p></div><Link href="/portfolio/new" className="rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Yeni Portföy</Link></div></header>{error&&<div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}{primeNotice.length>0&&<div className="mb-5 rounded-2xl border border-slate-200 bg-slate-950 px-5 py-4 text-white shadow-sm">
   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime · Yeni portföy fırsatları</p>
   <p className="mt-1 text-sm text-slate-200">Prime bu portföy için uygun müşteri adaylarını buldu. Şimdi sonucu hafızaya alarak aksiyona geçebilirsin.</p>
   {primeSuccess&&<div className="mt-3 rounded-xl bg-emerald-500/15 px-3 py-2 text-xs text-emerald-200">{primeSuccess}</div>}
@@ -189,60 +158,5 @@ export default function PortfolioPage() {
     </div>
     <div className="mt-5 flex justify-end"><button type="button" onClick={()=>{setShowPreview(false);setShowEdit(true);}} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">İlanı Düzenle</button></div>
   </div>
-</div>}{showCreate&&<div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"><form onSubmit={createPortfolio} className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Yeni portföy</p><h2 className="mt-1 text-2xl font-semibold text-slate-950">Portföy ekle</h2><p className="mt-1 text-sm text-slate-500">Portföy ve ilan kaydı tek adımda oluşturulur.</p></div><button type="button" onClick={()=>setShowCreate(false)} className="rounded-lg px-2 py-1 text-xl text-slate-400">×</button></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">Başlık *</span><input name="title" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">İlan amacı *</span><select name="purpose" defaultValue="SATILIK" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="SATILIK">Satılık</option><option value="KIRALIK">Kiralık</option></select></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Portföy tipi *</span><select name="propertyType" value={createPropertyType} onChange={(e)=>setCreatePropertyType(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="DAIRE">Daire</option><option value="VILLA">Villa</option><option value="ARSA">Arsa</option><option value="IS_YERI">İş Yeri</option><option value="BINA">Bina</option><option value="DEVRE_MULK">Devre Mülk</option></select></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Fiyat *</span><input name="price" required inputMode="numeric" onChange={(e)=>{e.currentTarget.value=formatNumberInput(e.currentTarget.value)}} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Para birimi</span><select name="currency" defaultValue="TRY" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>TRY</option><option>USD</option><option>EUR</option></select></label>
-{["SUPER_ADMIN","ORG_ADMIN","OFFICE_ADMIN"].includes(currentRole ?? "") ? <label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Sorumlu danışman</span><select name="consultantUserId" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Benim portföyüm</option>{consultants.map(consultant=><option key={consultant.id} value={consultant.id}>{consultant.name || consultant.email}</option>)}</select><span className="mt-1 block text-[11px] text-slate-400">Ofis yönetimi başka aktif danışmana atayabilir.</span></label> : null}<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">İl *</span><input name="city" required defaultValue="İstanbul" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">İlçe *</span><input name="district" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Mahalle *</span><input name="neighborhood" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Net m²</span><input name="sizeM2" inputMode="numeric" onChange={(e)=>{e.currentTarget.value=formatNumberInput(e.currentTarget.value)}} className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Oda</span><input name="rooms" placeholder="3+1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Kat</span><input name="floor" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Mal sahibi</span><input name="ownerName" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">Adres</span><input name="address" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label></div><div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-<p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Portföy tipine özel bilgiler</p>
-<p className="mt-1 text-xs text-slate-500">Seçtiğin gayrimenkul tipine göre gerekli alanlar burada açılır.</p>
-<div className="mt-4 grid gap-4 sm:grid-cols-2">
-{createPropertyType==="DAIRE" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Bina yaşı *</span><input name="buildingAge" type="number" min="0" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Isıtma *</span><select name="heating" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Seçiniz</option><option>Doğalgaz</option><option>Merkezi</option><option>Yerden ısıtma</option><option>Klima</option><option>Diğer</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Banyo</span><input name="bathrooms" type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Eşyalı</span><select name="furnished" defaultValue="Hayır" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>Hayır</option><option>Evet</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Balkon</span><select name="balcony" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Yok</option><option>Var</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Otopark</span><select name="parking" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Yok</option><option>Açık</option><option>Kapalı</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Asansör</span><select name="elevator" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Yok</option><option>Var</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Site</span><select name="site" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Yok</option><option>Var</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Aidat</span><input name="dues" inputMode="numeric" onChange={(e)=>{e.currentTarget.value=formatNumberInput(e.currentTarget.value)}} placeholder="5.000" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Cephe</span><input name="facade" placeholder="Güney, doğu..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Kullanım durumu</span><input name="usageStatus" placeholder="Boş, kiracılı, mal sahibi oturuyor..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Tapu durumu</span><input name="titleDeed" placeholder="Kat mülkiyeti..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Krediye uygun</span><select name="creditEligible" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Evet</option><option>Hayır</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Yatırıma uygun</span><select name="investmentSuitable" defaultValue="" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Belirtilmemiş</option><option>Evet</option><option>Hayır</option></select></label>
-</> : null}
-{createPropertyType==="VILLA" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Arsa m² *</span><input name="landSize" required type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Isıtma *</span><input name="heating" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Havuz</span><select name="pool" defaultValue="Yok" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>Yok</option><option>Var</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Bahçe</span><select name="garden" defaultValue="Yok" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>Yok</option><option>Var</option></select></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Otopark</span><select name="parking" defaultValue="Yok" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>Yok</option><option>Var</option></select></label>
-</> : null}
-{createPropertyType==="ARSA" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">İmar durumu *</span><input name="zoning" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Ada</span><input name="island" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Parsel</span><input name="parcel" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">KAKS / Emsal</span><input name="kaks" type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">TAKS</span><input name="taks" type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Yol cephesi (m)</span><input name="roadFrontage" type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-</> : null}
-{createPropertyType==="IS_YERI" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">İş yeri türü *</span><input name="commercialType" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Kat sayısı</span><input name="floorCount" type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Isıtma</span><input name="heating" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-</> : null}
-{createPropertyType==="BINA" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Arsa m² *</span><input name="landSize" required type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Toplam kat *</span><input name="totalFloors" required type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Bağımsız bölüm</span><input name="units" type="number" min="1" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Bina yaşı</span><input name="buildingAge" type="number" min="0" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-</> : null}
-{createPropertyType==="DEVRE_MULK" ? <>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Dönem *</span><input name="period" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Sezon *</span><input name="season" required className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Tesis</span><input name="siteName" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label><span className="mb-1.5 block text-xs font-semibold text-slate-600">Kullanım süresi</span><input name="term" className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-</> : null}
-<label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">İlan açıklaması</span><textarea name="description" rows={4} placeholder="Detaylı açıklama..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">Öne çıkan özellikler</span><input name="highlights" placeholder="Deniz manzarası, kapalı otopark, metroya yakın..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-<label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-slate-600">Arama etiketleri</span><input name="tags" placeholder="otopark, balkon, yatırım..." className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label></div></div><div className="mt-6 flex justify-end gap-2"><button type="button" onClick={()=>setShowCreate(false)} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button disabled={saving} type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving?"Kaydediliyor…":"Portföyü Kaydet"}</button></div></form></div>}</div>;
+</div>}}</div>;
 }
