@@ -73,3 +73,53 @@ test("Prime contact outcome learning persists learned negative attributes", () =
   assert.equal(result.result.direction, "negative");
   assert.equal(result.learning.negative.includes("otopark"), true);
 });
+
+
+test("Prime outcome learning changes the next match score", () => {
+  const demandBase = {
+    propertyType: "DAIRE",
+    type: "SATIN_ALMA",
+    locations: ["Kadıköy"],
+    budgetMin: 100,
+    budgetMax: 200,
+    currency: "TRY",
+    minSize: 90,
+    maxSize: 120,
+    rooms: "3+1",
+    preferences: { primeLearning: { positive: [], negative: [], history: [] } },
+  };
+  const listing = {
+    id: "listing-learning",
+    propertyId: "property-learning",
+    purpose: "SATILIK",
+    status: "AKTIF",
+    price: 150,
+    currency: "TRY",
+    tags: ["otopark"],
+    highlights: [],
+    property: {
+      propertyType: "DAIRE",
+      city: "İstanbul",
+      district: "Kadıköy",
+      neighborhood: "Bostancı",
+      sizeM2: 100,
+      rooms: "3+1",
+    },
+  };
+
+  const before = calculateMatch(demandBase as never, listing as never);
+  const learned = applyOutcomeLearning(
+    demandBase.preferences.primeLearning,
+    "activity-rematch",
+    "Müşteri otoparkı istemiyor.",
+  );
+  const afterDemand = {
+    ...demandBase,
+    preferences: { ...demandBase.preferences, primeLearning: learned.learning },
+  };
+  const after = calculateMatch(afterDemand as never, listing as never);
+
+  assert.equal(after.breakdown.learning, -6);
+  assert.equal(after.score < before.score, true);
+  assert.equal(after.reasons.some((reason) => reason.title === "Prime öğrenilen tercih ile çakışıyor"), true);
+});
