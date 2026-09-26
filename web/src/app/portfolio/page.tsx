@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Sidebar from "@/components/Sidebar";
 import PortfolioEditModal from "@/components/PortfolioEditModal";
