@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Sidebar from "@/components/Sidebar";
@@ -321,7 +322,7 @@ export default function ClientsPage() {
         <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Müşteriler</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Gerçek müşteri kayıtlarını, rolleri ve talepleri tek kayıtta yönetin.</p>
-        </div><button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Yeni Müşteri</button></div>
+        </div><Link href="/clients/new" className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Yeni Müşteri</Link></div>
       </header>
       {error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <div>
