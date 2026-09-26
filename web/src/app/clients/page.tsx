@@ -347,7 +347,7 @@ export default function ClientsPage() {
                 <p className="mt-1 text-sm text-slate-500">{selected.location || "Konum belirtilmemiş"} · {selected.phone || "Telefon yok"}</p>
                 <p className="mt-1 text-sm text-slate-400">{selected.email || "E-posta yok"}</p>
               </div>
-              <button type="button" onClick={() => setShowEdit(true)} className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Düzenle</button>
+              <Link href={"/clients/" + selected.id + "/edit"} className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Düzenle</Link>
             </div>
           </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
