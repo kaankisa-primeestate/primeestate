@@ -103,7 +103,7 @@ export default function RelationshipsPage() {
   const customerTasks=tasks.filter(t=>t.customer?.id===selectedId);
   const openTasks=tasks.filter(t=>t.status!=="TAMAMLANDI").length;
 
-  return <div className="flex min-h-screen bg-slate-50">
+  return <div className="min-h-screen bg-slate-50 md:flex">
     <Sidebar/>
     <main className="min-w-0 flex-1">
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
