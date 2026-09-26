@@ -172,26 +172,8 @@ export default function SalesPage() {
     const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
-    const updatedShowing = showings.find((showing) => showing.id === id);
     setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
-
-    if (status === "GERCEKLESTI" && updatedShowing) {
-      const dueAt = new Date(new Date(updatedShowing.dateTime).getTime() + 24 * 60 * 60 * 1000);
-      const taskResponse = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: updatedShowing.customer.id,
-          title: `Gösterim sonrası takip: ${updatedShowing.listing.title}`,
-          dueAt: dueAt.toISOString(),
-          priority: "YUKSEK",
-          source: "SHOWING_FOLLOW_UP",
-        }),
-      });
-      const taskPayload = await taskResponse.json();
-      if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Takip görevi oluşturulamadı.");
-      setTasks((current) => [taskPayload.task, ...current]);
-    }
+    if (payload.task) setTasks((current) => [payload.task, ...current]);
   }
 
   async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
