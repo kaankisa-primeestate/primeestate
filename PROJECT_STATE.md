@@ -70,7 +70,7 @@ Target chain:
 
 ### Base main commit
 
-`373b39b0e676ce2eafc4d02f513fb03781814c10`
+`aada04149ec15fcded1fc9927ee4c3780a396ec4`
 
 ### Branch state
 
@@ -78,17 +78,9 @@ The active branch contains the outcome-learning implementation plus focused test
 
 ### Immediate next steps
 
-1. Inspect the active branch diff and tests.
-2. Verify the outcome-learning transaction and data merge behavior.
-3. Add/fix focused tests for outcome → learning → rematch behavior.
-4. Run CI / Critical Tests / Web Quality.
-5. Fix root causes if anything fails.
-6. Create the PR only when the branch is coherent.
-7. Wait for required checks to become green.
-8. Merge only when green.
-9. Verify main after merge.
-10. Verify the end-to-end behavior: outcome → memory → rematch → changed Prime recommendation.
-11. Update this file with the new main/PR/phase state.
+1. Verify the merged main code and automated checks. ✅
+2. Verify the end-to-end behavior: outcome → memory → rematch → changed Prime recommendation.
+3. Then continue with the next Prime Brain improvement.
 
 ## 5. RECENT COMPLETED WORK
 
