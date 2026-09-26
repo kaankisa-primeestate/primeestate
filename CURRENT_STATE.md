@@ -152,8 +152,8 @@ Release Gate hedefi:
 
 - Active phase: **Prime Brain — Outcome Learning**
 - Active branch: `feat/prime-outcome-learning`
-- Base main commit: `373b39b0e676ce2eafc4d02f513fb03781814c10`
-- Active PR: **not created yet**
+- Base main commit: `6c5739e9695c1953a6e3d123fae59844960a428c`
+- Active PR: **#122 merged into main**
 - Immediate goal: outcome → Prime memory → rematch → changed recommendation
 
 ### Standard handoff
