@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     notes?: unknown;
     roles?: unknown;
     ownerUserId?: unknown;
+    demand?: unknown;
   };
 
   try {
@@ -117,6 +118,40 @@ export async function POST(request: Request) {
     ? body.roles.filter((value): value is string => typeof value === "string")
     : [];
 
+  const rawDemand = body.demand && typeof body.demand === "object" && !Array.isArray(body.demand)
+    ? body.demand as Record<string, unknown>
+    : null;
+  const demandTitle = typeof rawDemand?.title === "string" ? rawDemand.title.trim() : "";
+  const demandType = typeof rawDemand?.type === "string" ? rawDemand.type : "SATIN_ALMA";
+  const demandPropertyType = typeof rawDemand?.propertyType === "string" ? rawDemand.propertyType : "DAIRE";
+  const demandCurrency = typeof rawDemand?.currency === "string" ? rawDemand.currency.trim().toUpperCase() : "TRY";
+  const toNumber = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : null;
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().replace(/\\./g, "").replace(",", ".");
+    const number = Number(normalized);
+    return Number.isFinite(number) && number >= 0 ? number : null;
+  };
+  const demandBudgetMin = toNumber(rawDemand?.budgetMin);
+  const demandBudgetMax = toNumber(rawDemand?.budgetMax);
+  const demandMinSize = toNumber(rawDemand?.minSize);
+  const demandMaxSize = toNumber(rawDemand?.maxSize);
+  const demandLocations = Array.isArray(rawDemand?.locations)
+    ? rawDemand.locations.filter((value): value is string => typeof value === "string").map((value) => value.trim()).filter(Boolean)
+    : [];
+  const demandUrgency = typeof rawDemand?.urgency === "string" && ["YUKSEK", "NORMAL", "DUSUK"].includes(rawDemand.urgency)
+    ? rawDemand.urgency
+    : "NORMAL";
+  if (demandTitle) {
+    if (!["SATIN_ALMA", "KIRALAMA"].includes(demandType) || !["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"].includes(demandPropertyType)) {
+      return NextResponse.json({ message: "İlk talep için geçerli talep ve gayrimenkul tipi seçin." }, { status: 400 });
+    }
+    if (!/^[A-Z]{3}$/.test(demandCurrency)) return NextResponse.json({ message: "İlk talep için geçerli para birimi seçin." }, { status: 400 });
+    if (demandBudgetMin !== null && demandBudgetMax !== null && demandBudgetMin > demandBudgetMax) return NextResponse.json({ message: "Minimum bütçe maksimum bütçeden büyük olamaz." }, { status: 400 });
+    if (demandMinSize !== null && demandMaxSize !== null && demandMinSize > demandMaxSize) return NextResponse.json({ message: "Minimum m² maksimum m²'den büyük olamaz." }, { status: 400 });
+  }
+
   const customer = await prisma.customer.create({
     data: {
       organizationId: context.organizationId,
@@ -131,6 +166,24 @@ export async function POST(request: Request) {
       roles: {
         create: [...new Set(roleValues)].map((value) => ({ role: value as never })),
       },
+      ...(demandTitle ? {
+        demands: {
+          create: {
+            title: demandTitle,
+            type: demandType as never,
+            propertyType: demandPropertyType as never,
+            locations: demandLocations,
+            budgetMin: demandBudgetMin,
+            budgetMax: demandBudgetMax,
+            currency: demandCurrency,
+            minSize: demandMinSize,
+            maxSize: demandMaxSize,
+            rooms: typeof rawDemand?.rooms === "string" ? rawDemand.rooms.trim() || null : null,
+            urgency: demandUrgency as never,
+            notes: typeof rawDemand?.notes === "string" ? rawDemand.notes.trim() || null : null,
+          },
+        },
+      } : {}),
     },
     include: {
       roles: { select: { role: true } },
@@ -146,7 +199,7 @@ export async function POST(request: Request) {
       action: "CUSTOMER_CREATED",
       entityType: "Customer",
       entityId: customer.id,
-      metadata: { ownerUserId: customer.ownerUserId },
+      metadata: { ownerUserId: customer.ownerUserId, initialDemandCreated: Boolean(demandTitle) },
     },
   });
 

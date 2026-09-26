@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     include: {
       property: { select: {
         id: true, propertyType: true, city: true, district: true, neighborhood: true,
-        address: true, sizeM2: true, rooms: true, floor: true, ownerName: true,
+        address: true, sizeM2: true, rooms: true, floor: true, ownerName: true, details: true,
       } },
       consultant: { select: { id: true, name: true, email: true } },
       _count: { select: { matches: true, showings: true, offers: true } },
@@ -71,8 +71,16 @@ export async function POST(request: Request) {
   const city = String(body.city ?? "").trim();
   const district = String(body.district ?? "").trim();
   const neighborhood = String(body.neighborhood ?? "").trim();
-  const price = Number(body.price);
-  const sizeM2 = body.sizeM2 === "" || body.sizeM2 == null ? null : Number(body.sizeM2);
+  const toNumber = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().replace(/\\./g, "").replace(",", ".");
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+  };
+  const price = toNumber(body.price);
+  const sizeM2 = toNumber(body.sizeM2);
   const rooms = body.rooms ? String(body.rooms).trim() : null;
   const floor = body.floor ? String(body.floor).trim() : null;
   const address = body.address ? String(body.address).trim() : null;
@@ -108,23 +116,11 @@ export async function POST(request: Request) {
   if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
   if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
   if (!title || !city || !district || !neighborhood) return NextResponse.json({ message: "Başlık, il, ilçe ve mahalle zorunludur." }, { status: 400 });
-  if (!Number.isFinite(price) || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
-  if (sizeM2 !== null && (!Number.isFinite(sizeM2) || sizeM2 <= 0)) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
+  if (price === null || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
+  if (sizeM2 !== null && sizeM2 <= 0) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
   if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
 
-  const requiredDetailFields: Record<string, string[]> = {
-    DAIRE: ["buildingAge", "heating"],
-    VILLA: ["landSize", "heating"],
-    ARSA: ["zoning"],
-    IS_YERI: ["commercialType"],
-    BINA: ["landSize", "totalFloors"],
-    DEVRE_MULK: ["period", "season"],
-  };
-  for (const field of requiredDetailFields[propertyType] ?? []) {
-    if (details[field] == null || String(details[field]).trim() === "") {
-      return NextResponse.json({ message: `Seçilen portföy tipi için "${field}" bilgisi zorunludur.` }, { status: 400 });
-    }
-  }
+  // Detay alanları isteğe bağlıdır. Danışman temel ilanı kaydedip daha sonra düzenleyebilir.
 
   const code = `PR-${Date.now().toString(36).toUpperCase()}`;
 

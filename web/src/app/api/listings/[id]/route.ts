@@ -60,26 +60,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const city = String(body.city ?? listing.property.city).trim();
   const district = String(body.district ?? listing.property.district).trim();
   const neighborhood = String(body.neighborhood ?? listing.property.neighborhood).trim();
-  const price = Number(body.price ?? listing.price);
-  const sizeM2 = body.sizeM2 === "" || body.sizeM2 == null ? null : Number(body.sizeM2);
+  const toNumber = (value: unknown) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().replace(/\\./g, "").replace(",", ".");
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+  };
+  const price = toNumber(body.price ?? listing.price);
+  const sizeM2 = toNumber(body.sizeM2);
   const rooms = body.rooms ? String(body.rooms).trim() : null;
   const floor = body.floor ? String(body.floor).trim() : null;
   const address = body.address ? String(body.address).trim() : null;
   const ownerName = body.ownerName ? String(body.ownerName).trim() : null;
   const currency = body.currency ? String(body.currency).trim().toUpperCase() : listing.currency;
+  const incomingDetails = body.details && typeof body.details === "object" && !Array.isArray(body.details) ? body.details : null;
 
   if (!title || !city || !district || !neighborhood) return NextResponse.json({ message: "Başlık, il, ilçe ve mahalle zorunludur." }, { status: 400 });
   if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
   if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
   if (!STATUSES.includes(status as (typeof STATUSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan durumu seçin." }, { status: 400 });
-  if (!Number.isFinite(price) || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
-  if (sizeM2 !== null && (!Number.isFinite(sizeM2) || sizeM2 <= 0)) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
+  if (price === null || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
+  if (sizeM2 !== null && sizeM2 <= 0) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
   if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
 
   const updated = await prisma.$transaction(async (tx) => {
     const property = await tx.property.update({
       where: { id: listing.propertyId },
-      data: { title, propertyType: propertyType as never, city, district, neighborhood, address, sizeM2, rooms, floor, ownerName },
+      data: { title, propertyType: propertyType as never, city, district, neighborhood, address, sizeM2, rooms, floor, ownerName, ...(incomingDetails ? { details: incomingDetails } : {}) },
     });
     const result = await tx.listing.update({
       where: { id: listing.id },
