@@ -27,15 +27,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const body = await request.json().catch(() => null);
   const url = typeof body?.url === "string" ? body.url.trim() : "";
+  const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl.trim() : "";
   const alt = typeof body?.alt === "string" ? body.alt.trim() || null : null;
-  if (!url || !/^https?:\/\//i.test(url)) return NextResponse.json({ message: "Geçerli bir fotoğraf URL'si girin." }, { status: 400 });
+  const isRemoteUrl = /^https?:\/\//i.test(url);
+  const isImageDataUrl = /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(dataUrl);
+  if (!isRemoteUrl && !isImageDataUrl) {
+    return NextResponse.json({ message: "Geçerli bir fotoğraf dosyası veya fotoğraf URL'si seçin." }, { status: 400 });
+  }
+  const storedUrl = isImageDataUrl ? dataUrl : url;
+  if (storedUrl.length > 5_500_000) {
+    return NextResponse.json({ message: "Fotoğraf çok büyük. Lütfen daha küçük bir fotoğraf seçin." }, { status: 400 });
+  }
 
   const count = await prisma.listingImage.count({ where: { listingId: listing.id } });
   if (count >= 30) return NextResponse.json({ message: "Bir portföy için en fazla 30 fotoğraf eklenebilir." }, { status: 400 });
 
-  const image = await prisma.listingImage.create({ data: { listingId: listing.id, url, alt, sortOrder: count } });
+  const image = await prisma.listingImage.create({ data: { listingId: listing.id, url: storedUrl, alt, sortOrder: count } });
   await prisma.auditLog.create({
-    data: { organizationId: context.organizationId, actorUserId: context.userId, action: "LISTING_IMAGE_ADDED", entityType: "ListingImage", entityId: image.id, metadata: { listingId: listing.id } },
+    data: { organizationId: context.organizationId, actorUserId: context.userId, action: "LISTING_IMAGE_ADDED", entityType: "ListingImage", entityId: image.id, metadata: { listingId: listing.id, source: isImageDataUrl ? "upload" : "url" } },
   });
   return NextResponse.json({ image }, { status: 201 });
 }
