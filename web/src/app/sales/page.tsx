@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import { salesOps } from "@/data/salesOps";
 import type { ActivityType, OfferStatus, ShowingStatus, TaskStatus } from "@/types/SalesOps";
 
 type ApiOffer = {
@@ -17,6 +16,7 @@ type ApiOffer = {
   listing: { id: string; code: string; title: string; price?: string | number; currency?: string };
 };
 type ApiCustomer = { id: string; name: string };
+type ApiTask = { id: string; title: string; status: string; priority: string; dueAt: string; source: string | null; customer: { id: string; name: string } | null };
 type ApiListing = { id: string; code: string; title: string; price: string | number; currency: string; status: string };
 type ApiShowing = { id: string; dateTime: string; status: string; attendees: number; note: string | null; customer: { id: string; name: string }; listing: { id: string; code: string; title: string; property?: { city: string; district: string; neighborhood: string } } };
 type ApiSale = { id: string; amount: string | number; currency: string; status: string; createdAt: string; closedAt: string | null; note: string | null; customer: { id: string; name: string }; listing: { id: string; code: string; title: string; price?: string | number; currency?: string }; offer: { id: string; status: string } };
@@ -25,7 +25,7 @@ const tabs = ["Bugün", "Aktiviteler", "Görevler", "Gösterimler", "Teklifler",
 type Tab = (typeof tabs)[number];
 
 const activityIcon: Record<ActivityType, string> = { Arama: "☎", WhatsApp: "◈", "E-posta": "✉", Not: "▤", Gösterim: "⌂", Teklif: "₺" };
-const taskTone: Record<TaskStatus, string> = { Bekliyor: "bg-slate-100 text-slate-600", Tamamlandı: "bg-emerald-50 text-emerald-700", Gecikti: "bg-rose-50 text-rose-700" };
+const taskTone: Record<string, string> = { BEKLIYOR: "bg-slate-100 text-slate-600", TAMAMLANDI: "bg-emerald-50 text-emerald-700", GECIKTI: "bg-rose-50 text-rose-700" };
 const showingTone: Record<ShowingStatus, string> = { Planlandı: "bg-blue-50 text-blue-700", Gerçekleşti: "bg-emerald-50 text-emerald-700", İptal: "bg-rose-50 text-rose-700" };
 const offerTone: Record<OfferStatus, string> = { Taslak: "bg-slate-100 text-slate-600", Sunuldu: "bg-blue-50 text-blue-700", "Karşı teklif": "bg-amber-50 text-amber-700", Kabul: "bg-emerald-50 text-emerald-700", Reddedildi: "bg-rose-50 text-rose-700" };
 const activityTypeLabel: Record<string, ActivityType> = { ARAMA: "Arama", WHATSAPP: "WhatsApp", EMAIL: "E-posta", NOT: "Not", GOSTERIM: "Gösterim", TEKLIF: "Teklif" };
@@ -36,8 +36,7 @@ function Pill({ children, tone = "bg-slate-100 text-slate-600" }: { children: Re
 
 export default function SalesPage() {
   const [tab, setTab] = useState<Tab>("Bugün");
-  const [taskState, setTaskState] = useState<Record<number, TaskStatus>>({});
-  const [tasks, setTasks] = useState(salesOps.tasks);
+  const [tasks, setTasks] = useState<ApiTask[]>([]);
   const [showings, setShowings] = useState<ApiShowing[]>([]);
   const [sales, setSales] = useState<ApiSale[]>([]);
   const [offers, setOffers] = useState<ApiOffer[]>([]);
@@ -121,8 +120,7 @@ export default function SalesPage() {
     void loadActivities();
     return () => { cancelled = true; };
   }, []);
-  const taskRows = useMemo(() => tasks.map((task) => ({ ...task, status: taskState[task.id] ?? task.status })), [tasks, taskState]);
-  const pendingTasks = taskRows.filter((t) => t.status !== "Tamamlandı").length;
+  const pendingTasks = tasks.filter((t) => t.status !== "TAMAMLANDI").length;
   const plannedShowings = showings.filter((s) => s.status === "Planlandı").length;
   const openOffers = offers.filter((o) => !["KABUL", "REDDEDILDI"].includes(o.status)).length;
 
@@ -171,7 +169,7 @@ export default function SalesPage() {
   }
 
   async function updateShowing(id: string, status: string) {
-    const response = await fetch("/api/showings/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
     const updatedShowing = showings.find((showing) => showing.id === id);
@@ -267,7 +265,7 @@ export default function SalesPage() {
           </article>)}
         </div></section>}
 
-        {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><Link href="/sales/task/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</Link></div><div className="mt-5 space-y-3">{tasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status}</Pill><Pill tone={task.priority === "Yüksek" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority}</Pill><span className="text-xs text-slate-400">{task.due}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customerName} · {task.source}</p></div>{task.status !== "Tamamlandı" && <button type="button" onClick={() => setTaskState((current) => ({ ...current, [task.id]: "Tamamlandı" }))} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
+        {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><Link href="/sales/task/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</Link></div><div className="mt-5 space-y-3">{tasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status === "TAMAMLANDI" ? "Tamamlandı" : task.status === "GECIKTI" ? "Gecikti" : "Bekliyor"}</Pill><Pill tone={task.priority === "YUKSEK" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority === "YUKSEK" ? "Yüksek" : task.priority === "DUSUK" ? "Düşük" : "Normal"}</Pill><span className="text-xs text-slate-400">{new Date(task.dueAt).toLocaleString("tr-TR")}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customer?.name ?? "Genel görev"} · {task.source ?? "Manuel"}</p></div>{task.status !== "TAMAMLANDI" && <button type="button" onClick={async () => { try { const response = await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "TAMAMLANDI" }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.message ?? "Görev güncellenemedi."); setTasks((current) => current.map((item) => item.id === task.id ? payload.task : item)); } catch (error) { setOpsError(error instanceof Error ? error.message : "Görev güncellenemedi."); } }} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
 
         {tab === "Gösterimler" && <section className="mt-5 space-y-4">
           <div className="flex justify-end"><Link href="/sales/showing/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Gösterim</Link></div>
