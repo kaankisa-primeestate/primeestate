@@ -222,6 +222,19 @@ export async function PATCH(request: Request) {
         },
         data: { status: "TAMAMLANDI", completedAt: new Date() },
       });
+
+      if (showing.status !== "GERCEKLESTI") {
+        await tx.task.create({
+          data: {
+            customerId: showing.customer.id,
+            ownerUserId: context.userId,
+            title: `Gösterim sonrası takip: ${showing.listing.title}`,
+            dueAt: new Date(showing.dateTime.getTime() + 24 * 60 * 60 * 1000),
+            priority: "YUKSEK",
+            source: "SHOWING_FOLLOW_UP",
+          },
+        });
+      }
     } else if (status === "IPTAL") {
       await tx.customer.update({
         where: { id: showing.customer.id },
@@ -256,5 +269,18 @@ export async function PATCH(request: Request) {
     return result;
   });
 
-  return NextResponse.json({ showing: updated });
+  const followUpTask = status === "GERCEKLESTI" && showing.status !== "GERCEKLESTI"
+    ? await prisma.task.findFirst({
+        where: {
+          customerId: showing.customer.id,
+          ownerUserId: context.userId,
+          source: "SHOWING_FOLLOW_UP",
+          title: `Gösterim sonrası takip: ${showing.listing.title}`,
+          dueAt: new Date(showing.dateTime.getTime() + 24 * 60 * 60 * 1000),
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : null;
+
+  return NextResponse.json({ showing: updated, task: followUpTask });
 }
