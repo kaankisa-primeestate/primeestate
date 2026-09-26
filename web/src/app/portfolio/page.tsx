@@ -158,5 +158,5 @@ export default function PortfolioPage() {
     </div>
     <div className="mt-5 flex justify-end"><button type="button" onClick={()=>{setShowPreview(false);setShowEdit(true);}} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">İlanı Düzenle</button></div>
   </div>
-</div>}}</div>;
+</div>}</div>;
 }
