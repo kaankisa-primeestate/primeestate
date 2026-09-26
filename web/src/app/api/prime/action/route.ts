@@ -6,6 +6,7 @@ import { can, customerOwnershipScope, officeListingScope } from "@/lib/authz";
 import { calculateMatch } from "@/core/matching-engine";
 import { deriveNextAction, type PrimeActionType } from "@/core/prime-next-action";
 import { extractDemandPreferenceChanges } from "@/core/demand-preference-learning";
+import { applyOutcomeLearning } from "@/core/prime-learning";
 
 export async function POST(request: Request) {
   const context = await getUserContext();
@@ -129,29 +130,6 @@ export async function POST(request: Request) {
     return { demand, preferences: nextPreferences };
   });
 
-  const matchSets = updatedDemands.map(({ demand, preferences }) => {
-    const updatedDemand = {
-      ...demand,
-      preferences,
-      ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
-      ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
-      ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
-    };
-
-    return {
-      demand: updatedDemand,
-      results: listings
-        .filter((candidate) =>
-          updatedDemand.type === "SATIN_ALMA"
-            ? candidate.purpose === "SATILIK"
-            : candidate.purpose === "KIRALIK",
-        )
-        .map((candidate) => calculateMatch(updatedDemand, candidate))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 50),
-    };
-  });
-
   const activitySummary =
     listing && action === "WHATSAPP"
       ? `Prime önerisiyle ${listing.code} portföyü WhatsApp üzerinden paylaşıldı.`
@@ -193,6 +171,57 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    if (outcome) {
+      for (const entry of updatedDemands) {
+        const currentPreferences =
+          entry.preferences && typeof entry.preferences === "object" && !Array.isArray(entry.preferences)
+            ? entry.preferences as Record<string, unknown>
+            : {};
+        const applied = applyOutcomeLearning(
+          currentPreferences.primeLearning,
+          activity.id,
+          outcome,
+        );
+        entry.preferences = {
+          ...currentPreferences,
+          primeLearning: applied.learning,
+        };
+
+        await tx.demand.update({
+          where: { id: entry.demand.id },
+          data: {
+            preferences: {
+              ...currentPreferences,
+              primeLearning: applied.learning,
+            },
+          },
+        });
+      }
+    }
+
+    const matchSets = updatedDemands.map(({ demand, preferences }) => {
+    const updatedDemand = {
+      ...demand,
+      preferences,
+      ...(demandChanges.budgetMin !== undefined ? { budgetMin: demandChanges.budgetMin } : {}),
+      ...(demandChanges.budgetMax !== undefined ? { budgetMax: demandChanges.budgetMax } : {}),
+      ...(demandChanges.rooms ? { rooms: demandChanges.rooms } : {}),
+    };
+
+    return {
+      demand: updatedDemand,
+      results: listings
+        .filter((candidate) =>
+          updatedDemand.type === "SATIN_ALMA"
+            ? candidate.purpose === "SATILIK"
+            : candidate.purpose === "KIRALIK",
+        )
+        .map((candidate) => calculateMatch(updatedDemand, candidate))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 50),
+    };
+  });
 
     const updatedCustomer = await tx.customer.update({
       where: { id: customerId },
@@ -254,16 +283,16 @@ export async function POST(request: Request) {
           listingId: listing?.id ?? null,
           nextAction: nextAction.action,
           nextActionAt,
-          rematchedDemands: matchSets.length,
+          rematchedDemands: result.matchSets.length,
           demandChanges: demandChanges.summary,
         },
       },
     });
 
-    return { activity, customer: updatedCustomer };
+    return { activity, customer: updatedCustomer, matchSets };
   });
 
-  const topMatches = matchSets
+  const topMatches = result.matchSets
     .flatMap((set) => set.results.slice(0, 3).map((match) => ({ demandId: set.demand.id, ...match })))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
@@ -272,7 +301,7 @@ export async function POST(request: Request) {
     ...result,
     listing,
     nextAction,
-    rematchedDemands: matchSets.length,
+    rematchedDemands: result.matchSets.length,
     demandChanges: demandChanges.summary,
     topMatches,
   });
