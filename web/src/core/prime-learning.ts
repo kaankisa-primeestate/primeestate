@@ -83,6 +83,35 @@ export function learnFromShowing(note: string | null, listingText: string) {
   };
 }
 
+export function applyOutcomeLearning(current: unknown, activityId: string, outcome: string) {
+  const learning = readPrimeLearning(current);
+  const result = learnFromShowing(outcome, outcome);
+  const next = {
+    positive: [...learning.positive],
+    negative: [...learning.negative],
+    history: [...learning.history],
+  };
+
+  if (result.learned.length) {
+    if (result.direction === "positive") next.positive = unique([...next.positive, ...result.learned]).slice(-30);
+    if (result.direction === "negative") next.negative = unique([...next.negative, ...result.learned]).slice(-30);
+  }
+
+  next.history = [
+    ...next.history.filter((item) => item.showingId !== activityId),
+    {
+      showingId: activityId,
+      status: "GERCEKLESTI" as const,
+      note: outcome.trim() || null,
+      learned: result.learned,
+      direction: result.direction,
+      at: new Date().toISOString(),
+    },
+  ].slice(-20);
+
+  return { learning: next, result };
+}
+
 export function applyShowingLearning(current: unknown, showingId: string, status: "GERCEKLESTI" | "IPTAL", note: string | null, listingText: string) {
   const learning = readPrimeLearning(current);
   const result = learnFromShowing(note, listingText);
