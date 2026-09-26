@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
@@ -45,8 +45,26 @@ export default function NewPortfolioPage() {
   const [error,setError]=useState("");
   const [photos,setPhotos]=useState<Photo[]>([]);
   const [photoBusy,setPhotoBusy]=useState(false);
+  const [consultants,setConsultants]=useState<{ id: string; name: string; email: string; role: string; active: boolean }[]>([]);
+  const [currentRole,setCurrentRole]=useState<string | null>(null);
   const fileInputRef=useRef<HTMLInputElement>(null);
   const cameraInputRef=useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const loadConsultants = async () => {
+      try {
+        const res = await fetch("/api/users", { cache: "no-store" });
+        const data = await res.json();
+        if (res.ok) {
+          setCurrentRole(data.currentUser?.role ?? null);
+          setConsultants((data.users ?? []).filter((user: { role?: string; active?: boolean }) => user.role === "AGENT" && user.active));
+        }
+      } catch {
+        // Consultant selection is additive; listing creation remains independent.
+      }
+    };
+    void loadConsultants();
+  }, []);
 
   async function handlePhotoFiles(files: FileList | null) {
     if (!files?.length) return;
