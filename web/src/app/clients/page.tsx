@@ -150,7 +150,7 @@ export default function ClientsPage() {
       if (!res.ok) throw new Error(data.message || "Müşteriler yüklenemedi.");
       const next: ApiCustomer[] = data.customers ?? [];
       setCustomers(next);
-      const nextSelectedId = selectedId && next.some((x) => x.id === selectedId) ? selectedId : next[0]?.id ?? null;
+      const nextSelectedId = selectedId && next.some((x) => x.id === selectedId) ? selectedId : null;
       setSelectedId(nextSelectedId);
       if (nextSelectedId) void loadCustomerOps(nextSelectedId);
     } catch (e) {
@@ -163,7 +163,7 @@ export default function ClientsPage() {
     return () => window.clearTimeout(timer);
   }, [query, role]);
 
-  const selected = useMemo(() => customers.find((x) => x.id === selectedId) ?? customers[0] ?? null, [customers, selectedId]);
+  const selected = useMemo(() => customers.find((x) => x.id === selectedId) ?? null, [customers, selectedId]);
 
   async function loadCustomerOps(customerId: string) {
     setActivityLoading(true); setTaskLoading(true);
@@ -324,13 +324,20 @@ export default function ClientsPage() {
         </div><button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Yeni Müşteri</button></div>
       </header>
       {error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-      <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div>
+        {!selected && (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-4">
           <div className="relative"><span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Müşteri ara..." className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-3 text-sm outline-none focus:border-slate-400 focus:bg-white" /></div>
           <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">{roleFilters.map((item) => <button key={item} type="button" onClick={() => setRole(item)} className={"whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold " + (role === item ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}>{item}</button>)}</div>
         </div>{loading ? <div className="p-8 text-center text-sm text-slate-500">Müşteriler yükleniyor…</div> : <CustomerList items={customers} selectedId={selectedId} onSelect={(id) => { setSelectedId(id); void loadCustomerOps(id); }} />}</section>
+        )}
+
+        
 
         {selected ? <section className="min-w-0">
+          <button type="button" onClick={() => { setSelectedId(null); setActivities([]); setTasks([]); }} className="mb-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+            ← Müşteri listesine dön
+          </button>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">{initials(selected.name)}</div>
@@ -389,7 +396,7 @@ export default function ClientsPage() {
 
           <div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kaynak</p><p className="mt-2 font-semibold text-slate-900">{selected.source || "Belirtilmemiş"}</p><p className="mt-1 text-sm text-slate-500">Sorumlu danışman: {selected.owner.name}</p></div>
             <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime’ın önerisi · V1</p><p className="mt-2 text-sm leading-6 text-slate-200">Bu ekran artık seed veri yerine yetkili gerçek müşteri verisini kullanıyor.</p></div></div>
-        </section> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">{loading ? "Müşteriler yükleniyor…" : "Görüntülenecek müşteri bulunamadı."}</div>}
+        </section> : null}
       </div>
     </div></main>
 
