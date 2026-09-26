@@ -50,7 +50,10 @@ export async function POST(
 
   const toNumber = (value: unknown) => {
     if (value === null || value === undefined || value === "") return null;
-    const number = Number(value);
+    if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : null;
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().replace(/\\./g, "").replace(",", ".");
+    const number = Number(normalized);
     return Number.isFinite(number) && number >= 0 ? number : null;
   };
 
