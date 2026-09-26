@@ -242,7 +242,30 @@ export default function PrimeBriefLive() {
 
             <div className="mt-4 rounded-2xl border bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Temas sonucu</p>
+              <p className="mt-1 text-xs text-slate-500">Kısa bir not yaz. Prime bunu sonraki önerilerinde kullanacak.</p>
               <input value={outcome} onChange={(event) => setOutcome(event.target.value)} placeholder="Örn. Yeni portföy ilgisini koruyor." className="mt-2 w-full rounded-xl border px-3 py-2.5 text-sm" />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  "İlgileniyor, takip edelim.",
+                  "Portföyü beğendi, gösterim planlayalım.",
+                  "Şimdilik ilgilenmiyor.",
+                  "Bütçe / kriter değişti.",
+                ].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setOutcome(preset)}
+                    className="rounded-full border px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50"
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              {outcome.trim() && (
+                <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-700">
+                  Bu sonuç kaydedildiğinde Prime müşteri talebini ve sonraki adımı yeniden değerlendirecek.
+                </p>
+              )}
             </div>
 
             <div className="mt-4 rounded-2xl border bg-white p-4">
