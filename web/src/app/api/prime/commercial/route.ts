@@ -12,9 +12,26 @@ export async function POST(request: Request) {
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try { assertCan(context, "offers", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
 
-  let body: { offerId?: unknown; status?: unknown; outcome?: unknown };
+  let body: { action?: unknown; offerId?: unknown; status?: unknown; outcome?: unknown; customerId?: unknown; listingId?: unknown; amount?: unknown; currency?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
 
+  const action = typeof body.action === "string" ? body.action : "OFFER_STATUS";
+  if (action === "OFFER_CREATE") {
+    const customerId = typeof body.customerId === "string" ? body.customerId.trim() : "";
+    const listingId = typeof body.listingId === "string" ? body.listingId.trim() : "";
+    const amount = Number(body.amount);
+    const currency = typeof body.currency === "string" && body.currency.trim() ? body.currency.trim().toUpperCase() : "TRY";
+    if (!customerId || !listingId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Müşteri, portföy ve geçerli teklif tutarı zorunludur." }, { status: 400 });
+    const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true } });
+    if (!customer) return NextResponse.json({ message: "Bu müşteri için teklif oluşturma yetkiniz yok." }, { status: 403 });
+    const listing = await prisma.listing.findFirst({ where: { id: listingId, organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true } });
+    if (!listing) return NextResponse.json({ message: "Geçerli bir aktif ofis portföyü bulunamadı." }, { status: 400 });
+    const offer = await prisma.offer.create({ data: { customerId, listingId, amount, currency, nextAction: typeof body.outcome === "string" ? body.outcome.trim() || null : null }, include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true } } } });
+    const next = commercialNextAction({ event: "OFFER_CREATED" });
+    await prisma.customer.update({ where: { id: customerId }, data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) } });
+    await prisma.auditLog.create({ data: { organizationId: context.organizationId, actorUserId: context.userId, action: "OFFER_CREATED", entityType: "Offer", entityId: offer.id, metadata: { customerId, listingId, amount, currency } } });
+    return NextResponse.json({ offer }, { status: 201 });
+  }
   const offerId = typeof body.offerId === "string" ? body.offerId.trim() : "";
   const status = typeof body.status === "string" ? body.status : "";
   if (!offerId || !STATUSES.has(status)) return NextResponse.json({ message: "Teklif ve geçerli durum zorunludur." }, { status: 400 });
@@ -25,7 +42,7 @@ export async function POST(request: Request) {
         where: { id: offerId, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
         include: {
           customer: { select: { id: true, name: true } },
-          listing: { select: { id: true, code: true, title: true, currency: true, status: true } },
+          listing: { select: { id: true, code: true, title: true, currency: true, status: true, consultantUserId: true } },
           sale: { select: { id: true } },
         },
       });
@@ -42,7 +59,7 @@ export async function POST(request: Request) {
         if (existing.sale) throw new Error("Bu teklif zaten satış kaydına dönüştürülmüş.");
         if (!["AKTIF", "REZERVE"].includes(existing.listing.status)) throw new Error("Kabul edilen teklif için portföy aktif veya rezerve durumda olmalıdır.");
         sale = await tx.sale.create({
-          data: { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency },
+          data: (() => { const consultantUserId = existing.listing.consultantUserId ?? context.userId; return { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency, consultantUserId }; })(),
           include: { customer: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, status: true } }, offer: { select: { id: true, status: true } } },
         });
         await tx.listing.updateMany({ where: { id: existing.listingId, status: { in: ["AKTIF", "REZERVE"] } }, data: { status: "REZERVE" } });
