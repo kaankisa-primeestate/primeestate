@@ -109,6 +109,9 @@ export default function SalesPage() {
   const [showingSearch, setShowingSearch] = useState("");
   const [showingStatusFilter, setShowingStatusFilter] = useState("ALL");
   const [showingCustomerFilter, setShowingCustomerFilter] = useState("ALL");
+  const [offerSearch, setOfferSearch] = useState("");
+  const [offerStatusFilter, setOfferStatusFilter] = useState("ALL");
+  const [offerCustomerFilter, setOfferCustomerFilter] = useState("ALL");
 
   useEffect(() => {
     let cancelled = false;
@@ -207,6 +210,14 @@ export default function SalesPage() {
     if (!response.ok) throw new Error(payload.message ?? "Teklif güncellenemedi.");
     setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
   }
+  const filteredOffers = offers.filter((offer) => {
+    const query = offerSearch.trim().toLocaleLowerCase("tr-TR");
+    const matchesSearch = !query || [offer.customer.name, offer.listing.title, offer.listing.code, offer.nextAction ?? ""].some((value) => value.toLocaleLowerCase("tr-TR").includes(query));
+    const matchesStatus = offerStatusFilter === "ALL" || offer.status === offerStatusFilter;
+    const matchesCustomer = offerCustomerFilter === "ALL" || offer.customer.id === offerCustomerFilter;
+    return matchesSearch && matchesStatus && matchesCustomer;
+  });
+
   const filteredShowings = showings.filter((showing) => {
     const query = showingSearch.trim().toLocaleLowerCase("tr-TR");
     const matchesSearch = !query || [showing.customer.name, showing.listing.title, showing.listing.code, showing.listing.property?.district ?? "", showing.listing.property?.neighborhood ?? ""].some((value) => value.toLocaleLowerCase("tr-TR").includes(query));
@@ -304,6 +315,9 @@ export default function SalesPage() {
             <button type="button" onClick={() => { setOfferFormOpen((open) => !open); setOfferError(null); }} className="rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">+ Yeni teklif</button>
           </div>
 
+          <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]"><input value={offerSearch} onChange={(e) => setOfferSearch(e.target.value)} placeholder="Müşteri, portföy veya aksiyon ara…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" /><select value={offerStatusFilter} onChange={(e) => setOfferStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm durumlar</option><option value="TASLAK">Taslak</option><option value="SUNULDU">Sunuldu</option><option value="KARSILIKLI_TEKLIF">Karşı teklif</option><option value="KABUL">Kabul</option><option value="REDDEDILDI">Reddedildi</option></select><select value={offerCustomerFilter} onChange={(e) => setOfferCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(offers.map((offer) => [offer.customer.id, offer.customer.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
+          <div className="flex items-center justify-between text-xs text-slate-400"><span>{filteredOffers.length} teklif gösteriliyor</span>{(offerSearch || offerStatusFilter !== "ALL" || offerCustomerFilter !== "ALL") && <button type="button" onClick={() => { setOfferSearch(""); setOfferStatusFilter("ALL"); setOfferCustomerFilter("ALL"); }} className="font-semibold text-slate-600 hover:text-slate-900">Filtreleri temizle</button>}</div>
+
           {offerFormOpen && <form onSubmit={createOffer} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-semibold text-slate-700">Müşteri
@@ -334,15 +348,14 @@ export default function SalesPage() {
           {opsLoading && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">İş akışı verileri yükleniyor…</p>}
           {!opsLoading && !offers.length && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Henüz kayıtlı teklif yok.</p>}
 
-          {!opsLoading && offers.map((item) => {
+          {!opsLoading && filteredOffers.map((item) => {
             const statusLabel: Record<string, OfferStatus> = { TASLAK: "Taslak", SUNULDU: "Sunuldu", KARSILIKLI_TEKLIF: "Karşı teklif", KABUL: "Kabul", REDDEDILDI: "Reddedildi" };
             const label = statusLabel[item.status] ?? item.status;
-            const nextStatus: Record<string, string> = { TASLAK: "SUNULDU", SUNULDU: "KARSILIKLI_TEKLIF", KARSILIKLI_TEKLIF: "KABUL" };
             return <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2"><Pill tone={offerTone[label]}>{label}</Pill><span className="text-xs text-slate-400">{new Date(item.offeredAt).toLocaleString("tr-TR")}</span></div>
-                  <h2 className="mt-2 text-lg font-semibold text-slate-950">{item.customer.name} → {item.listing.title}</h2>
+                  <h2 className="mt-2 text-lg font-semibold text-slate-950"><Link href={`/clients/${item.customer.id}`} className="hover:underline">{item.customer.name}</Link> → {item.listing.title}</h2>
                   <p className="mt-1 text-sm text-slate-500">Teklif tutarı</p>
                   <p className="mt-1 text-2xl font-semibold text-slate-950">{new Intl.NumberFormat("tr-TR", { style: "currency", currency: item.currency }).format(Number(item.amount))}</p>
                 </div>
