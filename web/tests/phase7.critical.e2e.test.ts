@@ -440,6 +440,30 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
+  // 9. Pre-approval finance must be blocked.
+  const blockedPaymentResponse = await api(
+    "/api/payments",
+    cookie,
+    { saleId: salePayload.sale.id, amount: 100000, currency: "TRY", status: "ODENDI" },
+    "POST",
+  );
+  await expectStatus(blockedPaymentResponse, 409, "blockedPaymentResponse");
+
+  const blockedPlanResponse = await api(
+    "/api/payment-plans",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+  // Manual override changes current transaction values but preserves the original office source snapshot.
+  assert.equal(Number(commissionPayload.sale.sourceOfficeShareRate), 40);
+  assert.equal(Number(commissionPayload.sale.sourceConsultantShareRate), 60);
+      title: "Pre-approval plan must fail",
+      installments: [{ amount: 4800000, dueAt: "2026-11-01T00:00:00.000Z" }],
+    },
+    "POST",
+  );
+  await expectStatus(blockedPlanResponse, 409, "blockedPlanResponse");
+
   // 9. Commission calculation
   const commissionResponse = await api(
     `/api/sales/${salePayload.sale.id}`,
