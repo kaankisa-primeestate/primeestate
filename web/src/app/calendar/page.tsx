@@ -226,7 +226,7 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
       <Sidebar />
-      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+      <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate · Takvim</p>
@@ -235,7 +235,7 @@ export default function CalendarPage() {
                 <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Takvim</h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Görevler, gösterimler ve müşteri takip tarihleri tek çalışma ekranında.</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
                 <Link href="/sales/activity/new" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 shadow-sm">+ Aktivite</Link>
                 <Link href="/sales/task/new" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 shadow-sm">+ Görev</Link>
                 <Link href="/sales/showing/new" className="rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white shadow-sm">+ Gösterim</Link>
@@ -297,7 +297,7 @@ export default function CalendarPage() {
           {loading && <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">Takvim yükleniyor…</div>}
 
           {!loading && !error && view === "day" && (
-            <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Günlük ajanda</p>
@@ -313,7 +313,7 @@ export default function CalendarPage() {
           )}
 
           {!loading && !error && view === "week" && (
-            <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section className="mt-5 overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="grid min-w-[980px] grid-cols-7 divide-x divide-slate-200">
                 {weekDays.map((date) => {
                   const dayEvents = filteredEvents.filter((event) => sameDay(event.date, date));
@@ -336,7 +336,7 @@ export default function CalendarPage() {
             </section>
           )}
 
-          <section className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white p-5 sm:p-6">
+          <section className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white p-4 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Entegrasyon</p>
             <h2 className="mt-1 text-lg font-semibold text-slate-950">Google Takvim bağlantısı sonraki entegrasyon katmanı</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">PrimeEstate takvimindeki görev ve gösterimler artık tek çalışma ekranında. Google hesabı bağlantısı için OAuth ve kullanıcı bazlı token saklama ayrıca ele alınacak; mevcut ekranda henüz Google etkinlikleri okunmuyor.</p>
