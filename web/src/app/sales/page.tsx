@@ -109,6 +109,9 @@ export default function SalesPage() {
   const [showingSearch, setShowingSearch] = useState("");
   const [showingStatusFilter, setShowingStatusFilter] = useState("ALL");
   const [showingCustomerFilter, setShowingCustomerFilter] = useState("ALL");
+  const [saleSearch, setSaleSearch] = useState("");
+  const [saleStatusFilter, setSaleStatusFilter] = useState("ALL");
+  const [saleCustomerFilter, setSaleCustomerFilter] = useState("ALL");
 
   useEffect(() => {
     let cancelled = false;
