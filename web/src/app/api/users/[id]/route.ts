@@ -209,7 +209,7 @@ export async function PATCH(
     }
 
     if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) {
-      return NextResponse.json({ message: "Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır." }, { status: 400 });
+      return validationError("Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır.");
     }
 
     if (companyEmail && !/^\S+@\S+\.\S+$/.test(companyEmail)) {
