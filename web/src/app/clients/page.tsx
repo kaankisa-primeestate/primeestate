@@ -38,6 +38,32 @@ type ApiTask = {
   status: string;
   owner: { id: string; name: string; email: string };
 };
+type ApiShowing = {
+  id: string;
+  status: string;
+  dateTime: string;
+  note: string | null;
+  listing: { id: string; code: string; title: string; price: string | number; currency: string; };
+};
+type ApiOffer = {
+  id: string;
+  status: string;
+  amount: string | number;
+  currency: string;
+  offeredAt: string;
+  nextAction: string | null;
+  listing: { id: string; code: string; title: string; price: string | number; currency: string; };
+};
+type ApiSale = {
+  id: string;
+  amount: string | number;
+  currency: string;
+  createdAt: string;
+  note: string | null;
+  listing: { id: string; code: string; title: string; price: string | number; currency: string; };
+  offer: { id: string; status: string; offeredAt: string };
+};
+
 type ApiCustomer = {
   id: string;
   name: string;
@@ -133,6 +159,10 @@ export default function ClientsPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [activities, setActivities] = useState<ApiActivity[]>([]);
   const [tasks, setTasks] = useState<ApiTask[]>([]);
+  const [showings, setShowings] = useState<ApiShowing[]>([]);
+  const [offers, setOffers] = useState<ApiOffer[]>([]);
+  const [sales, setSales] = useState<ApiSale[]>([]);
+  const [commercialLoading, setCommercialLoading] = useState(false);
   const [activityLoading, setActivityLoading] = useState(false);
   const [taskLoading, setTaskLoading] = useState(false);
   const [showActivityCreate, setShowActivityCreate] = useState(false);
@@ -167,24 +197,36 @@ export default function ClientsPage() {
   const selected = useMemo(() => customers.find((x) => x.id === selectedId) ?? null, [customers, selectedId]);
 
   async function loadCustomerOps(customerId: string) {
-    setActivityLoading(true); setTaskLoading(true);
+    setActivityLoading(true); setTaskLoading(true); setCommercialLoading(true);
     try {
-      const [activityRes, taskRes] = await Promise.all([
-        fetch("/api/activities?customerId=" + encodeURIComponent(customerId), { cache: "no-store" }),
-        fetch("/api/tasks?customerId=" + encodeURIComponent(customerId), { cache: "no-store" }),
+      const customerQuery = "?customerId=" + encodeURIComponent(customerId);
+      const [activityRes, taskRes, showingRes, offerRes, saleRes] = await Promise.all([
+        fetch("/api/activities" + customerQuery, { cache: "no-store" }),
+        fetch("/api/tasks" + customerQuery, { cache: "no-store" }),
+        fetch("/api/showings" + customerQuery, { cache: "no-store" }),
+        fetch("/api/offers" + customerQuery, { cache: "no-store" }),
+        fetch("/api/sales" + customerQuery, { cache: "no-store" }),
       ]);
-      const activityData = await activityRes.json();
-      const taskData = await taskRes.json();
+      const [activityData, taskData, showingData, offerData, saleData] = await Promise.all([
+        activityRes.json(), taskRes.json(), showingRes.json(), offerRes.json(), saleRes.json(),
+      ]);
       if (!activityRes.ok) throw new Error(activityData.message || "Aktiviteler yüklenemedi.");
       if (!taskRes.ok) throw new Error(taskData.message || "Görevler yüklenemedi.");
+      if (!showingRes.ok) throw new Error(showingData.message || "Gösterimler yüklenemedi.");
+      if (!offerRes.ok) throw new Error(offerData.message || "Teklifler yüklenemedi.");
+      if (!saleRes.ok) throw new Error(saleData.message || "Satışlar yüklenemedi.");
       setActivities(activityData.activities ?? []);
       setTasks(taskData.tasks ?? []);
+      setShowings(showingData.showings ?? []);
+      setOffers(offerData.offers ?? []);
+      setSales(saleData.sales ?? []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Aktivite ve görevler yüklenemedi.");
-      setActivities([]); setTasks([]);
-    } finally { setActivityLoading(false); setTaskLoading(false); }
+      setError(e instanceof Error ? e.message : "Müşteri iş akışı yüklenemedi.");
+      setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]);
+    } finally {
+      setActivityLoading(false); setTaskLoading(false); setCommercialLoading(false);
+    }
   }
-
 
   async function createActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!selected) return;
@@ -336,7 +378,7 @@ export default function ClientsPage() {
         
 
         {selected ? <section className="min-w-0">
-          <button type="button" onClick={() => { setSelectedId(null); setActivities([]); setTasks([]); }} className="mb-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+          <button type="button" onClick={() => { setSelectedId(null); setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]); }} className="mb-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
             ← Müşteri listesine dön
           </button>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -369,6 +411,54 @@ export default function ClientsPage() {
             {jsonLocations(demand.locations).length > 0 && <div className="mt-4 flex flex-wrap gap-2">{jsonLocations(demand.locations).map((location) => <span key={location} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600">{location}</span>)}</div>}
             {demand.notes && <p className="mt-4 border-t border-slate-100 pt-4 text-sm leading-6 text-slate-600">{demand.notes}</p>}
           </article>) : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">Bu müşterinin henüz aktif talebi yok.</div>}</div>
+
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ticari akış</p>
+                <h2 className="mt-1 text-xl font-semibold text-slate-950">Gösterim · Teklif · Satış</h2>
+                <p className="mt-1 text-sm text-slate-500">Bu müşterinin portföylerle kurduğu ticari temasları tek yerde görün.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link href={"/sales/showing/new?customerId=" + encodeURIComponent(selected.id)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">+ Gösterim</Link>
+                <Link href={"/sales/offer/new?customerId=" + encodeURIComponent(selected.id)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">+ Teklif</Link>
+              </div>
+            </div>
+            {commercialLoading ? <p className="mt-5 text-sm text-slate-500">Ticari kayıtlar yükleniyor…</p> : (
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Gösterimler</p><span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-slate-600">{showings.length}</span></div>
+                  <div className="mt-3 space-y-2">
+                    {showings.slice(0, 4).map((showing) => <Link key={showing.id} href="/calendar" className="block rounded-lg bg-white p-3 hover:bg-slate-100">
+                      <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold text-slate-900">{showing.listing.title}</p><span className="shrink-0 text-[11px] font-semibold text-slate-500">{showing.status}</span></div>
+                      <p className="mt-1 text-xs text-slate-500">{showing.listing.code} · {displayDate(showing.dateTime)}</p>
+                    </Link>)}
+                    {!showings.length && <p className="text-sm text-slate-500">Henüz gösterim yok.</p>}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Teklifler</p><span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-slate-600">{offers.length}</span></div>
+                  <div className="mt-3 space-y-2">
+                    {offers.slice(0, 4).map((offer) => <Link key={offer.id} href="/sales" className="block rounded-lg bg-white p-3 hover:bg-slate-100">
+                      <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold text-slate-900">{offer.listing.title}</p><span className="shrink-0 text-[11px] font-semibold text-slate-500">{offer.status}</span></div>
+                      <p className="mt-1 text-xs font-semibold text-slate-700">{money(offer.amount, offer.currency)} · {offer.listing.code}</p>
+                    </Link>)}
+                    {!offers.length && <p className="text-sm text-slate-500">Henüz teklif yok.</p>}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Satışlar</p><span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-slate-600">{sales.length}</span></div>
+                  <div className="mt-3 space-y-2">
+                    {sales.slice(0, 4).map((sale) => <Link key={sale.id} href={"/sales/" + sale.id} className="block rounded-lg bg-white p-3 hover:bg-slate-100">
+                      <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold text-slate-900">{sale.listing.title}</p><span className="shrink-0 text-[11px] font-semibold text-slate-500">SATIŞ</span></div>
+                      <p className="mt-1 text-xs font-semibold text-slate-700">{money(sale.amount, sale.currency)} · {sale.listing.code}</p>
+                    </Link>)}
+                    {!sales.length && <p className="text-sm text-slate-500">Henüz satış yok.</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
