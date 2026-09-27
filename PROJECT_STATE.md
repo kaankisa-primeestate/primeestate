@@ -10,8 +10,8 @@
 - Product: **PrimeEstate**
 - Type: Real-estate CRM / Office Operating System / SaaS
 - Main repository: `kaankisa-primeestate/primeestate`
-- Reference/live repository: `kaankisa-primeestate/remax-CRM`
-- **`remax-CRM` must NEVER be modified.**
+- **Canonical/live repository: `kaankisa-primeestate/primeestate`**
+- **`kaankisa-primeestate/remax-CRM` is a separate project and must NEVER be modified or treated as PrimeEstate continuation.**
 - Production: `https://primeestate-v9eo.onrender.com`
 - Primary stack: Next.js + React + TypeScript + Prisma + PostgreSQL/Neon + Better Auth
 - Architecture: multi-tenant, responsive, mobile-first, server-side authorization
@@ -54,29 +54,34 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current phase
 
-**Mobile UX / Navigation Shell**
+**Phase 9 — Consultant Finance / Broker Approval / Payment Workflow**
 
 ### Current objective
 
-Fix the shared application shell so mobile navigation behaves as a real drawer instead of rendering the desktop sidebar above the page.
+Harden the live finance workflow around consultant commission source-of-truth, broker approval, payments, and payment plans without weakening authorization or historical snapshots.
 
 ### Active branch
 
-None — PR #127 was merged into main.
+**none** — working directly from `main`.
 
-### Base main commit
+### Current main commit
 
-`24c777602b00f5cadad2ac531522da52de7f1206`
+`95cddadaafb28295129af21afaf0d11eafc60e0c`
 
 ### Branch state
 
-PR #127 — **Fix responsive mobile navigation shell** — merged.
+No active development PR. Remaining open PRs are older foundation/legacy branches and are not the active continuation path.
+
+### Latest main verification
+
+- PrimeEstate Web Quality #1052 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #136 — **success**
 
 ### Immediate next steps
 
-1. Verify main CI after the merge.
-2. Test the mobile navigation on a real phone/browser: open, close, backdrop, Escape, navigation, and page scrolling.
-3. Continue with the next incomplete product task.
+1. Keep the finance business invariants protected by real workflow tests.
+2. Harden the remaining API response/error contracts, prioritizing critical customer → offer → sale → finance paths.
+3. Then clean up finance route naming and dashboard refresh UX without changing business semantics.
 
 ## 5. RECENT COMPLETED WORK
 
