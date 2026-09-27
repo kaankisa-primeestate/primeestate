@@ -537,12 +537,14 @@ export default function UsersPage() {
                                   {user.consultantCommissionPlan?.model ?? "Plan bekleniyor"}
                                 </p>
                                 {user.consultantCommissionPlan ? (
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    Ofis %{user.consultantCommissionPlan.officeShareRate ?? "—"} · Danışman %{user.consultantCommissionPlan.consultantShareRate ?? "—"}
-                                  </p>
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    Kira: {user.consultantCommissionPlan.rentAmount ? String(user.consultantCommissionPlan.rentAmount) + " " + user.consultantCommissionPlan.rentCurrency : "—"} · Başlangıç: {user.consultantCommissionPlan.rentStartDate ? new Date(user.consultantCommissionPlan.rentStartDate).toLocaleDateString("tr-TR") : "—"}
-                                  </p>
+                                  <>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      Ofis %{user.consultantCommissionPlan.officeShareRate ?? "—"} · Danışman %{user.consultantCommissionPlan.consultantShareRate ?? "—"}
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      Kira: {user.consultantCommissionPlan.rentAmount ? String(user.consultantCommissionPlan.rentAmount) + " " + user.consultantCommissionPlan.rentCurrency : "—"} · Başlangıç: {user.consultantCommissionPlan.rentStartDate ? new Date(user.consultantCommissionPlan.rentStartDate).toLocaleDateString("tr-TR") : "—"}
+                                    </p>
+                                  </>
                                 ) : null}
                               </div>
                             </div>
