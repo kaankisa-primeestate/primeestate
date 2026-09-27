@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, conflict, internalError } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -10,7 +10,8 @@ export async function GET() {
   const context = await getUserContext();
   if (!context) return authenticationRequired();
   try { if (!can(context.role, "paymentPlans", "read")) return forbidden(); } catch { return forbidden(); }
-  const plans = await prisma.paymentPlan.findMany({
+  try {
+    const plans = await prisma.paymentPlan.findMany({
     where: { sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } } },
     include: {
       installments: { orderBy: { sequence: "asc" } },
@@ -19,7 +20,10 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     take: 200,
   });
-  return NextResponse.json({ plans });
+    return NextResponse.json({ plans });
+  } catch {
+    return internalError();
+  }
 }
 
 export async function POST(request: Request) {
@@ -27,18 +31,18 @@ export async function POST(request: Request) {
   if (!context) return authenticationRequired();
   try { if (!can(context.role, "paymentPlans", "create")) return forbidden(); } catch { return forbidden(); }
   let body: { saleId?: unknown; title?: unknown; installments?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
   const title = typeof body.title === "string" ? body.title.trim() : "";
   const raw = Array.isArray(body.installments) ? body.installments : [];
-  if (!saleId || !title || raw.length < 1 || raw.length > 24) return NextResponse.json({ message: "Satış, plan adı ve 1-24 taksit zorunludur." }, { status: 400 });
+  if (!saleId || !title || raw.length < 1 || raw.length > 24) return validationError("Satış, plan adı ve 1-24 taksit zorunludur.");
 
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     select: { id: true, customerId: true, amount: true, currency: true, approvalStatus: true },
   });
-  if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
-  if (sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Ödeme planı için broker tarafından onaylanmış satış gerekir." }, { status: 409 });
+  if (!sale) return notFound("Satış bulunamadı veya yetkiniz yok.");
+  if (sale.approvalStatus !== "ONAYLANDI") return conflict("Ödeme planı için broker tarafından onaylanmış satış gerekir.");
 
   const installments = raw.map((item, index) => {
     const row = item as Record<string, unknown>;
@@ -47,11 +51,11 @@ export async function POST(request: Request) {
     return { sequence: index + 1, amount, dueAt, note: typeof row.note === "string" ? row.note.trim() || null : null };
   });
   if (installments.some((x) => !Number.isFinite(x.amount) || x.amount <= 0 || Number.isNaN(x.dueAt.getTime()))) {
-    return NextResponse.json({ message: "Her taksit için geçerli tutar ve vade tarihi gerekir." }, { status: 400 });
+    return validationError("Her taksit için geçerli tutar ve vade tarihi gerekir.");
   }
   const total = installments.reduce((sum, x) => sum + x.amount, 0);
   const saleAmount = Number(sale.amount);
-  if (Math.abs(total - saleAmount) > 0.01) return NextResponse.json({ message: `Taksit toplamı satış tutarına eşit olmalıdır: ${saleAmount.toFixed(2)} ${sale.currency}` }, { status: 400 });
+  if (Math.abs(total - saleAmount) > 0.01) return validationError(`Taksit toplamı satış tutarına eşit olmalıdır: ${saleAmount.toFixed(2)} ${sale.currency}`);
 
   try {
     const plan = await prisma.$transaction(async (tx) => {
@@ -74,6 +78,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ plan }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Ödeme planı oluşturulamadı." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Ödeme planı oluşturulamadı.");
   }
 }
