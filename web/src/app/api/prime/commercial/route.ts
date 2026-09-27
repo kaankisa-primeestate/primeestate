@@ -57,9 +57,11 @@ export async function POST(request: Request) {
       let sale = null;
       if (status === "KABUL") {
         if (existing.sale) throw new Error("Bu teklif zaten satış kaydına dönüştürülmüş.");
+        const consultantUserId = existing.listing.consultantUserId ?? context.userId;
+        const commissionPlan = await tx.consultantCommissionPlan.findFirst({ where: { userId: consultantUserId, organizationId: context.organizationId, officeId: context.officeId, active: true, effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, select: { id: true, officeShareRate: true, consultantShareRate: true } });
         if (!["AKTIF", "REZERVE"].includes(existing.listing.status)) throw new Error("Kabul edilen teklif için portföy aktif veya rezerve durumda olmalıdır.");
         sale = await tx.sale.create({
-          data: (() => { const consultantUserId = existing.listing.consultantUserId ?? context.userId; return { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency, consultantUserId }; })(),
+          data: { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency, consultantUserId, sourceCommissionPlanId: commissionPlan?.id ?? null, sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null, sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null, officeShareRate: commissionPlan?.officeShareRate ?? null },
           include: { customer: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, status: true } }, offer: { select: { id: true, status: true } } },
         });
         await tx.listing.updateMany({ where: { id: existing.listingId, status: { in: ["AKTIF", "REZERVE"] } }, data: { status: "REZERVE" } });
