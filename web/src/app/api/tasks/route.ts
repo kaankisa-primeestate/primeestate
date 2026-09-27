@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
   if (customerId) {
     const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true, ownerUserId: true } });
-    if (!customer) return NextResponse.json({ message: "Bu müşteri için görev oluşturma yetkiniz yok." }, { status: 403 });
+    if (!customer) return forbidden("Bu müşteri için görev oluşturma yetkiniz yok.");
   }
 
   let ownerUserId = context.userId;
