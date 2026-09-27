@@ -54,6 +54,8 @@ export default function DashboardLive() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [dashboardQuery, setDashboardQuery] = useState("");
+  const [dashboardRange, setDashboardRange] = useState<"TODAY" | "WEEK" | "ALL">("TODAY");
 
   async function load() {
     setBusy(true);
@@ -101,13 +103,23 @@ export default function DashboardLive() {
     };
   }, []);
 
-  const openT = t.filter((x) => x.status !== "TAMAMLANDI");
+  const normalizedQuery = dashboardQuery.trim().toLocaleLowerCase("tr-TR");
+  const rangeStart = (() => {
+    if (dashboardRange === "ALL") return null;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    if (dashboardRange === "WEEK") start.setDate(start.getDate() - 6);
+    return start;
+  })();
+  const inRange = (value: string) => !rangeStart || new Date(value) >= rangeStart;
+  const matchesQuery = (value: string) => !normalizedQuery || value.toLocaleLowerCase("tr-TR").includes(normalizedQuery);
+  const openT = t.filter((x) => x.status !== "TAMAMLANDI" && inRange(x.dueAt) && matchesQuery(`${x.title} ${x.customer?.name ?? ""}`));
   const openO = o.filter((x) => !["KABUL", "REDDEDILDI"].includes(x.status));
   const activeListings = l.filter((x) => x.status === "AKTIF");
   const financeLoaded = finance !== null;
   const paidByCurrency = finance?.paidByCurrency ?? {};
-  const today = lastUpdated?.toDateString() ?? "";
-  const todayS = s.filter((x) => new Date(x.dateTime).toDateString() === today);
+  const todayS = s.filter((x) => inRange(x.dateTime) && matchesQuery(`${x.customer.name} ${x.listing.code} ${x.listing.title}`));
+  const recentActivities = a.filter((x) => inRange(x.occurredAt) && matchesQuery(`${x.customer.name} ${x.summary}`));
 
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
@@ -125,6 +137,24 @@ export default function DashboardLive() {
               <button onClick={() => void load()} disabled={busy} className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50">{busy ? "Yükleniyor…" : "↻ Yenile"}</button>
             </div>
           </header>
+
+          <section className="mt-5 rounded-2xl border bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex-1">
+                <label className="sr-only" htmlFor="dashboard-search">Dashboard ara</label>
+                <input id="dashboard-search" value={dashboardQuery} onChange={(event) => setDashboardQuery(event.target.value)} placeholder="Müşteri, görev, gösterim veya aktivite ara…" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400" />
+              </div>
+              <div className="flex gap-2">
+                {[
+                  ["TODAY", "Bugün"],
+                  ["WEEK", "7 gün"],
+                  ["ALL", "Tümü"],
+                ].map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setDashboardRange(value as "TODAY" | "WEEK" | "ALL")} className={`rounded-xl px-3 py-2 text-sm font-semibold ${dashboardRange === value ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>{label}</button>
+                ))}
+              </div>
+            </div>
+          </section>
 
           {err && <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
 
@@ -218,7 +248,7 @@ export default function DashboardLive() {
             </div>
             <div className="rounded-3xl border bg-white p-5">
               <h2 className="text-xl font-semibold">Son Hareketler</h2>
-              <div className="mt-4 space-y-3">{a.slice(0, 5).map((x) => <div key={x.id} className="rounded-2xl bg-slate-50 p-4"><p className="text-sm font-semibold">{x.customer.name}</p><p className="text-sm text-slate-600">{x.summary}</p><p className="mt-1 text-xs text-slate-400">{dt(x.occurredAt)}</p></div>)}</div>
+              <div className="mt-4 space-y-3">{recentActivities.slice(0, 5).map((x) => <div key={x.id} className="rounded-2xl bg-slate-50 p-4"><p className="text-sm font-semibold">{x.customer.name}</p><p className="text-sm text-slate-600">{x.summary}</p><p className="mt-1 text-xs text-slate-400">{dt(x.occurredAt)}</p></div>)}</div>
             </div>
           </section>
 
