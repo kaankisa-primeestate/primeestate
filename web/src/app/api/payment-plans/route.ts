@@ -35,9 +35,10 @@ export async function POST(request: Request) {
 
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    select: { id: true, customerId: true, amount: true, currency: true },
+    select: { id: true, customerId: true, amount: true, currency: true, approvalStatus: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
+  if (sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Ödeme planı için broker tarafından onaylanmış satış gerekir." }, { status: 409 });
 
   const installments = raw.map((item, index) => {
     const row = item as Record<string, unknown>;
