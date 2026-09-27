@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, isManagerRole, officeListingScope } from "@/lib/authz";
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   try {
     if (!can(context.role, "listings", "read")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Portföy görüntüleme yetkiniz yok.");
   }
 
   const { searchParams } = new URL(request.url);
@@ -59,11 +59,11 @@ export async function POST(request: Request) {
   try {
     if (!can(context.role, "listings", "create")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Portföy oluşturma yetkiniz yok." }, { status: 403 });
+    return forbidden("Portföy oluşturma yetkiniz yok.");
   }
 
   const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ message: "Geçersiz istek." }, { status: 400 });
+  if (!body || typeof body !== "object") return validationError("Geçersiz istek.");
 
   const propertyType = String(body.propertyType ?? "");
   const purpose = String(body.purpose ?? "");
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
   if (requestedConsultantUserId) {
     if (!isManagerRole(context.role)) {
-      return NextResponse.json({ message: "Danışman atamasını yalnızca ofis yönetimi yapabilir." }, { status: 403 });
+      return forbidden("Danışman atamasını yalnızca ofis yönetimi yapabilir.");
     }
     const consultant = await prisma.user.findFirst({
       where: {
@@ -108,17 +108,17 @@ export async function POST(request: Request) {
       select: { id: true },
     });
     if (!consultant) {
-      return NextResponse.json({ message: "Seçilen danışman bu ofiste aktif değil." }, { status: 400 });
+      return validationError("Seçilen danışman bu ofiste aktif değil.");
     }
     consultantUserId = consultant.id;
   }
 
-  if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
-  if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
-  if (!title || !city || !district || !neighborhood) return NextResponse.json({ message: "Başlık, il, ilçe ve mahalle zorunludur." }, { status: 400 });
-  if (price === null || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
-  if (sizeM2 !== null && sizeM2 <= 0) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
-  if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
+  if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return validationError("Geçerli bir portföy türü seçin.");
+  if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return validationError("Geçerli bir ilan amacı seçin.");
+  if (!title || !city || !district || !neighborhood) return validationError("Başlık, il, ilçe ve mahalle zorunludur.");
+  if (price === null || price <= 0) return validationError("Geçerli bir fiyat girin.");
+  if (sizeM2 !== null && sizeM2 <= 0) return validationError("m² değeri geçersiz.");
+  if (!/^[A-Z]{3}$/.test(currency)) return validationError("Para birimi 3 harfli olmalıdır.");
 
   // Detay alanları isteğe bağlıdır. Danışman temel ilanı kaydedip daha sonra düzenleyebilir.
 
