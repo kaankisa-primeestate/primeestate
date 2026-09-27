@@ -31,91 +31,51 @@
 
 # 🏡 PRIME01
 
-## Sprint
-Foundation V1 · PostgreSQL + Authentication + Production Build Hardening
+## Current Sprint
+**Phase 9 · Consultant Finance / Broker Approval / Payment Workflow**
 
 ## Durum
-🚧 Step 4B · Foundation verification
+✅ Finance core chain is live and the critical finance invariants are covered by E2E tests.
 
-## Ürün Vizyonu
+## Mevcut Ana
+`95cddadaafb28295129af21afaf0d11eafc60e0c`
 
-PrimeEstate bir CRM değildir.
-
-Prime, emlak danışmanının ikinci beynidir.
-
-**Temel İlke:**
-
-> Prime hatırlar. Prime düşünür. Prime önerir. Sen ilişki kurarsın.
-
----
+## Son Doğrulama
+- Web Quality #1052 ✅
+- Production Auth Smoke #136 ✅
 
 ## Tamamlananlar
+- Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
+- Teklif → satış dönüşümü
+- Satışta ofis komisyon kaynağı ve tarihsel source snapshot
+- Yetkili kullanıcı için manuel komisyon override
+- Broker approval akışı
+- Onay öncesi ödeme ve ödeme planı oluşturma engeli
+- Ödeme planı / taksit / tahsilat bağlantısı
+- Finance kritik iş kuralları için gerçek HTTP/E2E kontrolleri
 
-- [x] Responsive PrimeEstate global design foundation
-- [x] Dashboard workspace V1
-- [x] Relationship Workspace V1
-- [x] Customer + Demand Workspace V1
-- [x] Portfolio Workspace V1
-- [x] Matching Engine V1
-- [x] Sales Ops domain types: Activity, Task, Showing, Offer
-- [x] Sales Ops seed workflow
-- [x] Activity timeline
-- [x] Task queue with status transition preview
-- [x] Showing workspace with customer + portfolio relationship
-- [x] Offer workspace with amount, status and next action
-- [x] Eşleşme → Aktivite → Görev → Gösterim → Teklif zinciri
-- [x] Mobile-first responsive Sales Ops workspace
-- [x] PostgreSQL Prisma schema
-- [x] Prisma 7 PostgreSQL dependencies and ESM foundation
-- [x] Prisma Client singleton
-- [x] Database health endpoint: /api/health
-- [x] Database connection is kept out of source control
-- [x] Better Auth + Prisma adapter configured
-- [x] Auth session/account/verification schema added
-- [x] Protected tenant-aware user context helper added
-- [x] Auth API mounted at /api/auth/[...all]
-- [x] Protected context probe added at /api/auth-context
-- [x] Production build pinned to Webpack
-- [x] Clean production build before each build
-- [x] Production App Router route manifest verification
-- [x] Web lint + typecheck + production build quality gate
-- [x] Foundation audit and decision log added
-- [x] Auth user tenant fields formalized
-- [x] Secure first Organization/Office/Admin bootstrap script added
-- [x] Manual bootstrap workflow added
-- [x] CI lint + typecheck + production build remains green after bootstrap changes
+## Değişmez İş Kuralları
+- İşlem anında danışmanın ofis kaydı komisyon paylaşımının varsayılan kaynağıdır.
+- Manuel override gerektiğinde mevcut işlem değerleri değişebilir; tarihsel source snapshot korunur.
+- Broker onayı olmadan ödeme veya ödeme planı oluşturulamaz.
+- Danışman müşteri kayıtları kendi yetki kapsamı dışına taşmaz.
+- Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
-## Bu Aşamanın Amacı
+## Sıradaki İş
+Kritik API response/error contract'larını audit edip standardize etmek. Öncelik: sales, payments, payment-plans, offers ve Prime commercial akışı. Amaç, frontend'in her hata durumunda güvenilir JSON sözleşmesiyle çalışması ve tekrar eden `Unexpected end of JSON input` sınıfı sorunların kökten azaltılması.
 
-Ekranları gerçek PostgreSQL verisine bağlamak ve PrimeEstate'in ilk gerçek persistence katmanını oluşturmak.
+## Sonraki Fazlar
+- Finance route naming cleanup
+- Dashboard refresh UX
+- API contract suite genişletme
+- Deletion policy
+- Stale branch / obsolete PR cleanup
 
-**Temel akış:**
-
-> Müşteri → Talep → Eşleşme → Portföy → Aktivite → Görev → Gösterim → Teklif → Kapanış
-
-**Temel ilke:** TEK VERİ, ÇOK FONKSİYON.
-
-## Mevcut Durum
-
-Uygulama tarafında PostgreSQL/Prisma bağlantı katmanı ve kimlik doğrulama temeli hazırlandı.
-
-- Prisma schema mevcut.
-- Prisma Client üretimi build/postinstall akışına bağlandı.
-- /api/health gerçek database bağlantısını test edecek şekilde hazır.
-- DATABASE_URL GitHub'a yazılmıyor.
-- İlk PostgreSQL migration staging'e uygulanmış durumda.
-- Better Auth için gerekli session/account/verification tabloları migration'a eklendi.
-- BETTER_AUTH_SECRET ve BETTER_AUTH_URL Render'da runtime secret/config olarak tanımlanmalı.
-- İlk gerçek kullanıcı bootstrap'i henüz yapılmadı.
-
-## Sonraki Adım
-
-Production route serving doğrulandı. Şimdi ilk Organization/Office/Admin kaydı oluşturulacak; ardından authorization enforcement katmanı API/query seviyesinde kurulacak.
-
-**Production veritabanına reset veya rastgele migration çalıştırılmayacaktır.**
-
-## Kural
-
-**Finished > Perfect**
-
-Her aşama bir sonraki modülün veri modeline bağlanabilecek şekilde tamamlanır; kritik mimari kararlar dokümante edilmeden sonraki katmana geçilmez.
+## Kurallar
+- Do not merge red.
+- Production DB reset yok.
+- Schema değişikliği olmadıkça migration yok.
+- Secret/connection string source'a girmez.
+- Server-side authorization zayıflatılmaz.
+- Tanımlanmamış REP / MAKSİMUM hesabı icat edilmez.
+- `kaankisa-primeestate/remax-CRM` PrimeEstate devamı değildir ve kullanıcı açıkça istemedikçe kullanılmaz.
