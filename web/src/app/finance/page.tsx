@@ -304,7 +304,12 @@ export default function FinancePage() {
             return <article key={sale.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${sale.status === "TAMAMLANDI" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>{sale.status === "TAMAMLANDI" ? "Tamamlandı" : sale.status === "IPTAL" ? "İptal" : "Açık"}</span><span className="text-xs text-slate-400">{sale.listing.code}</span></div>
+                   <div className="flex flex-wrap items-center gap-2">
+                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${sale.status === "TAMAMLANDI" ? "bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-blue-700"}`}>
+                       {sale.status === "TAMAMLANDI" ? "Tamamlandı" : sale.status === "IPTAL" ? "İptal" : "Açık"}
+                     </span>
+                     <span className="text-xs text-slate-400">{sale.listing.code}</span>
+                   </div>
                   <h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2>
                   <p className="mt-1 text-2xl font-semibold text-slate-950">{money(sale.amount, sale.currency)}</p>
                   <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
