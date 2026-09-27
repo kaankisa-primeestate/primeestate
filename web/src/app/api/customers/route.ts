@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   try {
     if (!can(context.role, "customers", "read")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Müşteri görüntüleme yetkiniz yok.");
   }
 
   const { searchParams } = new URL(request.url);
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   try {
     if (!can(context.role, "customers", "create")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Müşteri oluşturma yetkiniz yok." }, { status: 403 });
+    return forbidden("Müşteri oluşturma yetkiniz yok.");
   }
 
   let body: {
@@ -83,12 +83,12 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 });
+    return validationError("Geçersiz JSON.");
   }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
   if (!name) {
-    return NextResponse.json({ message: "Müşteri adı zorunludur." }, { status: 400 });
+    return validationError("Müşteri adı zorunludur.");
   }
 
   const requestedOwnerId =
@@ -107,11 +107,11 @@ export async function POST(request: Request) {
   });
 
   if (!owner) {
-    return NextResponse.json({ message: "Geçerli bir sorumlu danışman bulunamadı." }, { status: 400 });
+    return validationError("Geçerli bir sorumlu danışman bulunamadı.");
   }
 
   if (!isManagerRole(context.role) && requestedOwnerId !== context.userId && !canAssignCustomerOwner(context, owner.teamId)) {
-    return NextResponse.json({ message: "Bu danışman adına müşteri oluşturma yetkiniz yok." }, { status: 403 });
+    return forbidden("Bu danışman adına müşteri oluşturma yetkiniz yok.");
   }
 
   const roleValues = Array.isArray(body.roles)
@@ -145,11 +145,11 @@ export async function POST(request: Request) {
     : "NORMAL";
   if (demandTitle) {
     if (!["SATIN_ALMA", "KIRALAMA"].includes(demandType) || !["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"].includes(demandPropertyType)) {
-      return NextResponse.json({ message: "İlk talep için geçerli talep ve gayrimenkul tipi seçin." }, { status: 400 });
+      return validationError("İlk talep için geçerli talep ve gayrimenkul tipi seçin.");
     }
-    if (!/^[A-Z]{3}$/.test(demandCurrency)) return NextResponse.json({ message: "İlk talep için geçerli para birimi seçin." }, { status: 400 });
-    if (demandBudgetMin !== null && demandBudgetMax !== null && demandBudgetMin > demandBudgetMax) return NextResponse.json({ message: "Minimum bütçe maksimum bütçeden büyük olamaz." }, { status: 400 });
-    if (demandMinSize !== null && demandMaxSize !== null && demandMinSize > demandMaxSize) return NextResponse.json({ message: "Minimum m² maksimum m²'den büyük olamaz." }, { status: 400 });
+    if (!/^[A-Z]{3}$/.test(demandCurrency)) return validationError("İlk talep için geçerli para birimi seçin.");
+    if (demandBudgetMin !== null && demandBudgetMax !== null && demandBudgetMin > demandBudgetMax) return validationError("Minimum bütçe maksimum bütçeden büyük olamaz.");
+    if (demandMinSize !== null && demandMaxSize !== null && demandMinSize > demandMaxSize) return validationError("Minimum m² maksimum m²'den büyük olamaz.");
   }
 
   const customer = await prisma.customer.create({
