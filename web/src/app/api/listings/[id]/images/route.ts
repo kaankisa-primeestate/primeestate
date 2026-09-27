@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { assertCan, isManagerRole } from "@/lib/authz";
@@ -18,12 +19,12 @@ async function authorizedListing(id: string, context: Awaited<ReturnType<typeof 
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "listings", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "listings", "update"); } catch { return forbidden(); }
   const { id } = await params;
   const listing = await authorizedListing(id, context);
-  if (listing === false) return NextResponse.json({ message: "Bu portföye fotoğraf ekleme yetkiniz yok." }, { status: 403 });
-  if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
+  if (listing === false) return forbidden("Bu portföye fotoğraf ekleme yetkiniz yok.");
+  if (!listing) return notFound("Portföy bulunamadı.");
 
   const body = await request.json().catch(() => null);
   const url = typeof body?.url === "string" ? body.url.trim() : "";
@@ -32,15 +33,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const isRemoteUrl = /^https?:\/\//i.test(url);
   const isImageDataUrl = /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(dataUrl);
   if (!isRemoteUrl && !isImageDataUrl) {
-    return NextResponse.json({ message: "Geçerli bir fotoğraf dosyası veya fotoğraf URL'si seçin." }, { status: 400 });
+    return validationError("Geçerli bir fotoğraf dosyası veya fotoğraf URL'si seçin.");
   }
   const storedUrl = isImageDataUrl ? dataUrl : url;
   if (storedUrl.length > 5_500_000) {
-    return NextResponse.json({ message: "Fotoğraf çok büyük. Lütfen daha küçük bir fotoğraf seçin." }, { status: 400 });
+    return validationError("Fotoğraf çok büyük. Lütfen daha küçük bir fotoğraf seçin.");
   }
 
   const count = await prisma.listingImage.count({ where: { listingId: listing.id } });
-  if (count >= 30) return NextResponse.json({ message: "Bir portföy için en fazla 30 fotoğraf eklenebilir." }, { status: 400 });
+  if (count >= 30) return validationError("Bir portföy için en fazla 30 fotoğraf eklenebilir.");
 
   const image = await prisma.listingImage.create({ data: { listingId: listing.id, url: storedUrl, alt, sortOrder: count } });
   await prisma.auditLog.create({
@@ -51,17 +52,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "listings", "delete"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "listings", "delete"); } catch { return forbidden(); }
   const { id } = await params;
   const listing = await authorizedListing(id, context);
-  if (listing === false) return NextResponse.json({ message: "Bu portföyün fotoğraflarını düzenleme yetkiniz yok." }, { status: 403 });
-  if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
+  if (listing === false) return forbidden("Bu portföyün fotoğraflarını düzenleme yetkiniz yok.");
+  if (!listing) return notFound("Portföy bulunamadı.");
 
   const imageId = new URL(request.url).searchParams.get("imageId");
-  if (!imageId) return NextResponse.json({ message: "imageId zorunludur." }, { status: 400 });
+  if (!imageId) return validationError("imageId zorunludur.");
   const image = await prisma.listingImage.findFirst({ where: { id: imageId, listingId: listing.id } });
-  if (!image) return NextResponse.json({ message: "Fotoğraf bulunamadı." }, { status: 404 });
+  if (!image) return notFound("Fotoğraf bulunamadı.");
   await prisma.listingImage.delete({ where: { id: image.id } });
   await prisma.listingImage.updateMany({ where: { listingId: listing.id, sortOrder: { gt: image.sortOrder } }, data: { sortOrder: { decrement: 1 } } });
   return NextResponse.json({ ok: true });
