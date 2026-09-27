@@ -254,6 +254,13 @@ async function json<T>(response: ApiResponse): Promise<T> {
   return JSON.parse(response.body) as T;
 }
 
+async function expectErrorCode(response: ApiResponse, expectedCode: string, label: string) {
+  const payload = await json<{ ok: boolean; error?: { code?: string; message?: string } }>(response);
+  assert.equal(payload.ok, false, label + ": expected ok=false.");
+  assert.equal(payload.error?.code, expectedCode, label + ": unexpected error code.");
+  assert.ok(payload.error?.message, label + ": expected a non-empty error message.");
+}
+
 before(async () => {
   server = spawn(
     process.platform === "win32" ? "npx.cmd" : "npx",
@@ -391,6 +398,20 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(showingResponse, 201, "showingResponse");
 
   // 6. Offer
+  const invalidOfferResponse = await api(
+    "/api/offers",
+    cookie,
+    {
+      customerId,
+      listingId: listingPayload.listing.id,
+      amount: 0,
+      currency: "TRY",
+    },
+    "POST",
+  );
+  await expectStatus(invalidOfferResponse, 400, "invalidOfferResponse");
+  await expectErrorCode(invalidOfferResponse, "VALIDATION_ERROR", "invalidOfferResponse");
+
   const offerResponse = await api(
     "/api/offers",
     cookie,
@@ -421,6 +442,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   }
 
   // 8. Accepted offer -> sale
+  const invalidSaleResponse = await api(
+    "/api/sales",
+    cookie,
+    { offerId: "" },
+    "POST",
+  );
+  await expectStatus(invalidSaleResponse, 400, "invalidSaleResponse");
+  await expectErrorCode(invalidSaleResponse, "VALIDATION_ERROR", "invalidSaleResponse");
+
   const saleResponse = await api(
     "/api/sales",
     cookie,
@@ -448,6 +478,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     "POST",
   );
   await expectStatus(blockedPaymentResponse, 409, "blockedPaymentResponse");
+  await expectErrorCode(blockedPaymentResponse, "CONFLICT", "blockedPaymentResponse");
 
   const blockedPlanResponse = await api(
     "/api/payment-plans",
@@ -460,6 +491,8 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     "POST",
   );
   await expectStatus(blockedPlanResponse, 409, "blockedPlanResponse");
+  await expectErrorCode(blockedPlanResponse, "CONFLICT", "blockedPlanResponse");
+
   // 9. Commission calculation
   const commissionResponse = await api(
     `/api/sales/${salePayload.sale.id}`,
