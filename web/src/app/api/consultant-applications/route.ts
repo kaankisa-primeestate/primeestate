@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
 import { isManagerRole } from "@/lib/authz";
@@ -38,13 +39,13 @@ export async function GET(request: Request) {
       where: { slug: officeSlug },
       select: { id: true, name: true, organization: { select: { name: true } } },
     });
-    if (!office) return NextResponse.json({ message: "Ofis bulunamadı." }, { status: 404 });
+    if (!office) return notFound("Ofis bulunamadı.");
     return NextResponse.json({ office: { id: office.id, name: office.name, organizationName: office.organization.name } });
   }
 
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!isManagerRole(context.role)) return NextResponse.json({ message: "Yönetici yetkisi gerekli." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!isManagerRole(context.role)) return forbidden("Yönetici yetkisi gerekli.");
 
   const applications = await prisma.consultantApplication.findMany({
     where: context.role === "SUPER_ADMIN" || context.role === "ORG_ADMIN"
@@ -124,23 +125,23 @@ export async function POST(request: Request) {
     where: { slug: officeSlug },
     select: { id: true, organizationId: true, name: true },
   });
-  if (!office) return NextResponse.json({ message: "Ofis bulunamadı." }, { status: 404 });
+  if (!office) return notFound("Ofis bulunamadı.");
 
   const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-  if (existingUser) return NextResponse.json({ message: "Bu e-posta adresi zaten kayıtlı." }, { status: 409 });
+  if (existingUser) return conflict("Bu e-posta adresi zaten kayıtlı.");
 
   const tcHash = hashSecureValue(tc);
   const existing = await prisma.consultantApplication.findFirst({
     where: { officeId: office.id, tcIdentityHash: tcHash, status: "BEKLEMEDE" },
     select: { id: true },
   });
-  if (existing) return NextResponse.json({ message: "Bu kimlik bilgileriyle bekleyen bir başvuru zaten var." }, { status: 409 });
+  if (existing) return conflict("Bu kimlik bilgileriyle bekleyen bir başvuru zaten var.");
 
   const existingEmail = await prisma.consultantApplication.findFirst({
     where: { officeId: office.id, email, status: "BEKLEMEDE" },
     select: { id: true },
   });
-  if (existingEmail) return NextResponse.json({ message: "Bu e-posta ile bekleyen bir başvuru zaten var." }, { status: 409 });
+  if (existingEmail) return conflict("Bu e-posta ile bekleyen bir başvuru zaten var.");
 
   const contextAuth = await auth.$context;
   const application = await prisma.consultantApplication.create({
@@ -180,8 +181,8 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!isManagerRole(context.role)) return NextResponse.json({ message: "Yönetici yetkisi gerekli." }, { status: 403 });
+  if (!context) return authenticationRequired();
+  if (!isManagerRole(context.role)) return forbidden("Yönetici yetkisi gerekli.");
 
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : "";
