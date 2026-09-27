@@ -66,7 +66,7 @@ Bring the live consultant workflow to a consistent mobile-first standard without
 
 ### Current main commit
 
-`cc131d6974da05a95908e1c400dc1b505a3caefe`
+`37036119b1f88e470c4a65609f3f31ba925be2fa`
 
 ### Branch state
 
@@ -293,7 +293,7 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 10 — Mobile UX / Sales Operations Stabilization
 - CURRENT_TASK: Mobile UX passını tamamlayıp finance route naming cleanup aşamasına geçmek
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: cc131d6974da05a95908e1c400dc1b46be2a0e11c
+- BASE_MAIN_COMMIT: 37036119b1f88e470c4a65609f3f31ba925be2fa
 - ACTIVE_PR: none
 - LAST_GREEN_CHECKS: Web Quality #1087 ✅; Production Auth Smoke #171 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
