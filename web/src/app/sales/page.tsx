@@ -100,6 +100,9 @@ export default function SalesPage() {
   }>>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState<string | null>(null);
+  const [activitySearch, setActivitySearch] = useState("");
+  const [activityTypeFilter, setActivityTypeFilter] = useState("ALL");
+  const [activityCustomerFilter, setActivityCustomerFilter] = useState("ALL");
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +201,13 @@ export default function SalesPage() {
     if (!response.ok) throw new Error(payload.message ?? "Teklif güncellenemedi.");
     setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
   }
+  const filteredActivities = activities.filter((activity) => {
+    const query = activitySearch.trim().toLocaleLowerCase("tr-TR");
+    const matchesSearch = !query || [activity.customer.name, activity.summary, activity.outcome ?? "", activity.listing?.title ?? ""].some((value) => value.toLocaleLowerCase("tr-TR").includes(query));
+    const matchesType = activityTypeFilter === "ALL" || activity.type === activityTypeFilter;
+    const matchesCustomer = activityCustomerFilter === "ALL" || activity.customer.id === activityCustomerFilter;
+    return matchesSearch && matchesType && matchesCustomer;
+  });
   const todayActivityCount = activities.filter((activity) => {
     const date = new Date(activity.occurredAt);
     const now = new Date();
@@ -233,11 +243,11 @@ export default function SalesPage() {
           <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">Müşteri, portföy, gösterim, teklif ve satış kayıtları yetki kapsamı içinde gerçek veriden ilerler.</p></section>
         </div>}
 
-        {tab === "Aktiviteler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Timeline</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Son aktiviteler</h2></div><Link href="/sales/activity/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Aktivite</Link></div><div className="mt-5 divide-y divide-slate-100">
+        {tab === "Aktiviteler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Timeline</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Son aktiviteler</h2></div><Link href="/sales/activity/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Aktivite</Link></div><div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto]">\n          <input value={activitySearch} onChange={(e) => setActivitySearch(e.target.value)} placeholder="Müşteri, not veya portföy ara…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" />\n          <select value={activityTypeFilter} onChange={(e) => setActivityTypeFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm tipler</option>{Object.entries(activityTypeLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>\n          <select value={activityCustomerFilter} onChange={(e) => setActivityCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(activities.map((activity) => [activity.customer.id, activity.customer.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>\n        </div>\n        <div className="mt-3 flex items-center justify-between text-xs text-slate-400"><span>{filteredActivities.length} aktivite gösteriliyor</span>{(activitySearch || activityTypeFilter !== "ALL" || activityCustomerFilter !== "ALL") && <button type="button" onClick={() => { setActivitySearch(""); setActivityTypeFilter("ALL"); setActivityCustomerFilter("ALL"); }} className="font-semibold text-slate-600 hover:text-slate-900">Filtreleri temizle</button>}</div>\n        <div className="mt-3 divide-y divide-slate-100">
           {activitiesLoading && <p className="py-8 text-center text-sm text-slate-400">Aktiviteler yükleniyor…</p>}
           {activitiesError && <p className="py-8 text-center text-sm text-rose-600">{activitiesError}</p>}
-          {!activitiesLoading && !activitiesError && activities.length === 0 && <p className="py-8 text-center text-sm text-slate-400">Henüz kayıtlı aktivite yok.</p>}
-          {!activitiesLoading && !activitiesError && activities.map((item) => <article key={item.id} className="flex gap-4 py-4 first:pt-0">
+          {!activitiesLoading && !activitiesError && activities.length === 0 && <p className="py-8 text-center text-sm text-slate-400">Henüz kayıtlı aktivite yok.</p>}\n          {!activitiesLoading && !activitiesError && activities.length > 0 && filteredActivities.length === 0 && <p className="py-8 text-center text-sm text-slate-400">Filtrelere uyan aktivite bulunamadı.</p>}
+          {!activitiesLoading && !activitiesError && filteredActivities.map((item) => <article key={item.id} className="flex gap-4 py-4 first:pt-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700">{activityIcon[activityTypeLabel[item.type] ?? "Not"]}</div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-slate-900">{item.customer.name}</span><Pill>{activityTypeLabel[item.type] ?? item.type}</Pill><span className="text-xs text-slate-400">{new Date(item.occurredAt).toLocaleString("tr-TR")}</span></div>
