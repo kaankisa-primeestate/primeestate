@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish has now been applied through Dashboard, Portfolio, Customer, Customer 360, Customer Edit and Sales Ops / İş Akışı.
 
 ## Mevcut Ana
-`13c64f7fdd6e93fe49c5309e62d55b21b24361eb`
+`73e997a62b7693d8b99fed8ab25f1bbee5760ab2`
 
 ## Son Doğrulama
-- Sales Ops mobile commit `3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c` → Web Quality #1082 ✅
-- Sales Ops mobile commit `3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c` → Production Auth Smoke #166 ✅
+- Mobile UX tamamlandı: Sales Ops + Finance + Calendar + Calls → Web Quality #1087 ✅
+- Mobile UX tamamlandı: Sales Ops + Finance + Calendar + Calls → Production Auth Smoke #171 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,7 +62,7 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Finance ekranını mobil-first standarda taşımak. Ardından Takvim ve Aramalar ekranlarında aynı standardı uygulamak. İş kuralları ve gerçek API akışları değişmeyecek.
+Mobile UX pass tamamlandı. Şimdi duplicate/legacy finance route adlandırmasını temizleyeceğiz; iş kuralları ve gerçek API akışları değişmeyecek.
 
 ## Sonraki Fazlar
 - Finance route naming cleanup
