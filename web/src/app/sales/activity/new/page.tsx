@@ -1,42 +1,11 @@
 "use client";
-
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent,useEffect,useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-
-type Customer = { id: string; name: string };
-type Listing = { id: string; code: string; title: string };
-
-export default function NewSalesActivityPage() {
-  const router = useRouter();
-  const [customers,setCustomers]=useState<Customer[]>([]);
-  const [listings,setListings]=useState<Listing[]>([]);
-  const [saving,setSaving]=useState(false);
-  const [error,setError]=useState("");
-  useEffect(()=>{void Promise.all([
-    fetch("/api/customers",{cache:"no-store"}).then(r=>r.json()).then(d=>setCustomers(d.customers??[])),
-    fetch("/api/listings?status=AKTIF",{cache:"no-store"}).then(r=>r.json()).then(d=>setListings(d.listings??[])),
-  ]).catch(()=>setError("Form verileri alınamadı."));},[]);
-  async function submit(e:FormEvent<HTMLFormElement>){
-    e.preventDefault(); setSaving(true); setError("");
-    const data=Object.fromEntries(new FormData(e.currentTarget).entries());
-    try{
-      const r=await fetch("/api/activities",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
-      const d=await r.json(); if(!r.ok) throw new Error(d.message??"Aktivite oluşturulamadı.");
-      router.push("/sales");
-    }catch(err){setError(err instanceof Error?err.message:"Aktivite oluşturulamadı.");setSaving(false);}
-  }
-  return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-3xl">
-    <button type="button" onClick={()=>router.back()} className="mb-5 text-sm font-semibold text-slate-600">← İş Akışına dön</button>
-    <header className="mb-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">İş Akışı · Aktivite</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Yeni Aktivite</h1><p className="mt-2 text-sm text-slate-500">Müşteri temasını gerçek aktivite kaydına dönüştür.</p></header>
-    {error&&<div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-    <form onSubmit={submit} className="space-y-5"><section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="grid gap-4 sm:grid-cols-2">
-      <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Müşteri *</span><select required name="customerId" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Müşteri seçin</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-      <label className="block"><span className="text-sm font-semibold text-slate-700">Tip *</span><select name="type" defaultValue="ARAMA" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="ARAMA">Arama</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">E-posta</option><option value="NOT">Not</option><option value="GOSTERIM">Gösterim</option><option value="TEKLIF">Teklif</option></select></label>
-      <label className="block"><span className="text-sm font-semibold text-slate-700">Tarih</span><input name="occurredAt" type="datetime-local" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-      <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Portföy</span><select name="listingId" defaultValue="" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Portföy seçmeden devam et</option>{listings.map(l=><option key={l.id} value={l.id}>{l.code} · {l.title}</option>)}</select></label>
-      <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Özet *</span><textarea required name="summary" rows={4} placeholder="Müşteriyle ne konuşuldu?" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-      <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Sonuç</span><input name="outcome" placeholder="Örn. Geri dönüş bekleniyor" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
-    </div></section><div className="flex justify-end gap-2"><button type="button" onClick={()=>router.back()} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving?"Kaydediliyor…":"Aktiviteyi kaydet"}</button></div></form>
-  </div></main></div>;
+type Customer={id:string;name:string};type Listing={id:string;code:string;title:string};
+export default function NewSalesActivityPage(){
+ const router=useRouter();const [customers,setCustomers]=useState<Customer[]>([]),[listings,setListings]=useState<Listing[]>([]),[customerId,setCustomerId]=useState(""),[type,setType]=useState("ARAMA"),[saving,setSaving]=useState(false),[error,setError]=useState("");
+ useEffect(()=>{const p=new URLSearchParams(window.location.search);if(p.get("customerId"))setCustomerId(p.get("customerId")!);if(p.get("type"))setType(p.get("type")!);void Promise.all([fetch("/api/customers",{cache:"no-store"}).then(r=>r.json()).then(d=>setCustomers(d.customers??[])),fetch("/api/listings?status=AKTIF",{cache:"no-store"}).then(r=>r.json()).then(d=>setListings(d.listings??[]))]).catch(()=>setError("Form verileri alınamadı."));},[]);
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch("/api/activities",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const d=await r.json();if(!r.ok)throw new Error(d.message??"Aktivite oluşturulamadı.");router.push("/relationships");}catch(err){setError(err instanceof Error?err.message:"Aktivite oluşturulamadı.");setSaving(false);}}
+ return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-3xl"><button type="button" onClick={()=>router.back()} className="mb-5 text-sm font-semibold text-slate-600">← Geri</button><header className="mb-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">CRM · Aktivite</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Yeni Aktivite</h1><p className="mt-2 text-sm text-slate-500">Müşteri temasını gerçek aktivite kaydına dönüştür.</p></header>{error&&<div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}<form onSubmit={submit} className="space-y-5"><section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="grid gap-4 sm:grid-cols-2"><label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Müşteri *</span><select required name="customerId" value={customerId} onChange={e=>setCustomerId(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Müşteri seçin</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="block"><span className="text-sm font-semibold text-slate-700">Tip *</span><select name="type" value={type} onChange={e=>setType(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="ARAMA">Arama</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">E-posta</option><option value="NOT">Not</option><option value="GOSTERIM">Gösterim</option><option value="TEKLIF">Teklif</option></select></label><label className="block"><span className="text-sm font-semibold text-slate-700">Tarih</span><input name="occurredAt" type="datetime-local" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Portföy</span><select name="listingId" defaultValue="" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Portföy seçmeden devam et</option>{listings.map(l=><option key={l.id} value={l.id}>{l.code} · {l.title}</option>)}</select></label><label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Özet *</span><textarea required name="summary" rows={4} placeholder="Müşteriyle ne konuşuldu?" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label><label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Sonuç</span><input name="outcome" placeholder="Örn. Geri dönüş bekleniyor" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label></div></section><div className="flex justify-end gap-2"><button type="button" onClick={()=>router.back()} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving?"Kaydediliyor…":"Aktiviteyi kaydet"}</button></div></form></div></main></div>;
 }
