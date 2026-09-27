@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -14,12 +15,12 @@ function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Pr
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "payments", "create"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "payments", "create"); } catch { return forbidden(); }
   const { id } = await params;
 
   let body: { paidAt?: unknown; note?: unknown };
-  try { body = await request.json(); } catch { body = {}; }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
 
   const installment = await prisma.paymentInstallment.findFirst({
     where: {
@@ -37,12 +38,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       plan: { include: { sale: { select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true } } } },
     },
   });
-  if (!installment) return NextResponse.json({ message: "Taksit bulunamadı veya yetkiniz yok." }, { status: 404 });
-  if (installment.status === "IPTAL") return NextResponse.json({ message: "İptal edilmiş taksit tahsil edilemez." }, { status: 409 });
-  if (installment.payment) return NextResponse.json({ message: "Bu taksit için zaten bir tahsilat oluşturulmuş." }, { status: 409 });
+  if (!installment) return notFound("Taksit bulunamadı veya yetkiniz yok.");
+  if (installment.status === "IPTAL") return conflict("İptal edilmiş taksit tahsil edilemez.");
+  if (installment.payment) return conflict("Bu taksit için zaten bir tahsilat oluşturulmuş.");
 
   const paidAt = body.paidAt ? new Date(String(body.paidAt)) : new Date();
-  if (Number.isNaN(paidAt.getTime())) return NextResponse.json({ message: "Geçersiz tahsilat tarihi." }, { status: 400 });
+  if (Number.isNaN(paidAt.getTime())) return validationError("Geçersiz tahsilat tarihi.");
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -89,6 +90,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ payment: result.payment, installmentId: result.installmentId }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Taksit tahsilatı oluşturulamadı." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Taksit tahsilatı oluşturulamadı.");
   }
 }

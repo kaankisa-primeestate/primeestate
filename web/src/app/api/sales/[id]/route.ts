@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -27,8 +28,8 @@ function calculateCommission(amount: Prisma.Decimal, commissionRate: Prisma.Deci
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "sales", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "sales", "update"); } catch { return forbidden(); }
 
   const { id } = await params;
   let body: {
@@ -39,18 +40,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     approvalStatus?: unknown;
     approvalNote?: unknown;
   };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
 
   const status = typeof body.status === "string" && STATUSES.has(body.status as SaleStatus) ? body.status as SaleStatus : undefined;
-  if (body.status !== undefined && !status) return NextResponse.json({ message: "Geçersiz satış durumu." }, { status: 400 });
+  if (body.status !== undefined && !status) return validationError("Geçersiz satış durumu.");
 
   const requestedApproval = typeof body.approvalStatus === "string" && APPROVAL_STATUSES.has(body.approvalStatus as SaleApprovalStatus)
     ? body.approvalStatus as SaleApprovalStatus
     : undefined;
-  if (body.approvalStatus !== undefined && !requestedApproval) return NextResponse.json({ message: "Geçersiz onay durumu." }, { status: 400 });
+  if (body.approvalStatus !== undefined && !requestedApproval) return validationError("Geçersiz onay durumu.");
 
   if (requestedApproval && !isManagerRole(context.role)) {
-    return NextResponse.json({ message: "Satış onayını yalnızca ofis yönetimi verebilir." }, { status: 403 });
+    return forbidden("Satış onayını yalnızca ofis yönetimi verebilir.");
   }
 
   try {
@@ -176,6 +177,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ sale: updated });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Satış güncellenemedi." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Satış güncellenemedi.");
   }
 }

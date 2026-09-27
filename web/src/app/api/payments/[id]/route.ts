@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -6,20 +7,20 @@ import { assertCan, customerOwnershipScope } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "payments", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "payments", "update"); } catch { return forbidden(); }
   const { id } = await params;
   let body: { status?: unknown; paidAt?: unknown; note?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
   const status = body.status === "ODENDI" || body.status === "IPTAL" || body.status === "BEKLIYOR" ? body.status : undefined;
-  if (!status && body.paidAt === undefined && body.note === undefined) return NextResponse.json({ message: "Güncellenecek alan bulunamadı." }, { status: 400 });
+  if (!status && body.paidAt === undefined && body.note === undefined) return validationError("Güncellenecek alan bulunamadı.");
 
   const existing = await prisma.payment.findFirst({
     where: { id, sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } } },
     include: { installment: { select: { id: true, planId: true, sequence: true, status: true } }, sale: { select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true } }, ledgerEntries: true },
   });
-  if (!existing) return NextResponse.json({ message: "Tahsilat bulunamadı veya yetkiniz yok." }, { status: 404 });
-  if (existing.sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Tahsilat işlemleri için satışın broker tarafından onaylanmış olması gerekir." }, { status: 409 });
+  if (!existing) return notFound("Tahsilat bulunamadı veya yetkiniz yok.");
+  if (existing.sale.approvalStatus !== "ONAYLANDI") return conflict("Tahsilat işlemleri için satışın broker tarafından onaylanmış olması gerekir.");
 
   try {
     const updated = await prisma.$transaction(async (tx) => {
@@ -63,6 +64,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
     return NextResponse.json({ payment: updated });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Tahsilat güncellenemedi." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Tahsilat güncellenemedi.");
   }
 }
