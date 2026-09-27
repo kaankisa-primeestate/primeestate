@@ -63,7 +63,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
   try {
     if (!can(context.role, "customers", "update")) return forbidden();
   } catch {
@@ -82,7 +82,7 @@ export async function PATCH(
   });
 
   if (!customer) {
-    return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
+    return notFound("Müşteri bulunamadı.");
   }
 
   let body: {
