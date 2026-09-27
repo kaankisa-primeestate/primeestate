@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, conflict, internalError } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
   try { assertCan(context, "payments", "read"); } catch { return forbidden(); }
   const { searchParams } = new URL(request.url);
   const saleId = searchParams.get("saleId")?.trim();
-  const payments = await prisma.payment.findMany({
+  try {
+    const payments = await prisma.payment.findMany({
     where: {
       ...(saleId ? { saleId } : {}),
       sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
@@ -28,7 +29,10 @@ export async function GET(request: Request) {
     orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
     take: 200,
   });
-  return NextResponse.json({ payments });
+    return NextResponse.json({ payments });
+  } catch {
+    return internalError();
+  }
 }
 
 export async function POST(request: Request) {
@@ -36,21 +40,21 @@ export async function POST(request: Request) {
   if (!context) return authenticationRequired();
   try { assertCan(context, "payments", "create"); } catch { return forbidden(); }
   let body: { saleId?: unknown; amount?: unknown; currency?: unknown; status?: unknown; paidAt?: unknown; note?: unknown; installmentId?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
   const amount = Number(body.amount);
   const status = body.status === "ODENDI" ? "ODENDI" : body.status === "IPTAL" ? "IPTAL" : "BEKLIYOR";
-  if (!saleId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Satış ve pozitif tahsilat tutarı zorunludur." }, { status: 400 });
+  if (!saleId || !Number.isFinite(amount) || amount <= 0) return validationError("Satış ve pozitif tahsilat tutarı zorunludur.");
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true },
   });
-  if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
-  if (sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Tahsilat için broker tarafından onaylanmış satış gerekir." }, { status: 409 });
+  if (!sale) return notFound("Satış bulunamadı veya yetkiniz yok.");
+  if (sale.approvalStatus !== "ONAYLANDI") return conflict("Tahsilat için broker tarafından onaylanmış satış gerekir.");
   const currency = typeof body.currency === "string" && body.currency.trim() ? body.currency.trim().toUpperCase() : sale.currency;
-  if (currency !== sale.currency) return NextResponse.json({ message: "Tahsilat para birimi satış para birimi ile aynı olmalıdır." }, { status: 400 });
+  if (currency !== sale.currency) return validationError("Tahsilat para birimi satış para birimi ile aynı olmalıdır.");
   const paidAt = body.paidAt ? new Date(String(body.paidAt)) : new Date();
-  if (Number.isNaN(paidAt.getTime())) return NextResponse.json({ message: "Geçersiz tahsilat tarihi." }, { status: 400 });
+  if (Number.isNaN(paidAt.getTime())) return validationError("Geçersiz tahsilat tarihi.");
 
   try {
     const payment = await prisma.$transaction(async (tx) => {
@@ -81,6 +85,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ payment }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Tahsilat oluşturulamadı." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Tahsilat oluşturulamadı.");
   }
 }
