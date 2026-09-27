@@ -54,11 +54,11 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current phase
 
-**Phase 9 — Consultant Finance / Broker Approval / Payment Workflow**
+**Phase 10 — Mobile UX / Sales Operations Stabilization**
 
 ### Current objective
 
-Harden the live finance workflow around consultant commission source-of-truth, broker approval, payments, and payment plans without weakening authorization or historical snapshots.
+Bring the live consultant workflow to a consistent mobile-first standard without changing business semantics: Dashboard → Portfolio → Customer → Sales Ops → Finance → Calendar/Calls.
 
 ### Active branch
 
@@ -66,7 +66,7 @@ Harden the live finance workflow around consultant commission source-of-truth, b
 
 ### Current main commit
 
-`95cddadaafb28295129af21afaf0d11eafc60e0c`
+`3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c`
 
 ### Branch state
 
@@ -74,14 +74,16 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1052 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #136 — **success**
+- PrimeEstate Web Quality #1081 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #165 — **success**
+- PrimeEstate Web Quality #1082 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #166 — **success**
 
 ### Immediate next steps
 
-1. Keep the finance business invariants protected by real workflow tests.
-2. Harden the remaining API response/error contracts, prioritizing critical customer → offer → sale → finance paths.
-3. Then clean up finance route naming and dashboard refresh UX without changing business semantics.
+1. Finish mobile UX pass on Sales Ops / İş Akışı.
+2. Apply the same mobile-first pass to Finance, then Calendar and Calls.
+3. After the mobile pass, re-audit the actual main state and synchronize this snapshot again.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -104,9 +106,14 @@ Recent main milestones:
 - PR #126 — practical photo upload and listing preview
 - PR #127 — responsive mobile navigation shell
 
-Latest main before the active outcome-learning branch:
+Latest mobile UX commits on main:
 
-`373b39b0e676ce2eafc4d02f513fb03781814c10`
+- Dashboard workspace polish
+- Portfolio workspace polish
+- Customer workspace polish
+- Customer detail mobile polish
+- Customer edit form mobile polish
+- Sales Ops / İş Akışı mobile workspace polish (`3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c`)
 
 ## 6. PRIME BRAIN — CURRENT ARCHITECTURE
 
@@ -282,13 +289,13 @@ This gives us **one current source of truth without duplicating Git's history**.
 
 Keep these fields current:
 
-- CURRENT_PHASE: Phase 6 — Sales Operations / İş Akışı UX
-- CURRENT_TASK: İş Akışı ekranlarını full-page çalışma alanına geçirmek ve bozuk aksiyonları gerçek akışlara bağlamak
+- CURRENT_PHASE: Phase 10 — Mobile UX / Sales Operations Stabilization
+- CURRENT_TASK: Sales Ops / İş Akışı ekranını mobil-first standarda taşımak
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: e6b9b6d88c6292682defc9cb1502a11fb6e02e25
+- BASE_MAIN_COMMIT: 3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: PR #134 Critical Tests #158 ✅; Web Quality #922 ✅; Lint ✅; Typecheck ✅
+- LAST_GREEN_CHECKS: Web Quality #1082 ✅; Production Auth Smoke #166 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: İş Akışı mevcut sayfalarını ve action route'larını incele; Hızlı Aksiyon, Aktivite, Görev ve Gösterim akışlarını fazlara bölerek ilk kırık akışı düzelt
+- NEXT_STEP: Finance ekranının mobil düzenini iyileştir; sonra Takvim ve Aramalar için aynı mobile-first standardı uygula
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-27
