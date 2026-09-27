@@ -59,7 +59,7 @@ export default function Customer360Page(){
     finally{setLoading(false);}
   }
 
-  useEffect(()=>{if(id) void load();},[id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect\n  useEffect(()=>{if(id) void load();},[id]);
 
   const timeline=useMemo(()=>{
     if(!customer)return [];
