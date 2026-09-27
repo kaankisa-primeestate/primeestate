@@ -454,16 +454,12 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     cookie,
     {
       saleId: salePayload.sale.id,
-  // Manual override changes current transaction values but preserves the original office source snapshot.
-  assert.equal(Number(commissionPayload.sale.sourceOfficeShareRate), 40);
-  assert.equal(Number(commissionPayload.sale.sourceConsultantShareRate), 60);
       title: "Pre-approval plan must fail",
       installments: [{ amount: 4800000, dueAt: "2026-11-01T00:00:00.000Z" }],
     },
     "POST",
   );
   await expectStatus(blockedPlanResponse, 409, "blockedPlanResponse");
-
   // 9. Commission calculation
   const commissionResponse = await api(
     `/api/sales/${salePayload.sale.id}`,
@@ -473,11 +469,14 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(commissionResponse, 200, "commissionResponse");
   const commissionPayload = await json<{
-    sale: { grossCommission: string | number; officeShare: string | number; consultantShare: string | number };
+    sale: { grossCommission: string | number; officeShare: string | number; consultantShare: string | number; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null };
   }>(commissionResponse);
   assert.equal(Number(commissionPayload.sale.grossCommission), 144000);
   assert.equal(Number(commissionPayload.sale.officeShare), 72000);
   assert.equal(Number(commissionPayload.sale.consultantShare), 72000);
+  // Manual override changes current transaction values but preserves the original office source snapshot.
+  assert.equal(Number(commissionPayload.sale.sourceOfficeShareRate), 40);
+  assert.equal(Number(commissionPayload.sale.sourceConsultantShareRate), 60);
 
   // 10. Broker approval
   const broker = await createBroker(fixture.organization.id, fixture.office.id, randomUUID().slice(0, 8));
