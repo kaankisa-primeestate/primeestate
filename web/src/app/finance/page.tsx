@@ -217,7 +217,7 @@ export default function FinancePage() {
 
   return <div className="min-h-screen bg-slate-50 md:flex">
     <Sidebar />
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+    <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate · Finance</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Komisyon & Tahsilat</h1>
@@ -240,7 +240,7 @@ export default function FinancePage() {
 
         {error && <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div><h2 className="text-lg font-semibold text-slate-950">Yeni tahsilat</h2><p className="text-sm text-slate-500">Ödendi seçilirse ledger kayıtları aynı işlem içinde oluşur.</p></div>
           </div>
@@ -267,7 +267,7 @@ export default function FinancePage() {
           </form>
         </section>
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div><h2 className="text-lg font-semibold text-slate-950">Ödeme planı / taksit</h2><p className="text-sm text-slate-500">Yalnızca broker tarafından onaylanmış satış için oluşturulur. Taksit toplamı satış tutarına otomatik eşitlenir.</p></div>
           </div>
@@ -287,7 +287,7 @@ export default function FinancePage() {
             <label className="text-xs font-semibold text-slate-600">İlk vade
               <input name="firstDueAt" required type="datetime-local" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
             </label>
-            <button disabled={planSaving === "new"} type="submit" className="self-end rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{planSaving === "new" ? "Oluşturuluyor…" : "Ödeme planı oluştur"}</button>
+            <button disabled={planSaving === "new"} type="submit" className="w-full self-end rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-50 sm:w-auto">{planSaving === "new" ? "Oluşturuluyor…" : "Ödeme planı oluştur"}</button>
           </form>
           {paymentPlans.length ? <div className="mt-5 grid gap-3 lg:grid-cols-2">{paymentPlans.map((plan) => <div key={plan.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-900">{plan.title}</p><p className="mt-1 text-xs text-slate-500">{plan.sale.customer.name} · {plan.sale.listing.code}</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{plan.installments.length} taksit</span></div>
@@ -302,7 +302,7 @@ export default function FinancePage() {
             const officeShareRate = sale.officeShareRate == null ? "" : String(sale.officeShareRate);
             const salePayments = payments.filter((payment) => payment.saleId === sale.id);
              const statusClass = sale.status === "TAMAMLANDI" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-700" : "rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700";
-            return <article key={sale.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            return <article key={sale.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
                 <div className="min-w-0 flex-1">
                    <div className="flex flex-wrap items-center gap-2">
@@ -322,7 +322,7 @@ export default function FinancePage() {
                     <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-slate-800">Tahsilatlar</h3><span className="text-xs text-slate-400">{salePayments.length} kayıt</span></div>
                     {salePayments.length ? <div className="mt-3 space-y-2">{salePayments.map((payment) => <div key={payment.id} className="flex flex-col gap-2 rounded-xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div><p className="font-semibold text-slate-900">{money(payment.amount, payment.currency)}</p><p className="text-xs text-slate-400">{payment.paidAt ? new Date(payment.paidAt).toLocaleString("tr-TR") : "Tarih bekliyor"} · {statusLabel[payment.status]}</p></div>
-                      <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{payment.ledgerEntries.length} cari kayıt</span>{payment.status === "BEKLIYOR" && <button disabled={paymentSaving === payment.id} onClick={() => void updatePayment(payment.id, "ODENDI")} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Ödendi</button>}{payment.status === "ODENDI" && <button disabled={paymentSaving === payment.id} onClick={() => void updatePayment(payment.id, "IPTAL")} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 disabled:opacity-50">İptal</button>}</div>
+                      <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{payment.ledgerEntries.length} cari kayıt</span>{payment.status === "BEKLIYOR" && <button disabled={paymentSaving === payment.id} onClick={() => void updatePayment(payment.id, "ODENDI")} className="rounded-lg bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white disabled:opacity-50">Ödendi</button>}{payment.status === "ODENDI" && <button disabled={paymentSaving === payment.id} onClick={() => void updatePayment(payment.id, "IPTAL")} className="rounded-lg border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 disabled:opacity-50">İptal</button>}</div>
                     </div>)}</div> : <p className="mt-3 text-xs text-slate-400">Bu satış için henüz tahsilat yok.</p>}
                   </div>
                 </div>
