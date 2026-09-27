@@ -3,7 +3,7 @@ import { authenticationRequired, forbidden } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { can, customerOwnershipScope } from "@/lib/authz";
+import { can, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
 export async function GET(request: Request) {
   const context = await getUserContext();
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const customerId = searchParams.get("customerId")?.trim();
   const sales = await prisma.sale.findMany({
     where: { ...(customerId ? { customerId } : {}), customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
+    include: { customer: { select: { id: true, name: true, ownerUserId: true } }, consultant: { select: { id: true, name: true } }, approvedBy: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
     orderBy: { createdAt: "desc" }, take: 100,
   });
   return NextResponse.json({ sales });
@@ -39,12 +39,29 @@ export async function POST(request: Request) {
         },
         include: {
           sale: { select: { id: true } },
-          listing: { select: { id: true, status: true, purpose: true, currency: true } },
+          listing: { select: { id: true, status: true, purpose: true, currency: true, consultantUserId: true } },
         },
       });
       if (!offer) throw new Error("Teklif bulunamadı, kabul edilmemiş, portföy uygun değil veya yetkiniz yok.");
       if (offer.sale) throw new Error("Bu teklif zaten satış kaydına dönüştürülmüş.");
       if (offer.currency !== offer.listing.currency) throw new Error("Teklif para birimi portföy para birimi ile aynı olmalıdır.");
+
+      const consultantUserId = offer.listing.consultantUserId ?? context.userId;
+      const commissionPlan = await tx.consultantCommissionPlan.findFirst({
+        where: {
+          userId: consultantUserId,
+          organizationId: context.organizationId,
+          officeId: context.officeId,
+          active: true,
+          effectiveFrom: { lte: new Date() },
+          OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }],
+        },
+        select: {
+          id: true,
+          officeShareRate: true,
+          consultantShareRate: true,
+        },
+      });
 
       const sale = await tx.sale.create({
         data: {
@@ -54,11 +71,18 @@ export async function POST(request: Request) {
           amount: offer.amount,
           currency: offer.currency,
           note: typeof body.note === "string" ? body.note.trim() || null : null,
+          consultantUserId,
+          sourceCommissionPlanId: commissionPlan?.id ?? null,
+          sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null,
+          sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null,
+          officeShareRate: commissionPlan?.officeShareRate ?? null,
         },
         include: {
           customer: { select: { id: true, name: true } },
           listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true } },
           offer: { select: { id: true, status: true } },
+          consultant: { select: { id: true, name: true } },
+          approvedBy: { select: { id: true, name: true } },
         },
       });
 
@@ -74,7 +98,7 @@ export async function POST(request: Request) {
           action: "SALE_CREATED",
           entityType: "Sale",
           entityId: sale.id,
-          metadata: { offerId: offer.id, customerId: offer.customerId, listingId: offer.listingId, amount: offer.amount.toString(), currency: offer.currency },
+          metadata: { offerId: offer.id, customerId: offer.customerId, listingId: offer.listingId, consultantUserId, sourceCommissionPlanId: commissionPlan?.id ?? null, sourceOfficeShareRate: commissionPlan?.officeShareRate?.toString() ?? null, sourceConsultantShareRate: commissionPlan?.consultantShareRate?.toString() ?? null, amount: offer.amount.toString(), currency: offer.currency },
         },
       });
       return sale;
