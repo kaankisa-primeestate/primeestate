@@ -71,6 +71,11 @@ export async function GET(request: Request) {
       commissionModel: item.commissionModel,
       officeShareRate: item.officeShareRate?.toString() ?? null,
       consultantShareRate: item.consultantShareRate?.toString() ?? null,
+      rentAmount: item.rentAmount?.toString() ?? null,
+      rentCurrency: item.rentCurrency,
+      rentStartDate: item.rentStartDate,
+      rentDueDay: item.rentDueDay,
+      termsNote: item.termsNote,
       status: item.status,
       rejectionNote: item.rejectionNote,
       reviewedByUserId: item.reviewedByUserId,
@@ -97,6 +102,11 @@ export async function POST(request: Request) {
   const commissionModel = typeof body?.commissionModel === "string" ? body.commissionModel.trim() : "";
   const officeShareRate = rate(body?.officeShareRate);
   const consultantShareRate = rate(body?.consultantShareRate);
+  const rentAmountRaw = body?.rentAmount === "" || body?.rentAmount == null ? null : Number(body.rentAmount);
+  const rentCurrency = typeof body?.rentCurrency === "string" && body.rentCurrency.trim() ? body.rentCurrency.trim().toUpperCase() : "TRY";
+  const rentStartDate = body?.rentStartDate ? new Date(String(body.rentStartDate)) : null;
+  const rentDueDay = body?.rentDueDay === "" || body?.rentDueDay == null ? null : Number(body.rentDueDay);
+  const termsNote = typeof body?.termsNote === "string" ? body.termsNote.trim() : "";
 
   if (!officeSlug || !firstName || !lastName || !tc || !email || !phone || !password || !companyName || !commissionModel) {
     return NextResponse.json({ message: "Ofis, ad, soyad, T.C. kimlik no, e-posta, telefon, şifre, şirket ve komisyon modeli zorunludur." }, { status: 400 });
@@ -105,6 +115,9 @@ export async function POST(request: Request) {
   if (!emailOk(email) || (companyEmail && !emailOk(companyEmail))) return NextResponse.json({ message: "Geçerli bir e-posta adresi girin." }, { status: 400 });
   if (password.length < 8 || password.length > 128) return NextResponse.json({ message: "Şifre 8-128 karakter arasında olmalıdır." }, { status: 400 });
   if (Number.isNaN(officeShareRate) || Number.isNaN(consultantShareRate)) return NextResponse.json({ message: "Komisyon oranları 0-100 arasında olmalıdır." }, { status: 400 });
+  if (rentAmountRaw !== null && (!Number.isFinite(rentAmountRaw) || rentAmountRaw < 0)) return NextResponse.json({ message: "Kira tutarı 0 veya daha büyük olmalıdır." }, { status: 400 });
+  if (rentStartDate && Number.isNaN(rentStartDate.getTime())) return NextResponse.json({ message: "Geçersiz kira başlangıç tarihi." }, { status: 400 });
+  if (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) return NextResponse.json({ message: "Kira ödeme günü 1-31 arasında olmalıdır." }, { status: 400 });
 
   const office = await prisma.office.findFirst({
     where: { slug: officeSlug },
@@ -148,6 +161,11 @@ export async function POST(request: Request) {
       commissionModel,
       officeShareRate,
       consultantShareRate,
+      rentAmount: rentAmountRaw,
+      rentCurrency,
+      rentStartDate,
+      rentDueDay,
+      termsNote: termsNote || null,
       passwordHash: await contextAuth.password.hash(password),
     },
     select: { id: true, status: true, createdAt: true },
@@ -273,6 +291,11 @@ export async function PATCH(request: Request) {
           model: application.commissionModel,
           officeShareRate: application.officeShareRate,
           consultantShareRate: application.consultantShareRate,
+          rentAmount: application.rentAmount,
+          rentCurrency: application.rentCurrency,
+          rentStartDate: application.rentStartDate,
+          rentDueDay: application.rentDueDay,
+          termsNote: application.termsNote,
         },
       });
       await tx.auditLog.create({
