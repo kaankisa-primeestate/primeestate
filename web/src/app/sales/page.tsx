@@ -166,15 +166,6 @@ export default function SalesPage() {
     }
   }
 
-  async function convertOfferToSale(offer: ApiOffer) {
-    if (offer.status !== "KABUL") return;
-    const response = await fetch("/api/sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ offerId: offer.id }) });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.message ?? "Satış oluşturulamadı.");
-    setSales((current) => [payload.sale, ...current]);
-    setTab("Satışlar");
-  }
-
   async function updateSale(id: string, status: string) {
     const response = await fetch("/api/sales/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const payload = await response.json();
@@ -211,7 +202,10 @@ export default function SalesPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.message ?? "Teklif güncellenemedi.");
       setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
-      if (payload.sale) setSales((current) => [payload.sale, ...current]);
+      if (payload.sale) {
+        setSales((current) => [payload.sale, ...current]);
+        setTab("Satışlar");
+      }
       return;
     }
     const response = await fetch(`/api/offers/${id}`, {
@@ -368,7 +362,6 @@ export default function SalesPage() {
                   <select value={item.status} onChange={(e) => void updateOffer(item.id, { status: e.target.value }).catch((error) => setOfferError(error instanceof Error ? error.message : "Teklif güncellenemedi."))} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                     <option value="TASLAK">Taslak</option><option value="SUNULDU">Sunuldu</option><option value="KARSILIKLI_TEKLIF">Karşı teklif</option><option value="KABUL">Kabul</option><option value="REDDEDILDI">Reddedildi</option>
                   </select>
-                  {item.status === "KABUL" && <button type="button" onClick={() => void convertOfferToSale(item).catch((error) => setOfferError(error instanceof Error ? error.message : "Satış oluşturulamadı."))} className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Satışa dönüştür</button>}
                 </div>
               </div>
             </article>;
@@ -376,7 +369,7 @@ export default function SalesPage() {
         </section>}
 
         {tab === "Satışlar" && <section className="mt-5 space-y-4">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kapanış</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Satışlar</h2><p className="mt-1 text-sm text-slate-500">Kabul edilen teklif, burada gerçek satış kaydına dönüşür.</p></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kapanış</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Satışlar</h2><p className="mt-1 text-sm text-slate-500">Kabul edilen teklif otomatik olarak satış kaydına dönüşür; broker onayı sonrasında tahsilat ve kapanış işlemleri ilerler.</p></div>
           <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]"><input value={saleSearch} onChange={(e) => setSaleSearch(e.target.value)} placeholder="Müşteri, portföy veya kod ara…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" /><select value={saleStatusFilter} onChange={(e) => setSaleStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm durumlar</option><option value="ACIK">Açık</option><option value="TAMAMLANDI">Tamamlandı</option><option value="IPTAL">İptal</option></select><select value={saleCustomerFilter} onChange={(e) => setSaleCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(sales.map((sale) => [sale.customer.id, sale.customer.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
           <div className="flex items-center justify-between text-xs text-slate-400"><span>{sales.length} kayıt · filtreler listeyi daraltır</span>{(saleSearch||saleStatusFilter!=="ALL"||saleCustomerFilter!=="ALL")&&<button type="button" onClick={()=>{setSaleSearch("");setSaleStatusFilter("ALL");setSaleCustomerFilter("ALL");}} className="font-semibold text-slate-600">Filtreleri temizle</button>}</div>
           {opsError && <p className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{opsError}</p>}
