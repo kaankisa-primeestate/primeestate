@@ -248,13 +248,13 @@ export default function SalesPage() {
 
   return <div className="min-h-screen bg-slate-50 md:flex">
     <Sidebar />
-    <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+    <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate · Sales Ops</p>
           <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div><h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">İş Akışı</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Eşleşmeyi aksiyona çevir. Aktivite, görev, gösterim ve teklif aynı müşteri–portföy ilişkisi üzerinde ilerler.</p></div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               <Link href="/sales/activity/new" className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">+ Aktivite</Link>
               <Link href="/sales/task/new" className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">+ Görev</Link>
               <Link href="/sales/showing/new" className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">+ Gösterim</Link>
@@ -266,8 +266,8 @@ export default function SalesPage() {
           {[{ label: "Bekleyen görev", value: pendingTasks, hint: "bugün ve geciken" }, { label: "Planlı gösterim", value: plannedShowings, hint: "müşteri + portföy bağlı" }, { label: "Açık teklif", value: openOffers, hint: "takip gerekiyor" }, { label: "Bugünkü aktivite", value: todayActivityCount, hint: "kayıtlı temas" }].map((item) => <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs text-slate-400">{item.label}</p><p className="mt-1 text-2xl font-semibold text-slate-950">{item.value}</p><p className="mt-1 text-xs text-slate-400">{item.hint}</p></div>)}
         </section>
 
-        <nav className="mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
-          {tabs.map((item) => <button key={item} type="button" onClick={() => setTab(item)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>{item}</button>)}
+        <nav className="mt-6 flex gap-1 overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+          {tabs.map((item) => <button key={item} type="button" onClick={() => setTab(item)} className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>{item}</button>)}
         </nav>
 
         {tab === "Bugün" && <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
@@ -289,7 +289,7 @@ export default function SalesPage() {
           </article>)}
         </div></section>}
 
-        {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><Link href="/sales/task/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</Link></div><div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+        {tab === "Görevler" && <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takip</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Görev kuyruğu</h2></div><Link href="/sales/task/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Görev</Link></div><div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto]">
           <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="Görev, müşteri veya kaynak ara…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" />
           <select value={taskStatusFilter} onChange={(e) => setTaskStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm durumlar</option><option value="BEKLIYOR">Bekliyor</option><option value="GECIKTI">Gecikti</option><option value="TAMAMLANDI">Tamamlandı</option></select>
           <select value={taskCustomerFilter} onChange={(e) => setTaskCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(tasks.filter((task) => task.customer).map((task) => [task.customer!.id, task.customer!.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
@@ -302,7 +302,7 @@ export default function SalesPage() {
           <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]"><input value={showingSearch} onChange={(e) => setShowingSearch(e.target.value)} placeholder="Müşteri, portföy veya konum ara…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" /><select value={showingStatusFilter} onChange={(e) => setShowingStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm durumlar</option><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select><select value={showingCustomerFilter} onChange={(e) => setShowingCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(showings.map((showing) => [showing.customer.id, showing.customer.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
           <div className="flex items-center justify-between text-xs text-slate-400"><span>{filteredShowings.length} gösterim gösteriliyor</span>{(showingSearch || showingStatusFilter !== "ALL" || showingCustomerFilter !== "ALL") && <button type="button" onClick={() => { setShowingSearch(""); setShowingStatusFilter("ALL"); setShowingCustomerFilter("ALL"); }} className="font-semibold text-slate-600 hover:text-slate-900">Filtreleri temizle</button>}</div>
           {showingActionError && <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{showingActionError}</div>}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm"><span className="font-semibold text-slate-900">Akış:</span> Gösterim gerçekleştiğinde PrimeEstate müşteriye bağlı 24 saat sonrası takip görevini otomatik oluşturur.</div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-5 text-slate-600 shadow-sm"><span className="font-semibold text-slate-900">Akış:</span> Gösterim gerçekleştiğinde PrimeEstate müşteriye bağlı 24 saat sonrası takip görevini otomatik oluşturur.</div>
           <div className="grid gap-4 md:grid-cols-2">{filteredShowings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"]}>{item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950"><Link href={`/clients/${item.customer.id}`} className="hover:underline">{item.customer.name}</Link></h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code} · {item.listing.property?.district ?? "—"} / {item.listing.property?.neighborhood ?? "—"}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><select value={item.status} onChange={(e) => {
                       setShowingActionError(null);
                       void updateShowing(item.id, e.target.value).catch((error) => setShowingActionError(error instanceof Error ? error.message : "Gösterim güncellenemedi."));
@@ -335,8 +335,8 @@ export default function SalesPage() {
             </div>
             {offerError && <p className="mt-3 text-sm text-rose-600">{offerError}</p>}
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setOfferFormOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Vazgeç</button>
-              <button disabled={offerSaving} type="submit" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{offerSaving ? "Kaydediliyor…" : "Teklifi kaydet"}</button>
+              <button type="button" onClick={() => setOfferFormOpen(false)} className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-600">Vazgeç</button>
+              <button disabled={offerSaving} type="submit" className="rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-50">{offerSaving ? "Kaydediliyor…" : "Teklifi kaydet"}</button>
             </div>
           </form>}
 
