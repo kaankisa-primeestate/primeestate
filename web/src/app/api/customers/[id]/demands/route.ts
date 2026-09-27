@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -27,15 +28,15 @@ export async function POST(
   const { id } = await params;
   const { context, customer } = await getScopedCustomer(id);
 
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  if (!can(context.role, "demands", "create")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
-  if (!customer) return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
+  if (!context) return authenticationRequired();
+  if (!can(context.role, "demands", "create")) return forbidden();
+  if (!customer) return notFound("Müşteri bulunamadı.");
 
   let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 });
+    return validationError("Geçersiz JSON.");
   }
 
   const title = typeof body.title === "string" ? body.title.trim() : "";
@@ -43,10 +44,10 @@ export async function POST(
   const propertyType = typeof body.propertyType === "string" ? body.propertyType : "";
   const currency = typeof body.currency === "string" ? body.currency.trim().toUpperCase() : "TRY";
 
-  if (!title) return NextResponse.json({ message: "Talep başlığı zorunludur." }, { status: 400 });
-  if (!demandTypes.has(type)) return NextResponse.json({ message: "Geçersiz talep tipi." }, { status: 400 });
-  if (!propertyTypes.has(propertyType)) return NextResponse.json({ message: "Geçersiz gayrimenkul tipi." }, { status: 400 });
-  if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Geçersiz para birimi." }, { status: 400 });
+  if (!title) return validationError("Talep başlığı zorunludur.");
+  if (!demandTypes.has(type)) return validationError("Geçersiz talep tipi.");
+  if (!propertyTypes.has(propertyType)) return validationError("Geçersiz gayrimenkul tipi.");
+  if (!/^[A-Z]{3}$/.test(currency)) return validationError("Geçersiz para birimi.");
 
   const toNumber = (value: unknown) => {
     if (value === null || value === undefined || value === "") return null;
@@ -63,10 +64,10 @@ export async function POST(
   const maxSize = toNumber(body.maxSize);
 
   if (budgetMin !== null && budgetMax !== null && budgetMin > budgetMax) {
-    return NextResponse.json({ message: "Minimum bütçe maksimum bütçeden büyük olamaz." }, { status: 400 });
+    return validationError("Minimum bütçe maksimum bütçeden büyük olamaz.");
   }
   if (minSize !== null && maxSize !== null && minSize > maxSize) {
-    return NextResponse.json({ message: "Minimum m² maksimum m²'den büyük olamaz." }, { status: 400 });
+    return validationError("Minimum m² maksimum m²'den büyük olamaz.");
   }
 
   const urgency = typeof body.urgency === "string" && priorities.has(body.urgency) ? body.urgency : "NORMAL";
