@@ -672,7 +672,7 @@ Tahsilat gerçekleşmiş veya satış kapanmışsa komisyon oranı/pay oranı de
 - `/matching`
 - `/sales`
 - `/finance`
-- `/finance/dashboard`
+- `/finance/cari`
 - `/calendar`
 - `/calls`
 - `/users`
@@ -1099,7 +1099,7 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 | Matching UI | `web/src/app/matching/page.tsx` |
 | Sales UI | `web/src/app/sales/page.tsx` |
 | Finance UI | `web/src/app/finance/page.tsx` |
-| Finance dashboard | `web/src/app/finance/dashboard/page.tsx` |
+| Finance cari / ödeme planı | `web/src/app/finance/cari/page.tsx` |
 | Matching engine | `web/src/core/matching-engine.ts` |
 | Legacy matching | `web/src/core/matching.ts` |
 | Prime Brain | `web/src/core/prime-brain/decision.ts` |

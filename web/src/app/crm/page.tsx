@@ -80,7 +80,7 @@ export default function CrmFlow() {
     ["05", "Teklif", `${o.length} kayıt`, "/sales"],
     ["06", "Satış", `${s.length} kayıt`, "/sales"],
     ["07", "Komisyon", "Finans workspace", "/finance"],
-    ["08", "Tahsilat", paid ? money(paid) : "Tahsilat yok", "/finance/dashboard"],
+    ["08", "Tahsilat", paid ? money(paid) : "Tahsilat yok", "/finance"],
   ];
 
   return (

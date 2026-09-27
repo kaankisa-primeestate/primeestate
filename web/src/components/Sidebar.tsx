@@ -14,7 +14,7 @@ const menu = [
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
-  { name: "Finans", href: "/finance/dashboard", icon: "💰" },
+  { name: "Finans", href: "/finance", icon: "💰" },
 ];
 
 type SessionUser = { name?: string | null; email?: string | null; role?: string | null };

@@ -102,7 +102,7 @@ async function main() {
   const [dashboardResponse, financeResponse, financeDashboardResponse] = await Promise.all([
     fetch(`${baseUrl}/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/finance`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
-    fetch(`${baseUrl}/finance/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
+    fetch(`${baseUrl}/finance/cari`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/cari` } }),
   ]);
 
   result.dashboardPage.status = dashboardResponse.status;
