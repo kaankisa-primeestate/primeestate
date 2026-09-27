@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, internalError } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
@@ -33,6 +33,7 @@ export async function GET() {
     customer: customerScope,
   };
 
+  try {
   const [openSales, paidByCurrencyRows, pendingInstallments, overdueInstallments, paymentCount, paymentPlanCount] =
     await Promise.all([
       prisma.sale.count({
@@ -65,12 +66,15 @@ export async function GET() {
     paidByCurrencyRows.map((row) => [row.currency, row._sum.amount?.toString() ?? "0"]),
   );
 
-  return NextResponse.json({
-    openSales,
-    paidByCurrency,
-    pendingInstallments,
-    overdueInstallments,
-    paymentCount,
-    paymentPlanCount,
-  });
+    return NextResponse.json({
+      openSales,
+      paidByCurrency,
+      pendingInstallments,
+      overdueInstallments,
+      paymentCount,
+      paymentPlanCount,
+    });
+  } catch {
+    return internalError();
+  }
 }

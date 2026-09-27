@@ -297,6 +297,21 @@ after(async () => {
   await prisma.$disconnect();
 });
 
+test("Phase 7: critical API errors always return stable JSON contracts", async () => {
+  const cases = [
+    ["/api/sales", "GET"],
+    ["/api/payments", "GET"],
+    ["/api/payment-plans", "GET"],
+    ["/api/offers", "GET"],
+  ] as const;
+
+  for (const [path, method] of cases) {
+    const response = await api(path, "", undefined, method);
+    await expectStatus(response, 401, path + " unauthenticated");
+    await expectErrorCode(response, "AUTHENTICATION_REQUIRED", path + " unauthenticated");
+  }
+});
+
 test("Phase 7: critical customer-to-finance business chain works through real HTTP routes", async () => {
   const fixture = await createAgent(randomUUID().slice(0, 8));
   const cookie = await login(fixture.email, fixture.password);
