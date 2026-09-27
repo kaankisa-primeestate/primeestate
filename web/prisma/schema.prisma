@@ -622,6 +622,8 @@ model Sale {
 
   @@index([customerId, status])
   @@index([listingId, status])
+  @@index([approvalStatus])
+  @@index([consultantUserId, status])
   @@unique([listingId])
 }
 
