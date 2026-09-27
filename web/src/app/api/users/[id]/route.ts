@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { apiError, authenticationRequired, conflict, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
