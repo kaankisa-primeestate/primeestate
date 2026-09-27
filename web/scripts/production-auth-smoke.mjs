@@ -142,7 +142,7 @@ async function main() {
   if (!result.session.present) { process.exitCode = 4; return; }
   if (!result.health.healthy) { process.exitCode = 5; return; }
   if (!result.customers.authenticated) { process.exitCode = 6; return; }
-  if (!result.dashboardPage.ok || !result.dashboardPage.no500 || !result.financePage.ok || !result.financePage.no500 || !!result.financeCariPage.ok || !result.financeCariPage.no500 || !result.financeDashboardLegacy.ok || !result.financeDashboardLegacy.no500 || !result.financeDashboardLegacy.redirected) {
+  if (!result.dashboardPage.ok || !result.dashboardPage.no500 || !result.financePage.ok || !result.financePage.no500 || !result.financeCariPage.ok || !result.financeCariPage.no500 || !result.financeDashboardLegacy.ok || !result.financeDashboardLegacy.no500 || !result.financeDashboardLegacy.redirected) {
     process.exitCode = 7;
     return;
   }
