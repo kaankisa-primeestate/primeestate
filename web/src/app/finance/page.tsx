@@ -8,6 +8,7 @@ type Sale = {
   amount: string | number;
   currency: string;
   status: string;
+  approvalStatus: "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI";
   commissionRate: string | number | null;
   grossCommission: string | number | null;
   officeShareRate: string | number | null;
@@ -130,7 +131,8 @@ export default function FinancePage() {
     }
   }
 
-  const completed = sales.filter((sale) => sale.status === "TAMAMLANDI");
+  const approvedSales = sales.filter((sale) => sale.approvalStatus === "ONAYLANDI");
+  const completed = approvedSales.filter((sale) => sale.status === "TAMAMLANDI");
   const currencies = Array.from(new Set(completed.map((sale) => sale.currency)));
   const paidByCurrency = payments.filter((p) => p.status === "ODENDI").reduce<Record<string, number>>((acc, payment) => {
     acc[payment.currency] = (acc[payment.currency] ?? 0) + Number(payment.amount);
@@ -143,7 +145,7 @@ export default function FinancePage() {
       <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">PrimeEstate · Finance</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Komisyon & Tahsilat</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Satış komisyonunu hesapla, tahsilatı kaydet ve ödeme gerçekleştiğinde ofis/danışman cari kayıtlarını otomatik oluştur.</p>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Broker tarafından onaylanmış satışların komisyon ve tahsilatını takip et. Onay bekleyen satışlar önce İş Akışı üzerinden kesinleşir.</p>
 
         <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -170,7 +172,7 @@ export default function FinancePage() {
             <label className="text-xs font-semibold text-slate-600 lg:col-span-2">Satış
               <select name="saleId" required className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900">
                 <option value="">Satış seçin</option>
-                {sales.filter((sale) => sale.status !== "IPTAL").map((sale) => <option key={sale.id} value={sale.id}>{sale.customer.name} · {sale.listing.code} · {money(sale.amount, sale.currency)}</option>)}
+                {approvedSales.filter((sale) => sale.status !== "IPTAL").map((sale) => <option key={sale.id} value={sale.id}>{sale.customer.name} · {sale.listing.code} · {money(sale.amount, sale.currency)}</option>)}
               </select>
             </label>
             <label className="text-xs font-semibold text-slate-600">Tutar
@@ -191,7 +193,7 @@ export default function FinancePage() {
 
         <section className="mt-6 space-y-4">
           {loading && <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">Finans verileri yükleniyor…</div>}
-          {!loading && sales.map((sale) => {
+          {!loading && approvedSales.map((sale) => {
             const commissionRate = sale.commissionRate == null ? "" : String(sale.commissionRate);
             const officeShareRate = sale.officeShareRate == null ? "" : String(sale.officeShareRate);
             const salePayments = payments.filter((payment) => payment.saleId === sale.id);
@@ -224,7 +226,7 @@ export default function FinancePage() {
                       <input name="officeShareRate" defaultValue={officeShareRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 50" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
                     </label>
                   </div>
-                  <button disabled={saving === sale.id} type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
+                  <button disabled={saving === sale.id || sale.approvalStatus !== "BEKLIYOR" type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
                 </form>
               </div>
             </article>;
