@@ -208,6 +208,10 @@ export async function PATCH(
       );
     }
 
+    if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) {
+      return NextResponse.json({ message: "Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır." }, { status: 400 });
+    }
+
     if (companyEmail && !/^\S+@\S+\.\S+$/.test(companyEmail)) {
       return NextResponse.json(
         { message: "Şirket e-posta adresi geçerli değil." },
