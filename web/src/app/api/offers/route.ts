@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, internalError } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -16,7 +16,8 @@ export async function GET(request: Request) {
   const customerId = searchParams.get("customerId")?.trim();
   const status = searchParams.get("status")?.trim();
 
-  const offers = await prisma.offer.findMany({
+  try {
+    const offers = await prisma.offer.findMany({
     where: {
       ...(customerId ? { customerId } : {}),
       ...(status && OFFER_STATUSES.includes(status as (typeof OFFER_STATUSES)[number]) ? { status: status as never } : {}),
@@ -44,7 +45,10 @@ export async function GET(request: Request) {
     take: 100,
   });
 
-  return NextResponse.json({ offers });
+    return NextResponse.json({ offers });
+  } catch {
+    return internalError();
+  }
 }
 
 export async function POST(request: Request) {
@@ -77,7 +81,8 @@ export async function POST(request: Request) {
     return validationError("Müşteri, portföy, geçerli teklif tutarı ve tarih zorunludur.");
   }
 
-  const customer = await prisma.customer.findFirst({
+  try {
+    const customer = await prisma.customer.findFirst({
     where: {
       id: customerId,
       organizationId: context.organizationId,
@@ -86,9 +91,9 @@ export async function POST(request: Request) {
     },
     select: { id: true },
   });
-  if (!customer) return NextResponse.json({ message: "Bu müşteri için teklif oluşturma yetkiniz yok." }, { status: 403 });
+    if (!customer) return forbidden("Bu müşteri için teklif oluşturma yetkiniz yok.");
 
-  const listing = await prisma.listing.findFirst({
+    const listing = await prisma.listing.findFirst({
     where: {
       id: listingId,
       ...officeListingScope(context),
@@ -96,9 +101,9 @@ export async function POST(request: Request) {
     },
     select: { id: true },
   });
-  if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
+    if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
 
-  const offer = await prisma.offer.create({
+    const offer = await prisma.offer.create({
     data: {
       customerId,
       listingId,
@@ -113,7 +118,7 @@ export async function POST(request: Request) {
     },
   });
 
-  await prisma.auditLog.create({
+    await prisma.auditLog.create({
     data: {
       organizationId: context.organizationId,
       actorUserId: context.userId,
@@ -124,5 +129,8 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ offer }, { status: 201 });
+    return NextResponse.json({ offer }, { status: 201 });
+  } catch {
+    return internalError();
+  }
 }
