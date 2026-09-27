@@ -115,6 +115,7 @@ export async function POST(request: Request) {
   if (!emailOk(email) || (companyEmail && !emailOk(companyEmail))) return NextResponse.json({ message: "Geçerli bir e-posta adresi girin." }, { status: 400 });
   if (password.length < 8 || password.length > 128) return NextResponse.json({ message: "Şifre 8-128 karakter arasında olmalıdır." }, { status: 400 });
   if (Number.isNaN(officeShareRate) || Number.isNaN(consultantShareRate)) return NextResponse.json({ message: "Komisyon oranları 0-100 arasında olmalıdır." }, { status: 400 });
+  if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) return NextResponse.json({ message: "Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır." }, { status: 400 });
   if (rentAmountRaw !== null && (!Number.isFinite(rentAmountRaw) || rentAmountRaw < 0)) return NextResponse.json({ message: "Kira tutarı 0 veya daha büyük olmalıdır." }, { status: 400 });
   if (rentStartDate && Number.isNaN(rentStartDate.getTime())) return NextResponse.json({ message: "Geçersiz kira başlangıç tarihi." }, { status: 400 });
   if (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) return NextResponse.json({ message: "Kira ödeme günü 1-31 arasında olmalıdır." }, { status: 400 });
