@@ -12,6 +12,9 @@ type Sale = {
   commissionRate: string | number | null;
   grossCommission: string | number | null;
   officeShareRate: string | number | null;
+  sourceOfficeShareRate: string | number | null;
+  sourceConsultantShareRate: string | number | null;
+  sourceCommissionPlanId: string | null;
   officeShare: string | number | null;
   consultantShare: string | number | null;
   customer: { id: string; name: string };
@@ -217,16 +220,16 @@ export default function FinancePage() {
                   </div>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); const form = new FormData(e.currentTarget); void saveCommission(sale.id, String(form.get("commissionRate") ?? ""), String(form.get("officeShareRate") ?? "")); }} className="w-full rounded-2xl bg-slate-50 p-4 xl:max-w-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Satış oranları</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Satış oranları</p><div className="mt-3 rounded-xl border border-slate-200 bg-white p-3"><p className="text-xs font-semibold text-slate-700">Ofis kaynağı</p><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><div><span className="text-slate-400">Ofis payı</span><p className="mt-1 font-semibold text-slate-900">{sale.sourceOfficeShareRate != null ? `%${sale.sourceOfficeShareRate}` : "Tanımlı değil"}</p></div><div><span className="text-slate-400">Danışman payı</span><p className="mt-1 font-semibold text-slate-900">{sale.sourceConsultantShareRate != null ? `%${sale.sourceConsultantShareRate}` : "Tanımlı değil"}</p></div></div><p className="mt-2 text-[11px] leading-4 text-slate-500">Satış oluşturulurken ofisteki danışman kaydından alınan sabit kaynak oranları.</p></div>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <label className="text-xs font-semibold text-slate-600">Komisyon %
                       <input name="commissionRate" defaultValue={commissionRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 2" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
                     </label>
-                    <label className="text-xs font-semibold text-slate-600">Ofis payı %
+                    <label className="text-xs font-semibold text-slate-600">Ofis payı % <span className="font-normal text-slate-400">(manuel)</span>
                       <input name="officeShareRate" defaultValue={officeShareRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 50" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
                     </label>
                   </div>
-                  <button disabled={saving === sale.id || sale.approvalStatus !== "BEKLIYOR"} type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
+                  <p className="mt-3 text-[11px] leading-4 text-slate-500">Gerekirse bu satış için manuel oran girilebilir. Broker onayından sonra oranlar kilitlenir.</p><button disabled={saving === sale.id || sale.approvalStatus !== "BEKLIYOR"} type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
                 </form>
               </div>
             </article>;
