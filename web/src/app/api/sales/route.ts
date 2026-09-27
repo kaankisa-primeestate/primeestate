@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, internalError } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -11,12 +11,16 @@ export async function GET(request: Request) {
   try { if (!can(context.role, "sales", "read")) return forbidden(); } catch { return forbidden(); }
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
-  const sales = await prisma.sale.findMany({
+  try {
+    const sales = await prisma.sale.findMany({
     where: { ...(customerId ? { customerId } : {}), customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, consultant: { select: { id: true, name: true } }, approvedBy: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
     orderBy: { createdAt: "desc" }, take: 100,
   });
-  return NextResponse.json({ sales, currentUser: { id: context.userId, role: context.role } });
+    return NextResponse.json({ sales, currentUser: { id: context.userId, role: context.role } });
+  } catch {
+    return internalError();
+  }
 }
 
 export async function POST(request: Request) {
@@ -24,9 +28,9 @@ export async function POST(request: Request) {
   if (!context) return authenticationRequired();
   try { if (!can(context.role, "sales", "create")) return forbidden(); } catch { return forbidden(); }
   let body: { offerId?: unknown; note?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
   const offerId = typeof body.offerId === "string" ? body.offerId.trim() : "";
-  if (!offerId) return NextResponse.json({ message: "Kabul edilmiş teklif zorunludur." }, { status: 400 });
+  if (!offerId) return validationError("Kabul edilmiş teklif zorunludur.");
 
   try {
     const sale = await prisma.$transaction(async (tx) => {
@@ -106,6 +110,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ sale }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Satış oluşturulamadı." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Satış oluşturulamadı.");
   }
 }
