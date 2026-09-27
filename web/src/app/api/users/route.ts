@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { authenticationRequired, conflict, forbidden, validationError } from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
@@ -52,10 +52,7 @@ export async function GET() {
   const context = await getUserContext();
 
   if (!context) {
-    return NextResponse.json(
-      { message: "Authentication required." },
-      { status: 401 },
-    );
+    return authenticationRequired();
   }
 
   if (!can(context.role, "users", "read")) return forbidden();
@@ -291,10 +288,7 @@ export async function POST(request: Request) {
   const context = await getUserContext();
 
   if (!context) {
-    return NextResponse.json(
-      { message: "Authentication required." },
-      { status: 401 },
-    );
+    return authenticationRequired();
   }
 
   if (!can(context.role, "users", "create")) return forbidden();
@@ -311,26 +305,17 @@ export async function POST(request: Request) {
     typeof body?.teamId === "string" && body.teamId ? body.teamId : null;
 
   if (!name || !email) {
-    return NextResponse.json(
-      { message: "Ad soyad ve e-posta zorunludur." },
-      { status: 400 },
-    );
+    return validationError("Ad soyad ve e-posta zorunludur.");
   }
 
   if (!ROLE_VALUES.includes(requestedRole as ManagedRole)) {
-    return NextResponse.json(
-      { message: "Geçersiz kullanıcı rolü." },
-      { status: 400 },
-    );
+    return validationError("Geçersiz kullanıcı rolü.");
   }
 
   const role = requestedRole as ManagedRole;
 
   if (!canManageRole(context.role, role)) {
-    return NextResponse.json(
-      { message: "Bu rolü atama yetkiniz yok." },
-      { status: 403 },
-    );
+    return forbidden("Bu rolü atama yetkiniz yok.");
   }
 
   const officeId =
@@ -348,10 +333,7 @@ export async function POST(request: Request) {
   });
 
   if (!office) {
-    return NextResponse.json(
-      { message: "Seçilen ofis bulunamadı veya yetkiniz yok." },
-      { status: 403 },
-    );
+    return forbidden("Seçilen ofis bulunamadı veya yetkiniz yok.");
   }
 
   if (requestedTeamId) {
@@ -364,10 +346,7 @@ export async function POST(request: Request) {
     });
 
     if (!team) {
-      return NextResponse.json(
-        { message: "Seçilen ekip bu ofise ait değil." },
-        { status: 400 },
-      );
+      return validationError("Seçilen ekip bu ofise ait değil.");
     }
   }
 
@@ -377,10 +356,7 @@ export async function POST(request: Request) {
   });
 
   if (existing) {
-    return NextResponse.json(
-      { message: "Bu e-posta adresi zaten bir kullanıcıya ait." },
-      { status: 409 },
-    );
+    return conflict("Bu e-posta adresi zaten bir kullanıcıya ait.");
   }
 
   const contextAuth = await auth.$context;

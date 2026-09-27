@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { apiError, authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
@@ -49,10 +49,7 @@ export async function PATCH(
   const context = await getUserContext();
 
   if (!context) {
-    return NextResponse.json(
-      { message: "Authentication required." },
-      { status: 401 },
-    );
+    return authenticationRequired();
   }
 
   if (!can(context.role, "users", "update")) return forbidden();
@@ -72,10 +69,7 @@ export async function PATCH(
   });
 
   if (!existing) {
-    return NextResponse.json(
-      { message: "Kullanıcı bulunamadı veya yetkiniz yok." },
-      { status: 404 },
-    );
+    return notFound("Kullanıcı bulunamadı veya yetkiniz yok.");
   }
 
   const body = await request.json().catch(() => null);
@@ -91,10 +85,7 @@ export async function PATCH(
       });
     } catch (error) {
       console.error("PrimeEstate password reset email failed.", error);
-      return NextResponse.json(
-        { message: "Şifre yenileme e-postası gönderilemedi. E-posta ayarlarını kontrol edin." },
-        { status: 502 },
-      );
+      return apiError(502, "INTERNAL_ERROR", "Şifre yenileme e-postası gönderilemedi. E-posta ayarlarını kontrol edin.");
     }
 
     await prisma.auditLog.create({
@@ -115,10 +106,7 @@ export async function PATCH(
 
   if (action === "TOGGLE_ACTIVE") {
     if (existing.id === context.userId) {
-      return NextResponse.json(
-        { message: "Kendi hesabınızı bu ekrandan pasifleştiremezsiniz." },
-        { status: 400 },
-      );
+      return validationError("Kendi hesabınızı bu ekrandan pasifleştiremezsiniz.");
     }
 
     const nextActive = !existing.active;
@@ -153,10 +141,7 @@ export async function PATCH(
 
   if (action === "UPDATE_CONSULTANT") {
     if (existing.role !== "AGENT") {
-      return NextResponse.json(
-        { message: "Bu kullanıcı aktif bir danışman hesabı değil." },
-        { status: 400 },
-      );
+      return validationError("Bu kullanıcı aktif bir danışman hesabı değil.");
     }
 
     const profile = body?.profile && typeof body.profile === "object" ? body.profile : {};
@@ -187,10 +172,7 @@ export async function PATCH(
     const termsNote = typeof commission.termsNote === "string" ? commission.termsNote.trim() : "";
 
     if (!firstName || !lastName || !phone || !companyName || !commissionModel) {
-      return NextResponse.json(
-        { message: "Danışman adı, soyadı, telefon, şirket ve komisyon modeli zorunludur." },
-        { status: 400 },
-      );
+      return validationError("Danışman adı, soyadı, telefon, şirket ve komisyon modeli zorunludur.");
     }
 
     if (
@@ -202,10 +184,7 @@ export async function PATCH(
       (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) ||
       (rentStartDate !== null && Number.isNaN(rentStartDate.getTime()))
     ) {
-      return NextResponse.json(
-        { message: "Komisyon oranları 0-100 arasında olmalıdır." },
-        { status: 400 },
-      );
+      return validationError("Komisyon oranları 0-100 arasında olmalıdır.");
     }
 
     if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) {
@@ -213,10 +192,7 @@ export async function PATCH(
     }
 
     if (companyEmail && !/^\S+@\S+\.\S+$/.test(companyEmail)) {
-      return NextResponse.json(
-        { message: "Şirket e-posta adresi geçerli değil." },
-        { status: 400 },
-      );
+      return validationError("Şirket e-posta adresi geçerli değil.");
     }
 
     const [existingProfile, existingCompany, existingCommission] = await Promise.all([
@@ -238,10 +214,7 @@ export async function PATCH(
     ]);
 
     if (!existingProfile || !existingCompany || !existingCommission) {
-      return NextResponse.json(
-        { message: "Bu danışman hesabının resmi profil kayıtları eksik. Önce onboarding kaydını tamamlayın." },
-        { status: 409 },
-      );
+      return conflict("Bu danışman hesabının resmi profil kayıtları eksik. Önce onboarding kaydını tamamlayın.");
     }
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -329,10 +302,7 @@ export async function PATCH(
   }
 
   if (action !== "UPDATE") {
-    return NextResponse.json(
-      { message: "Geçersiz kullanıcı işlemi." },
-      { status: 400 },
-    );
+    return validationError("Geçersiz kullanıcı işlemi.");
   }
 
   const requestedRole =
@@ -345,26 +315,17 @@ export async function PATCH(
     typeof body?.name === "string" ? body.name.trim() : existing.name;
 
   if (!ROLE_VALUES.includes(requestedRole as ManagedRole)) {
-    return NextResponse.json(
-      { message: "Geçersiz kullanıcı rolü." },
-      { status: 400 },
-    );
+    return validationError("Geçersiz kullanıcı rolü.");
   }
 
   if (!requestedName) {
-    return NextResponse.json(
-      { message: "Ad soyad boş bırakılamaz." },
-      { status: 400 },
-    );
+    return validationError("Ad soyad boş bırakılamaz.");
   }
 
   const role = requestedRole as ManagedRole;
 
   if (!canManageRole(context.role, role)) {
-    return NextResponse.json(
-      { message: "Bu rolü atama yetkiniz yok." },
-      { status: 403 },
-    );
+    return forbidden("Bu rolü atama yetkiniz yok.");
   }
 
   const office = await prisma.office.findFirst({
@@ -377,10 +338,7 @@ export async function PATCH(
   });
 
   if (!office) {
-    return NextResponse.json(
-      { message: "Seçilen ofis bulunamadı veya yetkiniz yok." },
-      { status: 403 },
-    );
+    return forbidden("Seçilen ofis bulunamadı veya yetkiniz yok.");
   }
 
   if (requestedTeamId) {
@@ -390,10 +348,7 @@ export async function PATCH(
     });
 
     if (!team) {
-      return NextResponse.json(
-        { message: "Seçilen ekip bu ofise ait değil." },
-        { status: 400 },
-      );
+      return validationError("Seçilen ekip bu ofise ait değil.");
     }
   }
 

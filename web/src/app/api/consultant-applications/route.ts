@@ -110,16 +110,16 @@ export async function POST(request: Request) {
   const termsNote = typeof body?.termsNote === "string" ? body.termsNote.trim() : "";
 
   if (!officeSlug || !firstName || !lastName || !tc || !email || !phone || !password || !companyName || !commissionModel) {
-    return NextResponse.json({ message: "Ofis, ad, soyad, T.C. kimlik no, e-posta, telefon, şifre, şirket ve komisyon modeli zorunludur." }, { status: 400 });
+    return validationError("Ofis, ad, soyad, T.C. kimlik no, e-posta, telefon, şifre, şirket ve komisyon modeli zorunludur.");
   }
-  if (!isValidTc(tc)) return NextResponse.json({ message: "Geçerli bir T.C. kimlik numarası girin." }, { status: 400 });
-  if (!emailOk(email) || (companyEmail && !emailOk(companyEmail))) return NextResponse.json({ message: "Geçerli bir e-posta adresi girin." }, { status: 400 });
-  if (password.length < 8 || password.length > 128) return NextResponse.json({ message: "Şifre 8-128 karakter arasında olmalıdır." }, { status: 400 });
-  if (Number.isNaN(officeShareRate) || Number.isNaN(consultantShareRate)) return NextResponse.json({ message: "Komisyon oranları 0-100 arasında olmalıdır." }, { status: 400 });
-  if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) return NextResponse.json({ message: "Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır." }, { status: 400 });
-  if (rentAmountRaw !== null && (!Number.isFinite(rentAmountRaw) || rentAmountRaw < 0)) return NextResponse.json({ message: "Kira tutarı 0 veya daha büyük olmalıdır." }, { status: 400 });
-  if (rentStartDate && Number.isNaN(rentStartDate.getTime())) return NextResponse.json({ message: "Geçersiz kira başlangıç tarihi." }, { status: 400 });
-  if (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) return NextResponse.json({ message: "Kira ödeme günü 1-31 arasında olmalıdır." }, { status: 400 });
+  if (!isValidTc(tc)) return validationError("Geçerli bir T.C. kimlik numarası girin.");
+  if (!emailOk(email) || (companyEmail && !emailOk(companyEmail))) return validationError("Geçerli bir e-posta adresi girin.");
+  if (password.length < 8 || password.length > 128) return validationError("Şifre 8-128 karakter arasında olmalıdır.");
+  if (Number.isNaN(officeShareRate) || Number.isNaN(consultantShareRate)) return validationError("Komisyon oranları 0-100 arasında olmalıdır.");
+  if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) return validationError("Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır.");
+  if (rentAmountRaw !== null && (!Number.isFinite(rentAmountRaw) || rentAmountRaw < 0)) return validationError("Kira tutarı 0 veya daha büyük olmalıdır.");
+  if (rentStartDate && Number.isNaN(rentStartDate.getTime())) return validationError("Geçersiz kira başlangıç tarihi.");
+  if (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) return validationError("Kira ödeme günü 1-31 arasında olmalıdır.");
 
   const office = await prisma.office.findFirst({
     where: { slug: officeSlug },
@@ -188,7 +188,7 @@ export async function PATCH(request: Request) {
   const id = typeof body?.id === "string" ? body.id : "";
   const action = body?.action === "APPROVE" || body?.action === "REJECT" ? body.action : "";
   const rejectionNote = typeof body?.rejectionNote === "string" ? body.rejectionNote.trim() : "";
-  if (!id || !action) return NextResponse.json({ message: "Başvuru ve işlem bilgisi zorunludur." }, { status: 400 });
+  if (!id || !action) return validationError("Başvuru ve işlem bilgisi zorunludur.");
 
   const application = await prisma.consultantApplication.findFirst({
     where: {
@@ -197,8 +197,8 @@ export async function PATCH(request: Request) {
       ...(context.role === "OFFICE_ADMIN" ? { officeId: context.officeId } : {}),
     },
   });
-  if (!application) return NextResponse.json({ message: "Başvuru bulunamadı veya yetkiniz yok." }, { status: 404 });
-  if (application.status !== "BEKLEMEDE") return NextResponse.json({ message: "Bu başvuru daha önce sonuçlandırılmış." }, { status: 409 });
+  if (!application) return notFound("Başvuru bulunamadı veya yetkiniz yok.");
+  if (application.status !== "BEKLEMEDE") return conflict("Bu başvuru daha önce sonuçlandırılmış.");
 
   if (action === "REJECT") {
     const updated = await prisma.consultantApplication.update({
@@ -219,10 +219,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ application: updated, message: "Danışman başvurusu reddedildi." });
   }
 
-  if (!application.passwordHash) return NextResponse.json({ message: "Başvurunun giriş bilgisi bulunamadı." }, { status: 500 });
+  if (!application.passwordHash) return internalError("Başvurunun giriş bilgisi bulunamadı.");
 
   const existingUser = await prisma.user.findUnique({ where: { email: application.email }, select: { id: true } });
-  if (existingUser) return NextResponse.json({ message: "Bu e-posta zaten aktif bir kullanıcıya ait." }, { status: 409 });
+  if (existingUser) return conflict("Bu e-posta zaten aktif bir kullanıcıya ait.");
 
   const contextAuth = await auth.$context;
   let user: { id: string; name: string; email: string };
@@ -247,7 +247,7 @@ export async function PATCH(request: Request) {
     user = { id: created.id, name: created.name, email: created.email };
   } catch (error) {
     console.error("PrimeEstate consultant credential creation failed.", error);
-    return NextResponse.json({ message: "Danışman hesabı oluşturulamadı. Başvuru tekrar incelenebilir." }, { status: 500 });
+    return internalError("Danışman hesabı oluşturulamadı. Başvuru tekrar incelenebilir.");
   }
 
   try {
@@ -318,6 +318,6 @@ export async function PATCH(request: Request) {
     await prisma.session.deleteMany({ where: { userId: user.id } }).catch(() => undefined);
     await prisma.account.deleteMany({ where: { userId: user.id } }).catch(() => undefined);
     await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
-    return NextResponse.json({ message: "Onay kaydı tamamlanamadı; danışman hesabı geri alındı." }, { status: 500 });
+    return internalError("Onay kaydı tamamlanamadı; danışman hesabı geri alındı.");
   }
 }

@@ -312,6 +312,38 @@ test("Phase 7: critical API errors always return stable JSON contracts", async (
   }
 });
 
+test("Phase 7: onboarding and user-admin APIs follow the same stable error contract", async () => {
+  const protectedCases = [
+    ["/api/users", "GET"],
+    ["/api/users", "POST"],
+    ["/api/users/nonexistent-user-id", "PATCH"],
+  ] as const;
+
+  for (const [path, method] of protectedCases) {
+    const response = await api(path, "", method === "POST" ? {} : undefined, method);
+    await expectStatus(response, 401, path + " unauthenticated");
+    await expectErrorCode(response, "AUTHENTICATION_REQUIRED", path + " unauthenticated");
+  }
+
+  const officeApplication = await api(
+    "/api/platform/office-applications",
+    "",
+    {},
+    "POST",
+  );
+  await expectStatus(officeApplication, 400, "officeApplication validation");
+  await expectErrorCode(officeApplication, "VALIDATION_ERROR", "officeApplication validation");
+
+  const consultantApplication = await api(
+    "/api/consultant-applications",
+    "",
+    {},
+    "POST",
+  );
+  await expectStatus(consultantApplication, 400, "consultantApplication validation");
+  await expectErrorCode(consultantApplication, "VALIDATION_ERROR", "consultantApplication validation");
+});
+
 test("Phase 7: critical customer-to-finance business chain works through real HTTP routes", async () => {
   const fixture = await createAgent(randomUUID().slice(0, 8));
   const cookie = await login(fixture.email, fixture.password);

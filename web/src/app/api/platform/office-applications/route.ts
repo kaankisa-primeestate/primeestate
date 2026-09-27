@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import {
+  authenticationRequired,
+  conflict,
+  forbidden,
+  internalError,
+  notFound,
+  validationError,
+} from "@/lib/api-response";
 
 import { auth } from "@/lib/auth";
 import { getUserContext } from "@/lib/auth-context";
@@ -34,20 +42,20 @@ export async function POST(request: Request) {
   const password = typeof body?.password === "string" ? body.password : "";
 
   if (!officeName || !ownerFirstName || !ownerLastName || !ownerEmail || !ownerPhone || !password) {
-    return NextResponse.json({ message: "Ofis adı, ad, soyad, telefon, e-posta ve şifre zorunludur." }, { status: 400 });
+    return validationError("Ofis adı, ad, soyad, telefon, e-posta ve şifre zorunludur.");
   }
 
   if (!isValidEmail(ownerEmail)) {
-    return NextResponse.json({ message: "Geçerli bir e-posta adresi girin." }, { status: 400 });
+    return validationError("Geçerli bir e-posta adresi girin.");
   }
 
   if (password.length < 8 || password.length > 128) {
-    return NextResponse.json({ message: "Şifre 8-128 karakter arasında olmalıdır." }, { status: 400 });
+    return validationError("Şifre 8-128 karakter arasında olmalıdır.");
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email: ownerEmail }, select: { id: true } });
   if (existingUser) {
-    return NextResponse.json({ message: "Bu e-posta adresi zaten kayıtlı." }, { status: 409 });
+    return conflict("Bu e-posta adresi zaten kayıtlı.");
   }
 
   const existingApplication = await prisma.officeApplication.findFirst({
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
     select: { id: true },
   });
   if (existingApplication) {
-    return NextResponse.json({ message: "Bu e-posta ile bekleyen bir ofis başvurusu zaten var." }, { status: 409 });
+    return conflict("Bu e-posta ile bekleyen bir ofis başvurusu zaten var.");
   }
 
   const contextAuth = await auth.$context;
@@ -93,9 +101,8 @@ export async function POST(request: Request) {
 export async function GET() {
   const context = await getUserContext();
 
-  if (!context || context.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ message: "Platform yöneticisi yetkisi gerekli." }, { status: 403 });
-  }
+  if (!context) return authenticationRequired();
+  if (context.role !== "SUPER_ADMIN") return forbidden("Platform yöneticisi yetkisi gerekli.");
 
   const applications = await prisma.officeApplication.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -119,27 +126,20 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const context = await getUserContext();
 
-  if (!context || context.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ message: "Platform yöneticisi yetkisi gerekli." }, { status: 403 });
-  }
+  if (!context) return authenticationRequired();
+  if (context.role !== "SUPER_ADMIN") return forbidden("Platform yöneticisi yetkisi gerekli.");
 
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : "";
   const action = body?.action === "APPROVE" || body?.action === "REJECT" ? body.action : "";
   const rejectionNote = typeof body?.rejectionNote === "string" ? body.rejectionNote.trim() : "";
 
-  if (!id || !action) {
-    return NextResponse.json({ message: "Başvuru ve işlem bilgisi zorunludur." }, { status: 400 });
-  }
+  if (!id || !action) return validationError("Başvuru ve işlem bilgisi zorunludur.");
 
   const application = await prisma.officeApplication.findUnique({ where: { id } });
-  if (!application) {
-    return NextResponse.json({ message: "Başvuru bulunamadı." }, { status: 404 });
-  }
+  if (!application) return notFound("Başvuru bulunamadı.");
 
-  if (application.status !== "BEKLEMEDE") {
-    return NextResponse.json({ message: "Bu başvuru daha önce sonuçlandırılmış." }, { status: 409 });
-  }
+  if (application.status !== "BEKLEMEDE") return conflict("Bu başvuru daha önce sonuçlandırılmış.");
 
   if (action === "REJECT") {
     const updated = await prisma.officeApplication.update({
@@ -152,11 +152,11 @@ export async function PATCH(request: Request) {
 
   const existingUser = await prisma.user.findUnique({ where: { email: application.ownerEmail }, select: { id: true } });
   if (existingUser) {
-    return NextResponse.json({ message: "Bu e-posta zaten aktif bir kullanıcıya ait." }, { status: 409 });
+    return conflict("Bu e-posta zaten aktif bir kullanıcıya ait.");
   }
 
   if (!application.passwordHash) {
-    return NextResponse.json({ message: "Başvurunun giriş bilgisi bulunamadı." }, { status: 500 });
+    return internalError("Başvurunun giriş bilgisi bulunamadı.");
   }
 
   const baseSlug = slugify(application.officeName);
@@ -237,7 +237,7 @@ export async function PATCH(request: Request) {
       where: { id: application.id },
       data: { status: "BEKLEMEDE", reviewedAt: null },
     }).catch(() => undefined);
-    return NextResponse.json({ message: "Broker hesabı oluşturulamadı. Başvuru tekrar incelenebilir." }, { status: 500 });
+    return internalError("Broker hesabı oluşturulamadı. Başvuru tekrar incelenebilir.");
   }
 
   return NextResponse.json({
