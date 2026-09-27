@@ -1,12 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
 type Customer={id:string;name:string};
 type Listing={id:string;code:string;title:string;price:string|number;currency:string};
-export default function NewSalesOfferPage(){
+
+function OfferForm(){
  const router=useRouter(); const params=useSearchParams();
  const preCustomerId=params.get("customerId")??""; const preListingId=params.get("listingId")??"";
  const [customers,setCustomers]=useState<Customer[]>([]),[listings,setListings]=useState<Listing[]>([]),[saving,setSaving]=useState(false),[error,setError]=useState("");
@@ -14,15 +15,7 @@ export default function NewSalesOfferPage(){
    fetch("/api/customers",{cache:"no-store"}).then(r=>r.json()).then(d=>setCustomers(d.customers??[])),
    fetch("/api/listings?status=AKTIF",{cache:"no-store"}).then(r=>r.json()).then(d=>setListings(d.listings??[]))
  ]).catch(()=>setError("Form verileri alınamadı."));},[]);
- async function submit(e:FormEvent<HTMLFormElement>){
-   e.preventDefault(); setSaving(true); setError("");
-   const data=Object.fromEntries(new FormData(e.currentTarget).entries());
-   try{
-     const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,amount:Number(data.amount)})});
-     const d=await r.json(); if(!r.ok) throw new Error(d.message??"Teklif oluşturulamadı.");
-     router.push("/sales");
-   }catch(err){setError(err instanceof Error?err.message:"Teklif oluşturulamadı.");setSaving(false);}
- }
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,amount:Number(data.amount)})});const d=await r.json();if(!r.ok)throw new Error(d.message??"Teklif oluşturulamadı.");router.push("/sales");}catch(err){setError(err instanceof Error?err.message:"Teklif oluşturulamadı.");setSaving(false);}}
  const selectedListing=listings.find(l=>l.id===preListingId);
  return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-3xl">
  <button type="button" onClick={()=>router.back()} className="mb-5 text-sm font-semibold text-slate-600">← İş Akışına dön</button>
@@ -37,4 +30,8 @@ export default function NewSalesOfferPage(){
  <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Sonraki aksiyon</span><input name="nextAction" placeholder="Örn. 2 gün sonra müşteriyle tekrar görüş" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
  </div></section><div className="flex justify-end gap-2"><button type="button" onClick={()=>router.back()} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving?"Kaydediliyor…":"Teklifi kaydet"}</button></div></form>
  </div></main></div>;
+}
+
+export default function NewSalesOfferPage(){
+ return <Suspense fallback={<main className="min-h-screen bg-slate-50 p-8 text-slate-500">Teklif formu yükleniyor…</main>}><OfferForm/></Suspense>;
 }
