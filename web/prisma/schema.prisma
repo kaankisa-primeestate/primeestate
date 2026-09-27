@@ -231,7 +231,7 @@ model ConsultantCommissionPlan {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
 
-  sales              Sale[]
+  sales              Sale[] @relation("SaleSourceCommissionPlan")
   @@index([organizationId, officeId, active])
 }
 
@@ -323,6 +323,8 @@ model User {
   consultantProfile ConsultantProfile?
   consultantCompany ConsultantCompany?
   consultantCommissionPlan ConsultantCommissionPlan?
+  salesAsConsultant Sale[] @relation("SaleConsultant")
+  approvedSales Sale[] @relation("SaleApprovedBy")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId, officeId])
@@ -616,7 +618,7 @@ model Sale {
   offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
   consultant User? @relation("SaleConsultant", fields: [consultantUserId], references: [id], onDelete: SetNull)
   approvedBy User? @relation("SaleApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
-  sourceCommissionPlan ConsultantCommissionPlan? @relation(fields: [sourceCommissionPlanId], references: [id], onDelete: SetNull)
+  sourceCommissionPlan ConsultantCommissionPlan? @relation("SaleSourceCommissionPlan", fields: [sourceCommissionPlanId], references: [id], onDelete: SetNull)
   payments Payment[]
   paymentPlan PaymentPlan?
   ledgerEntries LedgerEntry[]
