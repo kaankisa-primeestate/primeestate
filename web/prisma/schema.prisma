@@ -361,9 +361,6 @@ model Customer {
   showings     Showing[]
   offers       Offer[]
   sales        Sale[]
-  salesAsConsultant Sale[] @relation("SaleConsultant")
-  approvedSales Sale[] @relation("SaleApprovedBy")
-
   @@index([organizationId, officeId])
   @@index([ownerUserId])
   @@index([phone])
