@@ -66,7 +66,7 @@ Bring the live consultant workflow to a consistent mobile-first standard without
 
 ### Current main commit
 
-`3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c`
+`cc131d6974da05a95908e1c400dc1b505a3caefe`
 
 ### Branch state
 
@@ -74,16 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1081 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #165 — **success**
-- PrimeEstate Web Quality #1082 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #166 — **success**
+- PrimeEstate Web Quality #1087 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #171 — **success**
 
 ### Immediate next steps
 
-1. Finish mobile UX pass on Sales Ops / İş Akışı.
-2. Apply the same mobile-first pass to Finance, then Calendar and Calls.
-3. After the mobile pass, re-audit the actual main state and synchronize this snapshot again.
+1. Mobile UX pass is complete through Sales Ops, Finance, Calendar and Calls.
+2. Re-audit the duplicate/legacy finance route naming without changing business semantics.
+3. Then expand the API contract suite and address the remaining technical debt.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -114,6 +112,9 @@ Latest mobile UX commits on main:
 - Customer detail mobile polish
 - Customer edit form mobile polish
 - Sales Ops / İş Akışı mobile workspace polish (`3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c`)
+- Finance workspace + Finance Dashboard mobile polish (`30308875bd54fbf8bb7526a7fe80db3252e38a82`)
+- Calendar mobile workspace polish (`41b8d6bef04bc42353c54595edc03ebfbb0b84c6`)
+- Calls mobile workspace polish (`cc131d6974da05a95908e1c400dc1b505a3caefe`)
 
 ## 6. PRIME BRAIN — CURRENT ARCHITECTURE
 
@@ -290,12 +291,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 10 — Mobile UX / Sales Operations Stabilization
-- CURRENT_TASK: Sales Ops / İş Akışı ekranını mobil-first standarda taşımak
+- CURRENT_TASK: Mobile UX passını tamamlayıp finance route naming cleanup aşamasına geçmek
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c
+- BASE_MAIN_COMMIT: cc131d6974da05a95908e1c400dc1b46be2a0e11c
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1082 ✅; Production Auth Smoke #166 ✅
+- LAST_GREEN_CHECKS: Web Quality #1087 ✅; Production Auth Smoke #171 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: Finance ekranının mobil düzenini iyileştir; sonra Takvim ve Aramalar için aynı mobile-first standardı uygula
+- NEXT_STEP: finance route naming cleanup; ardından genişletilmiş API contract suite
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-27
