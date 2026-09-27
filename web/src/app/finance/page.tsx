@@ -307,6 +307,8 @@ export default function FinancePage() {
                 <div className="min-w-0 flex-1">
                    <div className="flex flex-wrap items-center gap-2">
                      <span className={statusClass}>
+                       {sale.status === "TAMAMLANDI" ? "Tamamlandı" : sale.status === "IPTAL" ? "İptal" : "Açık"}
+                     </span>
                      <span className="text-xs text-slate-400">{sale.listing.code}</span>
                    </div>
                   <h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2>
