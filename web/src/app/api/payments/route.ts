@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       ...(saleId ? { saleId } : {}),
       sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
     },
-    include: { ledgerEntries: true, sale: { select: { id: true, amount: true, currency: true, customer: { select: { id: true, name: true } }, listing: { select: { code: true, title: true } } } } },
+    include: { ledgerEntries: true, installment: { select: { id: true, sequence: true, status: true, dueAt: true } }, sale: { select: { id: true, amount: true, currency: true, customer: { select: { id: true, name: true } }, listing: { select: { code: true, title: true } } } } },
     orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
     take: 200,
   });
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const context = await getUserContext();
   if (!context) return authenticationRequired();
   try { assertCan(context, "payments", "create"); } catch { return forbidden(); }
-  let body: { saleId?: unknown; amount?: unknown; currency?: unknown; status?: unknown; paidAt?: unknown; note?: unknown };
+  let body: { saleId?: unknown; amount?: unknown; currency?: unknown; status?: unknown; paidAt?: unknown; note?: unknown; installmentId?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
   const amount = Number(body.amount);
