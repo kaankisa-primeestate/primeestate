@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, consultant: { select: { id: true, name: true } }, approvedBy: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true, status: true, purpose: true } }, offer: { select: { id: true, status: true, offeredAt: true } } },
     orderBy: { createdAt: "desc" }, take: 100,
   });
-  return NextResponse.json({ sales });
+  return NextResponse.json({ sales, currentUser: { id: context.userId, role: context.role } });
 }
 
 export async function POST(request: Request) {
