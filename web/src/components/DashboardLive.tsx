@@ -124,7 +124,7 @@ export default function DashboardLive() {
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
       <Sidebar />
-      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+      <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -132,9 +132,9 @@ export default function DashboardLive() {
               <h1 className="mt-2 text-3xl font-semibold">Günaydın, Kaan.</h1>
               <p className="mt-2 text-sm text-slate-500">Dashboard gerçek CRM verileriyle çalışıyor ve 30 saniyede bir yenileniyor.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
               {lastUpdated && <span className="hidden text-xs text-slate-400 sm:inline">Son güncelleme {lastUpdated.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>}
-              <button onClick={() => void load()} disabled={busy} className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50">{busy ? "Yükleniyor…" : "↻ Yenile"}</button>
+              <button onClick={() => void load()} disabled={busy} className="flex-1 rounded-xl border bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50 sm:flex-none">{busy ? "Yükleniyor…" : "↻ Yenile"}</button>
             </div>
           </header>
 
@@ -144,7 +144,7 @@ export default function DashboardLive() {
                 <label className="sr-only" htmlFor="dashboard-search">Dashboard ara</label>
                 <input id="dashboard-search" value={dashboardQuery} onChange={(event) => setDashboardQuery(event.target.value)} placeholder="Müşteri, görev, gösterim veya aktivite ara…" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400" />
               </div>
-              <div className="flex gap-2">
+              <div className="flex max-w-full gap-2 overflow-x-auto pb-0.5">
                 {[
                   ["TODAY", "Bugün"],
                   ["WEEK", "7 gün"],
@@ -242,7 +242,7 @@ export default function DashboardLive() {
           </section>
 
           <section className="mt-6 grid gap-5 lg:grid-cols-2">
-            <div className="rounded-3xl border bg-white p-5">
+            <div className="rounded-3xl border bg-white p-4 sm:p-5">
               <div className="flex justify-between"><h2 className="text-xl font-semibold">Bugünün işleri</h2><Link href="/sales" className="text-sm font-semibold">Tümü →</Link></div>
               <div className="mt-4 space-y-3">{openT.slice(0, 5).map((x) => <div key={x.id} className="rounded-2xl bg-slate-50 p-4"><p className="font-semibold">{x.title}</p><p className="mt-1 text-xs text-slate-500">{x.customer?.name ?? "Genel"} · {dt(x.dueAt)} · {x.priority}</p></div>)}</div>
             </div>
