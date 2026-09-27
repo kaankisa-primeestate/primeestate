@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   if (!customerId || !listingId || !dateTime || Number.isNaN(dateTime.getTime())) return validationError("Müşteri, portföy ve geçerli gösterim tarihi zorunludur.");
 
   const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true } });
-  if (!customer) return NextResponse.json({ message: "Bu müşteri için gösterim oluşturma yetkiniz yok." }, { status: 403 });
+  if (!customer) return forbidden("Bu müşteri için gösterim oluşturma yetkiniz yok.");
 
   const listing = await prisma.listing.findFirst({ where: { id: listingId, ...officeListingScope(context), status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true } });
   if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
