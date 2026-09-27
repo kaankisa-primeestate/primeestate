@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -9,11 +10,11 @@ const STATUSES = new Set(["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "RE
 
 export async function POST(request: Request) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
-  try { assertCan(context, "offers", "update"); } catch { return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 }); }
+  if (!context) return authenticationRequired();
+  try { assertCan(context, "offers", "update"); } catch { return forbidden(); }
 
   let body: { action?: unknown; offerId?: unknown; status?: unknown; outcome?: unknown; customerId?: unknown; listingId?: unknown; amount?: unknown; currency?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
 
   const action = typeof body.action === "string" ? body.action : "OFFER_STATUS";
   if (action === "OFFER_CREATE") {
@@ -21,11 +22,11 @@ export async function POST(request: Request) {
     const listingId = typeof body.listingId === "string" ? body.listingId.trim() : "";
     const amount = Number(body.amount);
     const currency = typeof body.currency === "string" && body.currency.trim() ? body.currency.trim().toUpperCase() : "TRY";
-    if (!customerId || !listingId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Müşteri, portföy ve geçerli teklif tutarı zorunludur." }, { status: 400 });
+    if (!customerId || !listingId || !Number.isFinite(amount) || amount <= 0) return validationError("Müşteri, portföy ve geçerli teklif tutarı zorunludur.");
     const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true } });
-    if (!customer) return NextResponse.json({ message: "Bu müşteri için teklif oluşturma yetkiniz yok." }, { status: 403 });
+    if (!customer) return forbidden("Bu müşteri için teklif oluşturma yetkiniz yok.");
     const listing = await prisma.listing.findFirst({ where: { id: listingId, organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true } });
-    if (!listing) return NextResponse.json({ message: "Geçerli bir aktif ofis portföyü bulunamadı." }, { status: 400 });
+    if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
     const offer = await prisma.offer.create({ data: { customerId, listingId, amount, currency, nextAction: typeof body.outcome === "string" ? body.outcome.trim() || null : null }, include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true } } } });
     const next = commercialNextAction({ event: "OFFER_CREATED" });
     await prisma.customer.update({ where: { id: customerId }, data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) } });
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   }
   const offerId = typeof body.offerId === "string" ? body.offerId.trim() : "";
   const status = typeof body.status === "string" ? body.status : "";
-  if (!offerId || !STATUSES.has(status)) return NextResponse.json({ message: "Teklif ve geçerli durum zorunludur." }, { status: 400 });
+  if (!offerId || !STATUSES.has(status)) return validationError("Teklif ve geçerli durum zorunludur.");
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -85,6 +86,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Prime ticari işlem tamamlanamadı." }, { status: 400 });
+    return validationError(error instanceof Error ? error.message : "Prime ticari işlem tamamlanamadı.");
   }
 }
