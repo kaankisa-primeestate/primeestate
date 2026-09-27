@@ -32,17 +32,17 @@
 # 🏡 PRIME01
 
 ## Current Sprint
-**Phase 9 · Consultant Finance / Broker Approval / Payment Workflow**
+**Phase 10 · Mobile UX / Sales Operations Stabilization**
 
 ## Durum
-✅ Finance core chain is live and the critical finance invariants are covered by E2E tests.
+✅ Core finance chain remains live and verified. Mobile-first polish has now been applied through Dashboard, Portfolio, Customer, Customer 360, Customer Edit and Sales Ops / İş Akışı.
 
 ## Mevcut Ana
-`95cddadaafb28295129af21afaf0d11eafc60e0c`
+`13c64f7fdd6e93fe49c5309e62d55b21b24361eb`
 
 ## Son Doğrulama
-- Web Quality #1052 ✅
-- Production Auth Smoke #136 ✅
+- Sales Ops mobile commit `3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c` → Web Quality #1082 ✅
+- Sales Ops mobile commit `3f5d9f4c61ea01b0950bf162e1d1b46be2a0e11c` → Production Auth Smoke #166 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,7 +62,7 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Kritik API response/error contract'larını audit edip standardize etmek. Öncelik: sales, payments, payment-plans, offers ve Prime commercial akışı. Amaç, frontend'in her hata durumunda güvenilir JSON sözleşmesiyle çalışması ve tekrar eden `Unexpected end of JSON input` sınıfı sorunların kökten azaltılması.
+Finance ekranını mobil-first standarda taşımak. Ardından Takvim ve Aramalar ekranlarında aynı standardı uygulamak. İş kuralları ve gerçek API akışları değişmeyecek.
 
 ## Sonraki Fazlar
 - Finance route naming cleanup
