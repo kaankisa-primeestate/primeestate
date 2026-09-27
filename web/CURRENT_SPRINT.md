@@ -1,3 +1,34 @@
+# 🔒 AKTİF PROJE KİLİDİ — PRIMEESTATE
+
+> **KESİN KURAL — BU DOSYA DEVREDEYKEN PROJE KARIŞTIRILMAYACAKTIR.**
+>
+> Bu çalışma alanındaki aktif ve tek ana proje **PrimeEstate**'tir.
+>
+> **Yetkili ana GitHub repository:** `kaankisa-primeestate/primeestate`
+>
+> **Yetkili ana branch:** `main`
+>
+> **KESİNLİKLE KARIŞTIRILMAYACAK REPO:** `kaankisa-primeestate/remax-CRM`
+>
+> `remax-CRM` ayrı bir projedir. Kullanıcı açıkça istemediği sürece bu projeye **bakılmayacak, kontrol edilmeyecek, kod yazılmayacak, durumundan devam edilmeyecek ve referans alınmayacaktır.**
+>
+> Kullanıcı “PrimeEstate”, “devam edelim”, “kaldığımız yerden devam et”, “GitHub'ı kontrol et”, “durumu kontrol et” veya benzeri bir devam komutu verdiğinde varsayılan ve zorunlu hedef **yalnızca** `kaankisa-primeestate/primeestate` olacaktır.
+>
+> Her yeni devralmada işlem sırası zorunludur:
+> 1. Bu **AKTİF PROJE KİLİDİ** okunur.
+> 2. `kaankisa-primeestate/primeestate` repository doğrulanır.
+> 3. `main` branch ve güncel commit doğrulanır.
+> 4. `CURRENT_STATE.md` varsa, ardından `CURRENT_SPRINT.md` ve ilgili durum/dokümantasyon dosyaları kontrol edilir.
+> 5. GitHub Actions / CI durumu kontrol edilir.
+> 6. Son tamamlanmamış iş belirlenir.
+> 7. Çalışma **yalnızca PrimeEstate üzerinde** sürdürülür.
+>
+> **Başka bir repository'de bulunan benzer isimli veya eski çalışma, PrimeEstate'in devamı kabul edilemez.**
+>
+> Bu kilit, kullanıcı açıkça başka bir repository'ye geçiş talimatı vermedikçe geçerlidir.
+
+---
+
 # 🏡 PRIME01
 
 ## Sprint
