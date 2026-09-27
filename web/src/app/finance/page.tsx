@@ -301,13 +301,12 @@ export default function FinancePage() {
             const commissionRate = sale.commissionRate == null ? "" : String(sale.commissionRate);
             const officeShareRate = sale.officeShareRate == null ? "" : String(sale.officeShareRate);
             const salePayments = payments.filter((payment) => payment.saleId === sale.id);
+             const statusClass = sale.status === "TAMAMLANDI" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-700" : "rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700";
             return <article key={sale.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
                 <div className="min-w-0 flex-1">
                    <div className="flex flex-wrap items-center gap-2">
-                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${sale.status === "TAMAMLANDI" ? "bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-blue-700"}`}>
-                       {sale.status === "TAMAMLANDI" ? "Tamamlandı" : sale.status === "IPTAL" ? "İptal" : "Açık"}
-                     </span>
+                     <span className={statusClass}>
                      <span className="text-xs text-slate-400">{sale.listing.code}</span>
                    </div>
                   <h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2>
