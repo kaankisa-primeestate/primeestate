@@ -180,6 +180,11 @@ export async function PATCH(
       commission.consultantShareRate === "" || commission.consultantShareRate == null
         ? null
         : Number(commission.consultantShareRate);
+    const rentAmount = commission.rentAmount === "" || commission.rentAmount == null ? null : Number(commission.rentAmount);
+    const rentCurrency = typeof commission.rentCurrency === "string" && commission.rentCurrency.trim() ? commission.rentCurrency.trim().toUpperCase() : "TRY";
+    const rentStartDate = commission.rentStartDate ? new Date(String(commission.rentStartDate)) : null;
+    const rentDueDay = commission.rentDueDay === "" || commission.rentDueDay == null ? null : Number(commission.rentDueDay);
+    const termsNote = typeof commission.termsNote === "string" ? commission.termsNote.trim() : "";
 
     if (!firstName || !lastName || !phone || !companyName || !commissionModel) {
       return NextResponse.json(
@@ -192,12 +197,19 @@ export async function PATCH(
       (officeShareRate !== null &&
         (!Number.isFinite(officeShareRate) || officeShareRate < 0 || officeShareRate > 100)) ||
       (consultantShareRate !== null &&
-        (!Number.isFinite(consultantShareRate) || consultantShareRate < 0 || consultantShareRate > 100))
+        (!Number.isFinite(consultantShareRate) || consultantShareRate < 0 || consultantShareRate > 100)) ||
+      (rentAmount !== null && (!Number.isFinite(rentAmount) || rentAmount < 0)) ||
+      (rentDueDay !== null && (!Number.isInteger(rentDueDay) || rentDueDay < 1 || rentDueDay > 31)) ||
+      (rentStartDate !== null && Number.isNaN(rentStartDate.getTime()))
     ) {
       return NextResponse.json(
         { message: "Komisyon oranları 0-100 arasında olmalıdır." },
         { status: 400 },
       );
+    }
+
+    if (officeShareRate !== null && consultantShareRate !== null && Math.abs(officeShareRate + consultantShareRate - 100) > 0.01) {
+      return NextResponse.json({ message: "Ofis ve danışman paylaşım oranlarının toplamı %100 olmalıdır." }, { status: 400 });
     }
 
     if (companyEmail && !/^\S+@\S+\.\S+$/.test(companyEmail)) {
@@ -218,7 +230,10 @@ export async function PATCH(
       }),
       prisma.consultantCommissionPlan.findUnique({
         where: { userId: existing.id },
-        select: { id: true },
+        select: {
+          id: true, model: true, officeShareRate: true, consultantShareRate: true,
+          rentAmount: true, rentCurrency: true, rentStartDate: true, rentDueDay: true, termsNote: true,
+        },
       }),
     ]);
 
@@ -252,6 +267,11 @@ export async function PATCH(
           model: commissionModel,
           officeShareRate,
           consultantShareRate,
+          rentAmount,
+          rentCurrency,
+          rentStartDate,
+          rentDueDay,
+          termsNote: termsNote || null,
           active: true,
           effectiveTo: null,
         },
@@ -274,6 +294,21 @@ export async function PATCH(
             commissionModel,
             officeShareRate,
             consultantShareRate,
+            rentAmount,
+            rentCurrency,
+            rentStartDate,
+            rentDueDay,
+            termsNote: termsNote || null,
+            previous: {
+              model: existingCommission?.model ?? null,
+              officeShareRate: existingCommission?.officeShareRate?.toString() ?? null,
+              consultantShareRate: existingCommission?.consultantShareRate?.toString() ?? null,
+              rentAmount: existingCommission?.rentAmount?.toString() ?? null,
+              rentCurrency: existingCommission?.rentCurrency ?? null,
+              rentStartDate: existingCommission?.rentStartDate?.toISOString() ?? null,
+              rentDueDay: existingCommission?.rentDueDay ?? null,
+              termsNote: existingCommission?.termsNote ?? null,
+            },
           },
         },
       });

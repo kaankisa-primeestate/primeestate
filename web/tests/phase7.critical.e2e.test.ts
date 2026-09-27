@@ -128,7 +128,69 @@ async function createAgent(suffix: string) {
     password: await context.password.hash(password),
   });
 
+  await prisma.consultantProfile.create({
+    data: {
+      userId: user.id,
+      organizationId: organization.id,
+      officeId: office.id,
+      firstName: "Phase 7",
+      lastName: "E2E Agent",
+      phone: "+905555555555",
+      tcIdentityEncrypted: "test",
+      tcIdentityHash: "phase7-" + suffix,
+      tcIdentityLast4: "5555",
+    },
+  });
+  await prisma.consultantCompany.create({
+    data: {
+      userId: user.id,
+      organizationId: organization.id,
+      officeId: office.id,
+      name: "Phase 7 E2E Company",
+    },
+  });
+  await prisma.consultantCommissionPlan.create({
+    data: {
+      userId: user.id,
+      organizationId: organization.id,
+      officeId: office.id,
+      model: "YUZDE",
+      officeShareRate: 40,
+      consultantShareRate: 60,
+      rentAmount: 20000,
+      rentCurrency: "TRY",
+    },
+  });
+
   return { organization, office, team, user, email, password };
+}
+
+
+
+async function createBroker(organizationId: string, officeId: string, suffix: string) {
+  const email = "phase7-broker-" + suffix + "@example.test";
+  const password = "Phase7-Broker-Password-123!";
+  const context = await auth.$context;
+  const user = await context.internalAdapter.createUser(
+    {
+      email,
+      name: "Phase 7 E2E Broker",
+      emailVerified: true,
+      organizationId,
+      officeId,
+      teamId: null,
+      role: "OFFICE_ADMIN",
+      active: true,
+    },
+    { method: "phase7-e2e-test" },
+  );
+  await context.internalAdapter.linkAccount({
+    accountId: user.id,
+    providerId: "credential",
+    userId: user.id,
+    password: await context.password.hash(password),
+  });
+  return { user, email, password };
 }
 
 async function login(email: string, password: string) {
@@ -367,13 +429,16 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(saleResponse, 201, "saleResponse");
   const salePayload = await json<{
-    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string };
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; approvalStatus: string; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   // The Sale -> Listing invariant is enforced directly by the Phase 6 database test.
   // This HTTP-chain test verifies the accepted Offer -> Sale linkage and the downstream financial chain.
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
+  assert.equal(salePayload.sale.approvalStatus, "BEKLIYOR");
+  assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
+  assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
   // 9. Commission calculation
   const commissionResponse = await api(
@@ -390,7 +455,20 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(commissionPayload.sale.officeShare), 72000);
   assert.equal(Number(commissionPayload.sale.consultantShare), 72000);
 
-  // 10. Payment + ledger
+  // 10. Broker approval
+  const broker = await createBroker(fixture.organization.id, fixture.office.id, randomUUID().slice(0, 8));
+  const brokerCookie = await login(broker.email, broker.password);
+  const approvalResponse = await api(
+    "/api/sales/" + salePayload.sale.id,
+    brokerCookie,
+    { approvalStatus: "ONAYLANDI" },
+    "PATCH",
+  );
+  await expectStatus(approvalResponse, 200, "approvalResponse");
+  const approvalPayload = await json<{ sale: { approvalStatus: string } }>(approvalResponse);
+  assert.equal(approvalPayload.sale.approvalStatus, "ONAYLANDI");
+
+  // 11. Payment + ledger
   const paymentResponse = await api(
     "/api/payments",
     cookie,
@@ -408,7 +486,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(paymentPayload.payment.amount), 1000000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
 
-  // 11. Payment plan / installments
+  // 12. Payment plan / installments
   const planResponse = await api(
     "/api/payment-plans",
     cookie,

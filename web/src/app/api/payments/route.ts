@@ -43,9 +43,10 @@ export async function POST(request: Request) {
   if (!saleId || !Number.isFinite(amount) || amount <= 0) return NextResponse.json({ message: "Satış ve pozitif tahsilat tutarı zorunludur." }, { status: 400 });
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true },
+    select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true },
   });
   if (!sale) return NextResponse.json({ message: "Satış bulunamadı veya yetkiniz yok." }, { status: 404 });
+  if (sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Tahsilat için broker tarafından onaylanmış satış gerekir." }, { status: 409 });
   const currency = typeof body.currency === "string" && body.currency.trim() ? body.currency.trim().toUpperCase() : sale.currency;
   if (currency !== sale.currency) return NextResponse.json({ message: "Tahsilat para birimi satış para birimi ile aynı olmalıdır." }, { status: 400 });
   const paidAt = body.paidAt ? new Date(String(body.paidAt)) : new Date();

@@ -31,6 +31,11 @@ type UserItem = {
     model: string;
     officeShareRate: string | null;
     consultantShareRate: string | null;
+    rentAmount: string | null;
+    rentCurrency: string;
+    rentStartDate: string | null;
+    rentDueDay: number | null;
+    termsNote: string | null;
     active: boolean;
     effectiveFrom: string;
     effectiveTo: string | null;
@@ -261,6 +266,11 @@ export default function UsersPage() {
               model: form.get("commissionModel"),
               officeShareRate: form.get("officeShareRate"),
               consultantShareRate: form.get("consultantShareRate"),
+              rentAmount: form.get("rentAmount"),
+              rentCurrency: form.get("rentCurrency"),
+              rentStartDate: form.get("rentStartDate"),
+              rentDueDay: form.get("rentDueDay"),
+              termsNote: form.get("termsNote"),
             },
           }),
         });
@@ -527,9 +537,14 @@ export default function UsersPage() {
                                   {user.consultantCommissionPlan?.model ?? "Plan bekleniyor"}
                                 </p>
                                 {user.consultantCommissionPlan ? (
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    Ofis %{user.consultantCommissionPlan.officeShareRate ?? "—"} · Danışman %{user.consultantCommissionPlan.consultantShareRate ?? "—"}
-                                  </p>
+                                  <>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      Ofis %{user.consultantCommissionPlan.officeShareRate ?? "—"} · Danışman %{user.consultantCommissionPlan.consultantShareRate ?? "—"}
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      Kira: {user.consultantCommissionPlan.rentAmount ? String(user.consultantCommissionPlan.rentAmount) + " " + user.consultantCommissionPlan.rentCurrency : "—"} · Başlangıç: {user.consultantCommissionPlan.rentStartDate ? new Date(user.consultantCommissionPlan.rentStartDate).toLocaleDateString("tr-TR") : "—"}
+                                    </p>
+                                  </>
                                 ) : null}
                               </div>
                             </div>
@@ -741,7 +756,14 @@ export default function UsersPage() {
                         <input name="consultantShareRate" type="number" min="0" max="100" step="0.01" defaultValue={editing.consultantCommissionPlan.consultantShareRate ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" />
                       </label>
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">Bu alan oranları kaydeder. REP / maksimum modelinin hesaplama kuralını ayrıca netleştirip uygulayacağız.</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <label className="block"><span className="text-sm font-semibold text-slate-700">Aylık kira</span><input name="rentAmount" type="number" min="0" step="0.01" defaultValue={editing.consultantCommissionPlan.rentAmount ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                      <label className="block"><span className="text-sm font-semibold text-slate-700">Kira para birimi</span><select name="rentCurrency" defaultValue={editing.consultantCommissionPlan.rentCurrency} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option>TRY</option><option>USD</option><option>EUR</option></select></label>
+                      <label className="block"><span className="text-sm font-semibold text-slate-700">Kira başlangıcı</span><input name="rentStartDate" type="date" defaultValue={editing.consultantCommissionPlan.rentStartDate ? editing.consultantCommissionPlan.rentStartDate.slice(0,10) : ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                      <label className="block"><span className="text-sm font-semibold text-slate-700">Kira ödeme günü</span><input name="rentDueDay" type="number" min="1" max="31" defaultValue={editing.consultantCommissionPlan.rentDueDay ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                      <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Diğer çalışma / finans koşulları</span><textarea name="termsNote" rows={3} defaultValue={editing.consultantCommissionPlan.termsNote ?? ""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">Bu merkez kaydı danışman işlem finansmanında varsayılan kaynak veridir. Değişiklikler audit kaydına alınır.</p>
                   </div>
                 </div>
               ) : null}

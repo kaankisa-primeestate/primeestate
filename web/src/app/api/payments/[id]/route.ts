@@ -16,9 +16,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const existing = await prisma.payment.findFirst({
     where: { id, sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } } },
-    include: { sale: { select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true } }, ledgerEntries: true },
+    include: { sale: { select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true } }, ledgerEntries: true },
   });
   if (!existing) return NextResponse.json({ message: "Tahsilat bulunamadı veya yetkiniz yok." }, { status: 404 });
+  if (existing.sale.approvalStatus !== "ONAYLANDI") return NextResponse.json({ message: "Tahsilat işlemleri için satışın broker tarafından onaylanmış olması gerekir." }, { status: 409 });
 
   try {
     const updated = await prisma.$transaction(async (tx) => {

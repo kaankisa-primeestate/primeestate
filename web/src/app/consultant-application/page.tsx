@@ -55,7 +55,12 @@ export default function ConsultantApplicationPage() {
           <select name="commissionModel" required className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:col-span-3"><option value="">Model seçin</option><option value="YUZDE">Yüzde paylaşımı</option><option value="MAKSIMUM">Maksimum / tavan model</option><option value="REP">REP / özel model</option></select>
           <input name="officeShareRate" type="number" min="0" max="100" step="0.01" placeholder="Ofis payı % (opsiyonel)" className="rounded-2xl border border-slate-200 px-4 py-3"/>
           <input name="consultantShareRate" type="number" min="0" max="100" step="0.01" placeholder="Danışman payı % (opsiyonel)" className="rounded-2xl border border-slate-200 px-4 py-3 sm:col-span-2"/>
-        </div><p className="mt-2 text-xs text-slate-400">Oranlar başvuru kaydında saklanır; satış oluştuğunda kullanılacak kesin hesaplama kuralları ayrıca tanımlanacaktır.</p></div>
+          <input name="rentAmount" type="number" min="0" step="0.01" placeholder="Aylık kira tutarı (opsiyonel)" className="rounded-2xl border border-slate-200 px-4 py-3"/>
+          <select name="rentCurrency" defaultValue="TRY" className="rounded-2xl border border-slate-200 bg-white px-4 py-3"><option>TRY</option><option>USD</option><option>EUR</option></select>
+          <input name="rentStartDate" type="date" className="rounded-2xl border border-slate-200 px-4 py-3"/>
+          <input name="rentDueDay" type="number" min="1" max="31" placeholder="Kira ödeme günü (1-31)" className="rounded-2xl border border-slate-200 px-4 py-3"/>
+          <textarea name="termsNote" rows={3} placeholder="Diğer çalışma / finans koşulları" className="rounded-2xl border border-slate-200 px-4 py-3 sm:col-span-3"/>
+        </div><p className="mt-2 text-xs text-slate-400">Bu oran ve çalışma koşulları broker onayında danışmanın merkez kaydına aktarılır ve sonraki işlem finansmanında otomatik kaynak olarak kullanılır.</p></div>
         <div><h2 className="font-semibold text-slate-900">Giriş şifresi</h2><div className="mt-3 grid gap-4 sm:grid-cols-2">
           <input name="password" required minLength={8} type="password" autoComplete="new-password" placeholder="Şifre" className="rounded-2xl border border-slate-200 px-4 py-3"/>
           <input name="passwordConfirm" required minLength={8} type="password" autoComplete="new-password" placeholder="Şifre tekrar" className="rounded-2xl border border-slate-200 px-4 py-3"/>

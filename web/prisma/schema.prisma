@@ -144,6 +144,11 @@ model ConsultantApplication {
   commissionModel       String
   officeShareRate       Decimal? @db.Decimal(7, 4)
   consultantShareRate   Decimal? @db.Decimal(7, 4)
+  rentAmount            Decimal? @db.Decimal(18, 2)
+  rentCurrency          String   @default("TRY")
+  rentStartDate         DateTime?
+  rentDueDay            Int?
+  termsNote             String?
   passwordHash          String?
   status                ConsultantApplicationStatus @default(BEKLEMEDE)
   rejectionNote         String?
@@ -211,6 +216,11 @@ model ConsultantCommissionPlan {
   model              String
   officeShareRate    Decimal? @db.Decimal(7, 4)
   consultantShareRate Decimal? @db.Decimal(7, 4)
+  rentAmount         Decimal? @db.Decimal(18, 2)
+  rentCurrency       String   @default("TRY")
+  rentStartDate      DateTime?
+  rentDueDay         Int?
+  termsNote          String?
   active             Boolean  @default(true)
   effectiveFrom     DateTime @default(now())
   effectiveTo       DateTime?
@@ -221,6 +231,7 @@ model ConsultantCommissionPlan {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
 
+  sales              Sale[] @relation("SaleSourceCommissionPlan")
   @@index([organizationId, officeId, active])
 }
 
@@ -312,6 +323,8 @@ model User {
   consultantProfile ConsultantProfile?
   consultantCompany ConsultantCompany?
   consultantCommissionPlan ConsultantCommissionPlan?
+  salesAsConsultant Sale[] @relation("SaleConsultant")
+  approvedSales Sale[] @relation("SaleApprovedBy")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId, officeId])
@@ -348,7 +361,6 @@ model Customer {
   showings     Showing[]
   offers       Offer[]
   sales        Sale[]
-
   @@index([organizationId, officeId])
   @@index([ownerUserId])
   @@index([phone])
@@ -582,6 +594,14 @@ model Sale {
   status     SaleStatus @default(ACIK)
   closedAt   DateTime?
   note       String?
+  approvalStatus SaleApprovalStatus @default(BEKLIYOR)
+  approvalNote String?
+  approvedAt DateTime?
+  approvedByUserId String?
+  consultantUserId String?
+  sourceCommissionPlanId String?
+  sourceOfficeShareRate Decimal? @db.Decimal(7, 4)
+  sourceConsultantShareRate Decimal? @db.Decimal(7, 4)
   commissionRate     Decimal? @db.Decimal(7, 4)
   grossCommission   Decimal? @db.Decimal(18, 2)
   officeShareRate   Decimal? @db.Decimal(7, 4)
@@ -593,12 +613,17 @@ model Sale {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   listing  Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  consultant User? @relation("SaleConsultant", fields: [consultantUserId], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("SaleApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  sourceCommissionPlan ConsultantCommissionPlan? @relation("SaleSourceCommissionPlan", fields: [sourceCommissionPlanId], references: [id], onDelete: SetNull)
   payments Payment[]
   paymentPlan PaymentPlan?
   ledgerEntries LedgerEntry[]
 
   @@index([customerId, status])
   @@index([listingId, status])
+  @@index([approvalStatus])
+  @@index([consultantUserId, status])
   @@unique([listingId])
 }
 
@@ -631,6 +656,12 @@ model PaymentInstallment {
   plan     PaymentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@unique([planId, sequence])
+}
+
+enum SaleApprovalStatus {
+  BEKLIYOR
+  ONAYLANDI
+  REDDEDILDI
 }
 
 enum InstallmentStatus {
