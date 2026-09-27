@@ -54,11 +54,11 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current phase
 
-**Phase 10 — Mobile UX / Sales Operations Stabilization**
+**Phase 11 — API Contract Hardening / Workflow Reliability**
 
 ### Current objective
 
-Bring the live consultant workflow to a consistent mobile-first standard without changing business semantics: Dashboard → Portfolio → Customer → Sales Ops → Finance → Calendar/Calls.
+Standardize critical API error contracts while preserving existing UI compatibility and business semantics; expand real HTTP coverage across onboarding and user administration.
 
 ### Active branch
 
@@ -66,7 +66,7 @@ Bring the live consultant workflow to a consistent mobile-first standard without
 
 ### Current main commit
 
-`37036119b1f88e470c4a65609f3f31ba925be2fa`
+`f9a57520f7144f8fc158d984ac658ba0d717b202`
 
 ### Branch state
 
@@ -74,14 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1087 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #171 — **success**
+- PrimeEstate Web Quality #1094 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #178 — **success**
 
 ### Immediate next steps
 
-1. Mobile UX pass is complete through Sales Ops, Finance, Calendar and Calls.
-2. Re-audit the duplicate/legacy finance route naming without changing business semantics.
-3. Then expand the API contract suite and address the remaining technical debt.
+1. API error contract hardening is complete for onboarding and user-administration routes touched in this phase.
+2. Continue the API contract suite across remaining CRM routes (tasks, listings, activities, showings, customers) using the same stable error schema.
+3. Then address dashboard refresh UX and remaining technical debt.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -290,13 +290,13 @@ This gives us **one current source of truth without duplicating Git's history**.
 
 Keep these fields current:
 
-- CURRENT_PHASE: Phase 10 — Mobile UX / Sales Operations Stabilization
-- CURRENT_TASK: Mobile UX passını tamamlayıp finance route naming cleanup aşamasına geçmek
+- CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
+- CURRENT_TASK: Kritik onboarding ve kullanıcı yönetimi API'lerinde stable error contract'ı genişletmek
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 37036119b1f88e470c4a65609f3f31ba925be2fa
+- BASE_MAIN_COMMIT: f9a57520f7144f8fc158d984ac658ba0d717b202
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1087 ✅; Production Auth Smoke #171 ✅
+- LAST_GREEN_CHECKS: Web Quality #1094 ✅; Production Auth Smoke #178 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: finance route naming cleanup; ardından genişletilmiş API contract suite
+- NEXT_STEP: remaining API contract hardening; ardından dashboard refresh UX
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-27

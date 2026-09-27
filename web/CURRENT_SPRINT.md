@@ -32,17 +32,17 @@
 # 🏡 PRIME01
 
 ## Current Sprint
-**Phase 10 · Mobile UX / Sales Operations Stabilization**
+**Phase 11 · API Contract Hardening / Workflow Reliability**
 
 ## Durum
-✅ Core finance chain remains live and verified. Mobile-first polish has now been applied through Dashboard, Portfolio, Customer, Customer 360, Customer Edit and Sales Ops / İş Akışı.
+✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`73e997a62b7693d8b99fed8ab25f1bbee5760ab2`
+`f9a57520f7144f8fc158d984ac658ba0d717b202`
 
 ## Son Doğrulama
-- Mobile UX tamamlandı: Sales Ops + Finance + Calendar + Calls → Web Quality #1087 ✅
-- Mobile UX tamamlandı: Sales Ops + Finance + Calendar + Calls → Production Auth Smoke #171 ✅
+- API contract + mobile regression → Web Quality #1094 ✅
+- Production auth/runtime smoke → Production Auth Smoke #178 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,13 +62,13 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Mobile UX pass tamamlandı. Şimdi duplicate/legacy finance route adlandırmasını temizleyeceğiz; iş kuralları ve gerçek API akışları değişmeyecek.
+Onboarding ve kullanıcı yönetimi API'lerinin stable error contract'ı genişletildi. Şimdi kalan CRM API'lerinde aynı sözleşmeyi tamamlayıp gerçek HTTP test kapsamını büyüteceğiz.
 
 ## Sonraki Fazlar
-- Finance route naming cleanup
+- Remaining CRM API error contract hardening
 - Dashboard refresh UX
-- API contract suite genişletme
 - Deletion policy
+- Auth matrix documentation refinements
 - Stale branch / obsolete PR cleanup
 
 ## Kurallar
