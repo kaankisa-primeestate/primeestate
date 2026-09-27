@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     if (!can(context.role, "listings", "read")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Portföy görüntüleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Portföy görüntüleme yetkiniz yok.");
   }
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
@@ -36,22 +36,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     if (!can(context.role, "listings", "update")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Portföy düzenleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Portföy düzenleme yetkiniz yok.");
   }
   const { id } = await params;
   const listing = await prisma.listing.findFirst({
     where: { id, ...officeListingScope(context) },
     include: { property: true, consultant: { select: { id: true, teamId: true } } },
   });
-  if (!listing) return NextResponse.json({ message: "Portföy bulunamadı." }, { status: 404 });
+  if (!listing) return notFound("Portföy bulunamadı.");
 
   const isManager = isManagerRole(context.role);
   const isOwner = listing.consultantUserId === context.userId;
   const isTeamLeader = context.role === "TEAM_LEADER" && !!context.teamId && listing.consultant?.teamId === context.teamId;
-  if (!isManager && !isOwner && !isTeamLeader) return NextResponse.json({ message: "Bu portföyü düzenleme yetkiniz yok." }, { status: 403 });
+  if (!isManager && !isOwner && !isTeamLeader) return forbidden("Bu portföyü düzenleme yetkiniz yok.");
 
   const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ message: "Geçersiz istek." }, { status: 400 });
+  if (!body || typeof body !== "object") return validationError("Geçersiz istek.");
 
   const title = String(body.title ?? listing.title).trim();
   const purpose = String(body.purpose ?? listing.purpose);
@@ -77,13 +77,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const currency = body.currency ? String(body.currency).trim().toUpperCase() : listing.currency;
   const incomingDetails = body.details && typeof body.details === "object" && !Array.isArray(body.details) ? body.details : null;
 
-  if (!title || !city || !district || !neighborhood) return NextResponse.json({ message: "Başlık, il, ilçe ve mahalle zorunludur." }, { status: 400 });
-  if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return NextResponse.json({ message: "Geçerli bir portföy türü seçin." }, { status: 400 });
-  if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan amacı seçin." }, { status: 400 });
-  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return NextResponse.json({ message: "Geçerli bir ilan durumu seçin." }, { status: 400 });
-  if (price === null || price <= 0) return NextResponse.json({ message: "Geçerli bir fiyat girin." }, { status: 400 });
-  if (sizeM2 !== null && sizeM2 <= 0) return NextResponse.json({ message: "m² değeri geçersiz." }, { status: 400 });
-  if (!/^[A-Z]{3}$/.test(currency)) return NextResponse.json({ message: "Para birimi 3 harfli olmalıdır." }, { status: 400 });
+  if (!title || !city || !district || !neighborhood) return validationError("Başlık, il, ilçe ve mahalle zorunludur.");
+  if (!PROPERTY_TYPES.includes(propertyType as (typeof PROPERTY_TYPES)[number])) return validationError("Geçerli bir portföy türü seçin.");
+  if (!PURPOSES.includes(purpose as (typeof PURPOSES)[number])) return validationError("Geçerli bir ilan amacı seçin.");
+  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return validationError("Geçerli bir ilan durumu seçin.");
+  if (price === null || price <= 0) return validationError("Geçerli bir fiyat girin.");
+  if (sizeM2 !== null && sizeM2 <= 0) return validationError("m² değeri geçersiz.");
+  if (!/^[A-Z]{3}$/.test(currency)) return validationError("Para birimi 3 harfli olmalıdır.");
 
   const updated = await prisma.$transaction(async (tx) => {
     const property = await tx.property.update({
