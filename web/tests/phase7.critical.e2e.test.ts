@@ -344,6 +344,38 @@ test("Phase 7: onboarding and user-admin APIs follow the same stable error contr
   await expectErrorCode(consultantApplication, "VALIDATION_ERROR", "consultantApplication validation");
 });
 
+test("Phase 7: core CRM APIs keep the same unauthenticated error contract", async () => {
+  const cases = [
+    ["/api/customers", "GET"],
+    ["/api/customers", "POST"],
+    ["/api/customers/nonexistent-customer-id", "GET"],
+    ["/api/customers/nonexistent-customer-id/demands", "POST"],
+    ["/api/tasks", "GET"],
+    ["/api/tasks", "POST"],
+    ["/api/tasks/nonexistent-task-id", "PATCH"],
+    ["/api/activities", "GET"],
+    ["/api/activities", "POST"],
+    ["/api/listings", "GET"],
+    ["/api/listings", "POST"],
+    ["/api/listings/nonexistent-listing-id", "GET"],
+    ["/api/listings/nonexistent-listing-id", "PATCH"],
+    ["/api/listings/nonexistent-listing-id/images", "POST"],
+    ["/api/showings", "GET"],
+    ["/api/showings", "POST"],
+    ["/api/showings/nonexistent-showing-id", "PATCH"],
+    ["/api/offers", "GET"],
+    ["/api/offers", "POST"],
+    ["/api/offers/nonexistent-offer-id", "PATCH"],
+  ] as const;
+
+  for (const [path, method] of cases) {
+    const body = method === "POST" || method === "PATCH" ? {} : undefined;
+    const response = await api(path, "", body, method);
+    await expectStatus(response, 401, path + " unauthenticated");
+    await expectErrorCode(response, "AUTHENTICATION_REQUIRED", path + " unauthenticated");
+  }
+});
+
 test("Phase 7: critical customer-to-finance business chain works through real HTTP routes", async () => {
   const fixture = await createAgent(randomUUID().slice(0, 8));
   const cookie = await login(fixture.email, fixture.password);
