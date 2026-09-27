@@ -75,7 +75,7 @@ export default function EditCustomerPage() {
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
       <Sidebar />
-      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+      <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-3xl">
           <button type="button" onClick={() => router.back()} className="mb-5 text-sm font-semibold text-slate-600 hover:text-slate-900">
             ← Müşteri detayına dön
