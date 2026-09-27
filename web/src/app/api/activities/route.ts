@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   });
 
   if (!customer) {
-    return NextResponse.json({ message: "Bu müşteri için aktivite oluşturma yetkiniz yok." }, { status: 403 });
+    return forbidden("Bu müşteri için aktivite oluşturma yetkiniz yok.");
   }
 
   if (listingId) {
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     if (!owner) return validationError("Geçerli bir sorumlu danışman bulunamadı.");
     ownerUserId = owner.id;
   } else if (!isManagerRole(context.role) && ownerUserId !== customer.ownerUserId) {
-    return NextResponse.json({ message: "Bu müşterinin aktivitesi yalnızca sorumlu danışman tarafından oluşturulabilir." }, { status: 403 });
+    return forbidden("Bu müşterinin aktivitesi yalnızca sorumlu danışman tarafından oluşturulabilir.");
   }
 
   const parsedOccurredAt =
