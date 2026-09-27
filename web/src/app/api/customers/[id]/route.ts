@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -9,11 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const context = await getUserContext();
-  if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
+  if (!context) return authenticationRequired();
   try {
-    if (!can(context.role, "customers", "read")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "customers", "read")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Müşteri görüntüleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Müşteri görüntüleme yetkiniz yok.");
   }
 
   const { id } = await params;
@@ -50,7 +51,7 @@ export async function GET(
   });
 
   if (!customer) {
-    return NextResponse.json({ message: "Müşteri bulunamadı." }, { status: 404 });
+    return notFound("Müşteri bulunamadı.");
   }
 
   return NextResponse.json({ customer });
@@ -64,9 +65,9 @@ export async function PATCH(
   const context = await getUserContext();
   if (!context) return NextResponse.json({ message: "Authentication required." }, { status: 401 });
   try {
-    if (!can(context.role, "customers", "update")) return NextResponse.json({ message: "Yetkiniz yok." }, { status: 403 });
+    if (!can(context.role, "customers", "update")) return forbidden();
   } catch {
-    return NextResponse.json({ message: "Müşteri düzenleme yetkiniz yok." }, { status: 403 });
+    return forbidden("Müşteri düzenleme yetkiniz yok.");
   }
 
   const { id } = await params;
@@ -89,10 +90,10 @@ export async function PATCH(
     source?: unknown; notes?: unknown; roles?: unknown;
   };
   try { body = await request.json(); }
-  catch { return NextResponse.json({ message: "Geçersiz JSON." }, { status: 400 }); }
+  catch { return validationError("Geçersiz JSON."); }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
-  if (!name) return NextResponse.json({ message: "Müşteri adı zorunludur." }, { status: 400 });
+  if (!name) return validationError("Müşteri adı zorunludur.");
 
   const roles = Array.isArray(body.roles)
     ? [...new Set(body.roles.filter((value): value is string => typeof value === "string"))]
