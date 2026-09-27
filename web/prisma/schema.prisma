@@ -654,6 +654,7 @@ model PaymentInstallment {
   updatedAt  DateTime          @updatedAt
 
   plan     PaymentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  payment  Payment?
 
   @@unique([planId, sequence])
 }
@@ -682,6 +683,8 @@ model Payment {
   updatedAt  DateTime      @updatedAt
 
   sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  installment   PaymentInstallment? @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  installmentId String? @unique
   ledgerEntries LedgerEntry[]
 
   @@index([saleId, status, paidAt])
