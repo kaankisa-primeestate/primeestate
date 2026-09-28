@@ -66,7 +66,7 @@ Improve workflow reliability through stable API contracts, live dashboard behavi
 
 ### Current main commit
 
-`4838e690c5bcf908eb055c84df3f70e25eb33a01`
+`77e3206e9ab81267c5c4266a6974e9a810b5cac3`
 
 ### Branch state
 
@@ -74,8 +74,8 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1108 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #192 — **success**
+- PrimeEstate Web Quality #1109 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #193 — **success**
 
 ### Immediate next steps
 
@@ -293,9 +293,9 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
 - CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 4838e690c5bcf908eb055c84df3f70e25eb33a01
+- BASE_MAIN_COMMIT: 77e3206e9ab81267c5c4266a6974e9a810b5cac3
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1108 ✅; Production Auth Smoke #192 ✅
+- LAST_GREEN_CHECKS: Web Quality #1109 ✅; Production Auth Smoke #193 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
 - NEXT_STEP: remaining edge-case API contracts and workflow reliability
 - BLOCKERS: None
