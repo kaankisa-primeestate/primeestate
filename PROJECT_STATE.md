@@ -58,7 +58,7 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current objective
 
-Standardize critical API error contracts while preserving existing UI compatibility and business semantics; expand real HTTP coverage across onboarding and user administration.
+Improve workflow reliability through stable API contracts and live dashboard behavior, preserving UI compatibility, business semantics, and tenant authorization.
 
 ### Active branch
 
@@ -66,7 +66,7 @@ Standardize critical API error contracts while preserving existing UI compatibil
 
 ### Current main commit
 
-`351b30f9ce8144e8cdcabebf5be02fcf175efe60`
+`74b129b863cb1d5631561169002784b161139e00`
 
 ### Branch state
 
@@ -74,14 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1098 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #182 — **success**
+- PrimeEstate Web Quality #1103 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #187 — **success**
 
 ### Immediate next steps
 
-1. Stable unauthenticated coverage and authorized 403/validation coverage now span the critical onboarding, user-admin and CRM write boundaries.
-2. Next, address dashboard refresh UX without introducing static/demo data.
-3. Continue remaining technical debt only after live workflow verification.
+1. Dashboard live refresh behavior is stabilized: manual/30-second refresh, focus/visibility refresh, in-flight protection, partial-success preservation, and stable API error parsing are in place.
+2. Dashboard finance-summary authentication is now covered by the real HTTP API contract suite.
+3. Next, continue remaining edge-case API contracts and workflow reliability checks without adding static/demo data.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -211,7 +211,7 @@ After merge:
 - broader API response/error contract hardening
 - expanded API contract suite
 - deletion policy
-- dashboard refresh UX improvements
+- remaining dashboard live-data edge cases
 - finance route naming cleanup
 - listing status filtering refinements
 - auth matrix documentation refinements
@@ -291,12 +291,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
-- CURRENT_TASK: Dashboard'da canlı veri güncelleme/yenileme davranışını sağlamlaştırmak
+- CURRENT_TASK: Remaining edge-case API contract and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: f9a57520f7144f8fc158d984ac658ba0d717b202
+- BASE_MAIN_COMMIT: 74b129b863cb1d5631561169002784b161139e00
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1094 ✅; Production Auth Smoke #178 ✅
+- LAST_GREEN_CHECKS: Web Quality #1103 ✅; Production Auth Smoke #187 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: remaining API contract hardening; ardından dashboard refresh UX
+- NEXT_STEP: remaining edge-case API contracts and workflow reliability
 - BLOCKERS: None
-- LAST_UPDATED_UTC: 2026-09-27
+- LAST_UPDATED_UTC: 2026-09-28
