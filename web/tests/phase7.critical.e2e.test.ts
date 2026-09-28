@@ -714,6 +714,19 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     4800000,
   );
 
+  const duplicatePlanResponse = await api(
+    "/api/payment-plans",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      title: "Duplicate plan must fail",
+      installments: [{ amount: 4800000, dueAt: "2027-03-01T00:00:00.000Z" }],
+    },
+    "POST",
+  );
+  await expectStatus(duplicatePlanResponse, 409, "duplicatePlanResponse");
+  await expectErrorCode(duplicatePlanResponse, "CONFLICT", "duplicatePlanResponse");
+
   // 12. Read-back: the chain is visible to the same scoped user and finance endpoints.
   const salesRead = await api("/api/sales", cookie);
   assert.equal(salesRead.status, 200);
