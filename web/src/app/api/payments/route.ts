@@ -43,7 +43,12 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
   const saleId = typeof body.saleId === "string" ? body.saleId.trim() : "";
   const amount = Number(body.amount);
-  const status = body.status === "ODENDI" ? "ODENDI" : body.status === "IPTAL" ? "IPTAL" : "BEKLIYOR";
+  const status = body.status === undefined
+    ? "BEKLIYOR"
+    : body.status === "ODENDI" || body.status === "IPTAL" || body.status === "BEKLIYOR"
+      ? body.status
+      : undefined;
+  if (!status) return validationError("Geçersiz tahsilat durumu.");
   if (!saleId || !Number.isFinite(amount) || amount <= 0) return validationError("Satış ve pozitif tahsilat tutarı zorunludur.");
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
