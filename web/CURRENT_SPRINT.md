@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`351b30f9ce8144e8cdcabebf5be02fcf175efe60`
+`4838e690c5bcf908eb055c84df3f70e25eb33a01`
 
 ## Son Doğrulama
-- Dashboard live refresh + API contract regression → Web Quality #1103 ✅
-- Production auth/runtime smoke → Production Auth Smoke #187 ✅
+- Dashboard live refresh + duplicate finance conflict regression → Web Quality #1108 ✅
+- Production auth/runtime smoke → Production Auth Smoke #192 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,10 +62,11 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Dashboard canlı veri yenileme davranışı sağlamlaştırıldı ve finance-summary için gerçek HTTP auth kontratı eklendi. Sıradaki adım kalan edge-case API kontratlarını ve workflow reliability noktalarını ilerletmek; statik/demo veri eklenmeyecek.
+Dashboard canlı veri yenileme davranışı ve finance-summary auth kontratı tamamlandı. Duplicate ödeme planı ile duplicate taksit tahsilatı için gerçek HTTP conflict kontratları da doğrulandı. Sıradaki adım kalan edge-case API kontratları; statik/demo veri eklenmeyecek.
 
 ## Sonraki Fazlar
 - Dashboard refresh UX / live-data refresh reliability ✅
+- Duplicate payment-plan / installment-payment conflict contracts ✅
 - Remaining edge-case API contracts
 - Deletion policy
 - Auth matrix documentation refinements
