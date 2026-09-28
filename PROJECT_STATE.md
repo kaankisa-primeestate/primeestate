@@ -58,7 +58,7 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current objective
 
-Improve workflow reliability through stable API contracts and live dashboard behavior, preserving UI compatibility, business semantics, and tenant authorization.
+Improve workflow reliability through stable API contracts, live dashboard behavior, and real HTTP edge-case coverage, preserving UI compatibility, business semantics, and tenant authorization.
 
 ### Active branch
 
@@ -66,7 +66,7 @@ Improve workflow reliability through stable API contracts and live dashboard beh
 
 ### Current main commit
 
-`74b129b863cb1d5631561169002784b161139e00`
+`4838e690c5bcf908eb055c84df3f70e25eb33a01`
 
 ### Branch state
 
@@ -74,14 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1103 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #187 — **success**
+- PrimeEstate Web Quality #1108 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #192 — **success**
 
 ### Immediate next steps
 
 1. Dashboard live refresh behavior is stabilized: manual/30-second refresh, focus/visibility refresh, in-flight protection, partial-success preservation, and stable API error parsing are in place.
 2. Dashboard finance-summary authentication is now covered by the real HTTP API contract suite.
-3. Next, continue remaining edge-case API contracts and workflow reliability checks without adding static/demo data.
+3. Duplicate payment-plan and duplicate installment-payment conflict behavior is now covered through real HTTP tests; continue remaining edge-case API contracts without adding static/demo data.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -291,11 +291,11 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
-- CURRENT_TASK: Remaining edge-case API contract and workflow reliability checks
+- CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 74b129b863cb1d5631561169002784b161139e00
+- BASE_MAIN_COMMIT: 4838e690c5bcf908eb055c84df3f70e25eb33a01
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1103 ✅; Production Auth Smoke #187 ✅
+- LAST_GREEN_CHECKS: Web Quality #1108 ✅; Production Auth Smoke #192 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
 - NEXT_STEP: remaining edge-case API contracts and workflow reliability
 - BLOCKERS: None
