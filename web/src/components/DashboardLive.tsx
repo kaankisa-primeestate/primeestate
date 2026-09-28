@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import PrimeBriefLive from "@/components/PrimeBriefLive";
 
@@ -27,9 +27,17 @@ async function g<T>(u: string): Promise<T> {
 
   if (!r.ok) {
     const message =
-      d && typeof d === "object" && "message" in d && typeof d.message === "string"
-        ? d.message
-        : `API ${r.status} yanıtı`;
+      d &&
+      typeof d === "object" &&
+      "error" in d &&
+      d.error &&
+      typeof d.error === "object" &&
+      "message" in d.error &&
+      typeof d.error.message === "string"
+        ? d.error.message
+        : d && typeof d === "object" && "message" in d && typeof d.message === "string"
+          ? d.message
+          : `API ${r.status} yanıtı`;
     throw new Error(`${message} — ${u}`);
   }
 
@@ -56,10 +64,15 @@ export default function DashboardLive() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [dashboardQuery, setDashboardQuery] = useState("");
   const [dashboardRange, setDashboardRange] = useState<"TODAY" | "WEEK" | "ALL">("TODAY");
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const loadInFlight = useRef(false);
 
   async function load() {
+    if (loadInFlight.current) return;
+    loadInFlight.current = true;
     setBusy(true);
     setErr("");
+
     const requests = [
       g<{ customers: C[] }>("/api/customers"),
       g<{ tasks: T[] }>("/api/tasks?limit=50"),
@@ -76,14 +89,17 @@ export default function DashboardLive() {
       .map((result, index) => (result.status === "rejected" ? { index, reason: result.reason } : null))
       .filter((item): item is { index: number; reason: unknown } => item !== null);
 
-    setC(x.status === "fulfilled" ? x.value.customers : []);
-    setT(y.status === "fulfilled" ? y.value.tasks : []);
-    setL(z.status === "fulfilled" ? z.value.listings : []);
-    setA(q.status === "fulfilled" ? q.value.activities : []);
-    setS(w.status === "fulfilled" ? w.value.showings : []);
-    setO(n.status === "fulfilled" ? n.value.offers : []);
+    if (x.status === "fulfilled") setC(x.value.customers);
+    if (y.status === "fulfilled") setT(y.value.tasks);
+    if (z.status === "fulfilled") setL(z.value.listings);
+    if (q.status === "fulfilled") setA(q.value.activities);
+    if (w.status === "fulfilled") setS(w.value.showings);
+    if (n.status === "fulfilled") setO(n.value.offers);
     if (f.status === "fulfilled") setFinance(f.value);
-    setLastUpdated(new Date());
+
+    const hasSuccessfulRequest = failed.length < results.length;
+    if (hasSuccessfulRequest) setLastUpdated(new Date());
+    setHasLoaded(true);
 
     if (failed.length) {
       const first = failed[0].reason;
@@ -92,14 +108,26 @@ export default function DashboardLive() {
         : "Dashboard verilerinin bir kısmı alınamadı. Sayfa otomatik olarak tekrar denenecek.");
     }
     setBusy(false);
+    loadInFlight.current = false;
   }
 
   useEffect(() => {
-    const first = setTimeout(() => void load(), 0);
-    const interval = setInterval(() => void load(), 30000);
+    void load();
+    const interval = setInterval(() => {
+      if (!document.hidden) void load();
+    }, 30000);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) void load();
+    };
+    const handleFocus = () => void load();
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
     return () => {
-      clearTimeout(first);
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -191,7 +219,7 @@ export default function DashboardLive() {
               <Link key={String(n)} href={String(h)} className="rounded-2xl border bg-white p-5 shadow-sm">
                 <span className="text-2xl">{e}</span>
                 <p className="mt-3 text-xs uppercase tracking-wide text-slate-400">{n}</p>
-                <p className="mt-1 text-3xl font-bold">{busy || (n === "Açık Satış" && !financeLoaded) ? "—" : v}</p>
+                <p className="mt-1 text-3xl font-bold">{(!hasLoaded && busy) || (n === "Açık Satış" && !financeLoaded) ? "—" : v}</p>
               </Link>
             ))}
           </section>
