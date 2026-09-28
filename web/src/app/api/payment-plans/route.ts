@@ -78,6 +78,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ plan }, { status: 201 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return conflict("Bu satış için zaten bir ödeme planı var.");
+    }
     return validationError(error instanceof Error ? error.message : "Ödeme planı oluşturulamadı.");
   }
 }
