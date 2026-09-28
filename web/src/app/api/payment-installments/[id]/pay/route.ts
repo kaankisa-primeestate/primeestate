@@ -90,6 +90,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ payment: result.payment, installmentId: result.installmentId }, { status: 201 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return conflict("Bu taksit için zaten bir tahsilat oluşturulmuş.");
+    }
     return validationError(error instanceof Error ? error.message : "Taksit tahsilatı oluşturulamadı.");
   }
 }
