@@ -112,7 +112,7 @@ export default function DashboardLive() {
   }
 
   useEffect(() => {
-    void load();
+    const first = setTimeout(() => void load(), 0);
     const interval = setInterval(() => {
       if (!document.hidden) void load();
     }, 30000);
@@ -125,6 +125,7 @@ export default function DashboardLive() {
     window.addEventListener("focus", handleFocus);
 
     return () => {
+      clearTimeout(first);
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
