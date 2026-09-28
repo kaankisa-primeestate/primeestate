@@ -448,6 +448,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const fixture = await createAgent(randomUUID().slice(0, 8));
   const cookie = await login(fixture.email, fixture.password);
 
+  const missingSaleResponse = await api(
+    "/api/sales/nonexistent-sale-id",
+    cookie,
+    { note: "missing sale must return not found" },
+    "PATCH",
+  );
+  await expectStatus(missingSaleResponse, 404, "missingSaleResponse");
+  await expectErrorCode(missingSaleResponse, "NOT_FOUND", "missingSaleResponse");
+
   // 1. Customer
   const customerResponse = await api(
     "/api/customers",
@@ -672,6 +681,20 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(approvalPayload.sale.approvalStatus, "ONAYLANDI");
 
   // 11. Payment + ledger
+  const invalidPaymentStatusResponse = await api(
+    "/api/payments",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      amount: 100000,
+      currency: "TRY",
+      status: "INVALID_STATUS",
+    },
+    "POST",
+  );
+  await expectStatus(invalidPaymentStatusResponse, 400, "invalidPaymentStatusResponse");
+  await expectErrorCode(invalidPaymentStatusResponse, "VALIDATION_ERROR", "invalidPaymentStatusResponse");
+
   const paymentResponse = await api(
     "/api/payments",
     cookie,
