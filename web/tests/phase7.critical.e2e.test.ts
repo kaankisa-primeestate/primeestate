@@ -554,6 +554,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(showingResponse, 201, "showingResponse");
 
   // 6. Offer
+  const missingOfferUpdateResponse = await api(
+    "/api/offers/nonexistent-offer-id",
+    cookie,
+    { status: "KABUL" },
+    "PATCH",
+  );
+  await expectStatus(missingOfferUpdateResponse, 404, "missingOfferUpdateResponse");
+  await expectErrorCode(missingOfferUpdateResponse, "NOT_FOUND", "missingOfferUpdateResponse");
+
   const invalidOfferResponse = await api(
     "/api/offers",
     cookie,
@@ -681,6 +690,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(approvalPayload.sale.approvalStatus, "ONAYLANDI");
 
   // 11. Payment + ledger
+  const invalidPaymentUpdateResponse = await api(
+    "/api/payments/nonexistent-payment-id",
+    cookie,
+    { status: "INVALID_STATUS" },
+    "PATCH",
+  );
+  await expectStatus(invalidPaymentUpdateResponse, 400, "invalidPaymentUpdateResponse");
+  await expectErrorCode(invalidPaymentUpdateResponse, "VALIDATION_ERROR", "invalidPaymentUpdateResponse");
+
   const invalidPaymentStatusResponse = await api(
     "/api/payments",
     cookie,
