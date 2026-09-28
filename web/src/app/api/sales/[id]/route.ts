@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -10,6 +10,8 @@ type SaleStatus = "ACIK" | "TAMAMLANDI" | "IPTAL";
 type SaleApprovalStatus = "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI";
 const STATUSES = new Set<SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
 const APPROVAL_STATUSES = new Set<SaleApprovalStatus>(["BEKLIYOR", "ONAYLANDI", "REDDEDILDI"]);
+
+class SaleNotFoundError extends Error {}
 
 function parseRate(value: unknown, label: string) {
   if (value === null || value === undefined || value === "") return null;
@@ -66,7 +68,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           payments: { where: { status: "ODENDI" }, select: { id: true, amount: true } },
         },
       });
-      if (!existing) throw new Error("Satış bulunamadı veya yetkiniz yok.");
+      if (!existing) throw new SaleNotFoundError("Satış bulunamadı veya yetkiniz yok.");
 
       if (status && status !== existing.status) {
         const valid = existing.status === "ACIK" && (status === "TAMAMLANDI" || status === "IPTAL");
@@ -177,6 +179,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ sale: updated });
   } catch (error) {
+    if (error instanceof SaleNotFoundError) return notFound(error.message);
     return validationError(error instanceof Error ? error.message : "Satış güncellenemedi.");
   }
 }
