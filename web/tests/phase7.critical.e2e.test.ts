@@ -706,7 +706,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     "POST",
   );
   await expectStatus(planResponse, 201, "planResponse");
-  const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ sequence: number; amount: string | number }> } }>(planResponse);
+  const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ id: string; sequence: number; amount: string | number }> } }>(planResponse);
   assert.equal(planPayload.plan.currency, "TRY");
   assert.deepEqual(planPayload.plan.installments.map((item) => item.sequence), [1, 2, 3, 4]);
   assert.equal(
@@ -726,6 +726,24 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(duplicatePlanResponse, 409, "duplicatePlanResponse");
   await expectErrorCode(duplicatePlanResponse, "CONFLICT", "duplicatePlanResponse");
+
+  const installmentId = planPayload.plan.installments[0].id;
+  const installmentPaymentResponse = await api(
+    `/api/payment-installments/${installmentId}/pay`,
+    cookie,
+    { paidAt: "2026-11-02T10:00:00.000Z", note: "Phase 7 installment payment" },
+    "POST",
+  );
+  await expectStatus(installmentPaymentResponse, 201, "installmentPaymentResponse");
+
+  const duplicateInstallmentPaymentResponse = await api(
+    `/api/payment-installments/${installmentId}/pay`,
+    cookie,
+    { paidAt: "2026-11-03T10:00:00.000Z" },
+    "POST",
+  );
+  await expectStatus(duplicateInstallmentPaymentResponse, 409, "duplicateInstallmentPaymentResponse");
+  await expectErrorCode(duplicateInstallmentPaymentResponse, "CONFLICT", "duplicateInstallmentPaymentResponse");
 
   // 12. Read-back: the chain is visible to the same scoped user and finance endpoints.
   const salesRead = await api("/api/sales", cookie);
