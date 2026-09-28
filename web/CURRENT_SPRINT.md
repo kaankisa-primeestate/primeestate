@@ -41,8 +41,8 @@
 `351b30f9ce8144e8cdcabebf5be02fcf175efe60`
 
 ## Son Doğrulama
-- API contract + mobile regression → Web Quality #1098 ✅
-- Production auth/runtime smoke → Production Auth Smoke #182 ✅
+- Dashboard live refresh + API contract regression → Web Quality #1103 ✅
+- Production auth/runtime smoke → Production Auth Smoke #187 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,10 +62,10 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Unauthenticated kontrat kapsamı ve kritik yetkili 403/validation HTTP kontrolleri tamamlandı. Sıradaki adım Dashboard canlı veri yenileme davranışını sağlamlaştırmak; statik/demo veri eklenmeyecek.
+Dashboard canlı veri yenileme davranışı sağlamlaştırıldı ve finance-summary için gerçek HTTP auth kontratı eklendi. Sıradaki adım kalan edge-case API kontratlarını ve workflow reliability noktalarını ilerletmek; statik/demo veri eklenmeyecek.
 
 ## Sonraki Fazlar
-- Dashboard refresh UX / live-data refresh reliability
+- Dashboard refresh UX / live-data refresh reliability ✅
 - Remaining edge-case API contracts
 - Deletion policy
 - Auth matrix documentation refinements
