@@ -66,7 +66,7 @@ Standardize critical API error contracts while preserving existing UI compatibil
 
 ### Current main commit
 
-`c2914b1fd88778f0c1c7790f25060346335b6a66`
+`351b30f9ce8144e8cdcabebf5be02fcf175efe60`
 
 ### Branch state
 
@@ -74,14 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1096 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #180 — **success**
+- PrimeEstate Web Quality #1098 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #182 — **success**
 
 ### Immediate next steps
 
-1. Stable unauthenticated error-contract coverage now spans onboarding, user administration, customers, tasks, activities, listings, showings and offers.
-2. Extend contract assertions to meaningful authorized 403/validation cases where they protect tenant and workflow boundaries.
-3. Then address dashboard refresh UX and remaining technical debt.
+1. Stable unauthenticated coverage and authorized 403/validation coverage now span the critical onboarding, user-admin and CRM write boundaries.
+2. Next, address dashboard refresh UX without introducing static/demo data.
+3. Continue remaining technical debt only after live workflow verification.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -291,7 +291,7 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
-- CURRENT_TASK: Kritik CRM ve yönetim API'lerinin stable error kontratını yetkili 403/validation senaryolarıyla genişletmek
+- CURRENT_TASK: Dashboard'da canlı veri güncelleme/yenileme davranışını sağlamlaştırmak
 - ACTIVE_BRANCH: none
 - BASE_MAIN_COMMIT: f9a57520f7144f8fc158d984ac658ba0d717b202
 - ACTIVE_PR: none

@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`c2914b1fd88778f0c1c7790f25060346335b6a66`
+`351b30f9ce8144e8cdcabebf5be02fcf175efe60`
 
 ## Son Doğrulama
-- API contract + mobile regression → Web Quality #1096 ✅
-- Production auth/runtime smoke → Production Auth Smoke #180 ✅
+- API contract + mobile regression → Web Quality #1098 ✅
+- Production auth/runtime smoke → Production Auth Smoke #182 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,11 +62,11 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Core CRM API'lerinin unauthenticated error contract kapsamı tamamlandı. Şimdi tenant/workflow sınırlarını koruyan yetkili 403 ve validation kontratlarını gerçek HTTP testleriyle genişleteceğiz.
+Unauthenticated kontrat kapsamı ve kritik yetkili 403/validation HTTP kontrolleri tamamlandı. Sıradaki adım Dashboard canlı veri yenileme davranışını sağlamlaştırmak; statik/demo veri eklenmeyecek.
 
 ## Sonraki Fazlar
-- Remaining CRM API error contract hardening
-- Dashboard refresh UX
+- Dashboard refresh UX / live-data refresh reliability
+- Remaining edge-case API contracts
 - Deletion policy
 - Auth matrix documentation refinements
 - Stale branch / obsolete PR cleanup
