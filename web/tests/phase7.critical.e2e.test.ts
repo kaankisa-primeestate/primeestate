@@ -167,6 +167,32 @@ async function createAgent(suffix: string) {
 
 
 
+async function createViewer(organizationId: string, officeId: string, suffix: string) {
+  const email = "phase7-viewer-" + suffix + "@example.test";
+  const password = "Phase7-Viewer-Password-123!";
+  const context = await auth.$context;
+  const user = await context.internalAdapter.createUser(
+    {
+      email,
+      name: "Phase 7 E2E Viewer",
+      emailVerified: true,
+      organizationId,
+      officeId,
+      teamId: null,
+      role: "VIEWER",
+      active: true,
+    },
+    { method: "phase7-e2e-test" },
+  );
+  await context.internalAdapter.linkAccount({
+    accountId: user.id,
+    providerId: "credential",
+    userId: user.id,
+    password: await context.password.hash(password),
+  });
+  return { user, email, password };
+}
+
 async function createBroker(organizationId: string, officeId: string, suffix: string) {
   const email = "phase7-broker-" + suffix + "@example.test";
   const password = "Phase7-Broker-Password-123!";
@@ -342,6 +368,47 @@ test("Phase 7: onboarding and user-admin APIs follow the same stable error contr
   );
   await expectStatus(consultantApplication, 400, "consultantApplication validation");
   await expectErrorCode(consultantApplication, "VALIDATION_ERROR", "consultantApplication validation");
+});
+
+test("Phase 7: tenant/workflow boundaries return stable 403 and validation contracts", async () => {
+  const fixture = await createAgent(randomUUID().slice(0, 8));
+  const agentCookie = await login(fixture.email, fixture.password);
+  const viewer = await createViewer(
+    fixture.organization.id,
+    fixture.office.id,
+    randomUUID().slice(0, 8),
+  );
+  const viewerCookie = await login(viewer.email, viewer.password);
+
+  const forbiddenCases = [
+    ["/api/customers", "POST"],
+    ["/api/tasks", "POST"],
+    ["/api/activities", "POST"],
+    ["/api/listings", "POST"],
+    ["/api/showings", "POST"],
+    ["/api/offers", "POST"],
+  ] as const;
+
+  for (const [path, method] of forbiddenCases) {
+    const response = await api(path, viewerCookie, {}, method);
+    await expectStatus(response, 403, path + " forbidden");
+    await expectErrorCode(response, "FORBIDDEN", path + " forbidden");
+  }
+
+  const validationCases: Array<[string, string, unknown]> = [
+    ["/api/customers", "POST", {}],
+    ["/api/tasks", "POST", {}],
+    ["/api/activities", "POST", {}],
+    ["/api/listings", "POST", {}],
+    ["/api/showings", "POST", {}],
+    ["/api/offers", "POST", { amount: 0 }],
+  ];
+
+  for (const [path, method, body] of validationCases) {
+    const response = await api(path, agentCookie, body, method);
+    await expectStatus(response, 400, path + " validation");
+    await expectErrorCode(response, "VALIDATION_ERROR", path + " validation");
+  }
 });
 
 test("Phase 7: core CRM APIs keep the same unauthenticated error contract", async () => {
