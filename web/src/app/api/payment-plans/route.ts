@@ -59,8 +59,6 @@ export async function POST(request: Request) {
 
   try {
     const plan = await prisma.$transaction(async (tx) => {
-      const existing = await tx.paymentPlan.findUnique({ where: { saleId } });
-      if (existing) throw new Error("Bu satış için zaten bir ödeme planı var.");
       const created = await tx.paymentPlan.create({
         data: {
           saleId, title, currency: sale.currency,
