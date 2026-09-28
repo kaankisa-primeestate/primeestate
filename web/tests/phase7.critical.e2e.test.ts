@@ -433,6 +433,7 @@ test("Phase 7: core CRM APIs keep the same unauthenticated error contract", asyn
     ["/api/offers", "GET"],
     ["/api/offers", "POST"],
     ["/api/offers/nonexistent-offer-id", "PATCH"],
+    ["/api/dashboard/finance-summary", "GET"],
   ] as const;
 
   for (const [path, method] of cases) {
