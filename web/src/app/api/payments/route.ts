@@ -6,6 +6,8 @@ import { getUserContext } from "@/lib/auth-context";
 import { assertCan, customerOwnershipScope } from "@/lib/authz";
 import { commercialNextAction } from "@/core/prime-commercial";
 
+class PaymentConflictError extends Error {}
+
 function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Prisma.Decimal | null; officeShareRate: Prisma.Decimal | null }) {
   if (!sale.commissionRate || !sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
   const gross = amount.mul(sale.commissionRate).div(100).toDecimalPlaces(2);
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
       const existingPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId, status: "ODENDI" } });
       const alreadyPaid = existingPaid._sum.amount ?? new Prisma.Decimal(0);
       const nextPaid = status === "ODENDI" ? alreadyPaid.add(new Prisma.Decimal(String(amount))) : alreadyPaid;
-      if (nextPaid.gt(sale.amount)) throw new Error("Toplam tahsilat satış tutarını aşamaz.");
+      if (nextPaid.gt(sale.amount)) throw new PaymentConflictError("Toplam tahsilat satış tutarını aşamaz.");
       if (status === "ODENDI") commissionForPayment(new Prisma.Decimal(String(amount)), sale);
 
       const created = await tx.payment.create({
@@ -90,6 +92,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ payment }, { status: 201 });
   } catch (error) {
+    if (error instanceof PaymentConflictError) return conflict(error.message);
     return validationError(error instanceof Error ? error.message : "Tahsilat oluşturulamadı.");
   }
 }
