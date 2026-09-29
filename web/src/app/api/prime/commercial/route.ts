@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { assertCan, customerOwnershipScope } from "@/lib/authz";
 import { commercialNextAction } from "@/core/prime-commercial";
+
+class PrimeCommercialNotFoundError extends Error {}
+class PrimeCommercialConflictError extends Error {}
 
 const STATUSES = new Set(["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"]);
 
@@ -47,7 +50,7 @@ export async function POST(request: Request) {
           sale: { select: { id: true } },
         },
       });
-      if (!existing) throw new Error("Teklif bulunamadı veya yetkiniz yok.");
+      if (!existing) throw new PrimeCommercialNotFoundError("Teklif bulunamadı veya yetkiniz yok.");
 
       const offer = await tx.offer.update({
         where: { id: offerId },
@@ -57,10 +60,10 @@ export async function POST(request: Request) {
 
       let sale = null;
       if (status === "KABUL") {
-        if (existing.sale) throw new Error("Bu teklif zaten satış kaydına dönüştürülmüş.");
+        if (existing.sale) throw new PrimeCommercialConflictError("Bu teklif zaten satış kaydına dönüştürülmüş.");
         const consultantUserId = existing.listing.consultantUserId ?? context.userId;
         const commissionPlan = await tx.consultantCommissionPlan.findFirst({ where: { userId: consultantUserId, organizationId: context.organizationId, officeId: context.officeId, active: true, effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, select: { id: true, officeShareRate: true, consultantShareRate: true } });
-        if (!["AKTIF", "REZERVE"].includes(existing.listing.status)) throw new Error("Kabul edilen teklif için portföy aktif veya rezerve durumda olmalıdır.");
+        if (!["AKTIF", "REZERVE"].includes(existing.listing.status)) throw new PrimeCommercialConflictError("Kabul edilen teklif için portföy aktif veya rezerve durumda olmalıdır.");
         sale = await tx.sale.create({
           data: { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency, consultantUserId, sourceCommissionPlanId: commissionPlan?.id ?? null, sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null, sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null, officeShareRate: commissionPlan?.officeShareRate ?? null },
           include: { customer: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, status: true } }, offer: { select: { id: true, status: true } } },
@@ -86,6 +89,11 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof PrimeCommercialNotFoundError) return notFound(error.message);
+    if (error instanceof PrimeCommercialConflictError) return conflict(error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return conflict("Bu teklif zaten satış kaydına dönüştürülmüş.");
+    }
     return validationError(error instanceof Error ? error.message : "Prime ticari işlem tamamlanamadı.");
   }
 }
