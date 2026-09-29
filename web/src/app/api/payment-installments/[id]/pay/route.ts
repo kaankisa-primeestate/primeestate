@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
+
+class InstallmentPaymentConflictError extends Error {}
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -51,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const existingPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId: sale.id, status: "ODENDI" } });
       const alreadyPaid = existingPaid._sum.amount ?? new Prisma.Decimal(0);
       const amount = installment.amount;
-      if (alreadyPaid.add(amount).gt(sale.amount)) throw new Error("Toplam tahsilat satış tutarını aşamaz.");
+      if (alreadyPaid.add(amount).gt(sale.amount)) throw new InstallmentPaymentConflictError("Toplam tahsilat satış tutarını aşamaz.");
 
       const split = commissionForPayment(amount, sale);
       const payment = await tx.payment.create({
@@ -90,6 +92,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ payment: result.payment, installmentId: result.installmentId }, { status: 201 });
   } catch (error) {
+    if (error instanceof InstallmentPaymentConflictError) return conflict(error.message);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return conflict("Bu taksit için zaten bir tahsilat oluşturulmuş.");
     }
