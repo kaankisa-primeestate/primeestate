@@ -5,13 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope, isManagerRole } from "@/lib/authz";
 
+class SaleOfferUnavailableError extends Error {}
+class SaleAlreadyCreatedError extends Error {}
+
 export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return authenticationRequired();
   try { if (!can(context.role, "sales", "read")) return forbidden(); } catch { return forbidden(); }
-  class SaleOfferUnavailableError extends Error {}
-class SaleAlreadyCreatedError extends Error {}
-
 const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   try {
