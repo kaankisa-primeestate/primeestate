@@ -730,6 +730,30 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(paymentPayload.payment.amount), 1000000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
 
+  const invalidPaymentPatchStatusResponse = await api(
+    `/api/payments/${paymentPayload.payment.id}`,
+    cookie,
+    { status: "INVALID_STATUS" },
+    "PATCH",
+  );
+  await expectStatus(invalidPaymentPatchStatusResponse, 400, "invalidPaymentPatchStatusResponse");
+  await expectErrorCode(invalidPaymentPatchStatusResponse, "VALIDATION_ERROR", "invalidPaymentPatchStatusResponse");
+
+  const overchargeResponse = await api(
+    "/api/payments",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      amount: 4000000,
+      currency: "TRY",
+      status: "ODENDI",
+      paidAt: "2026-10-21T10:00:00.000Z",
+    },
+    "POST",
+  );
+  await expectStatus(overchargeResponse, 409, "overchargeResponse");
+  await expectErrorCode(overchargeResponse, "CONFLICT", "overchargeResponse");
+
   // 12. Payment plan / installments
   const planResponse = await api(
     "/api/payment-plans",
