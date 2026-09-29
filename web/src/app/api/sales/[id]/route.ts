@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -12,6 +12,7 @@ const STATUSES = new Set<SaleStatus>(["ACIK", "TAMAMLANDI", "IPTAL"]);
 const APPROVAL_STATUSES = new Set<SaleApprovalStatus>(["BEKLIYOR", "ONAYLANDI", "REDDEDILDI"]);
 
 class SaleNotFoundError extends Error {}
+class SaleConflictError extends Error {}
 
 function parseRate(value: unknown, label: string) {
   if (value === null || value === undefined || value === "") return null;
@@ -72,14 +73,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
       if (status && status !== existing.status) {
         const valid = existing.status === "ACIK" && (status === "TAMAMLANDI" || status === "IPTAL");
-        if (!valid) throw new Error("Satış " + existing.status + " durumundan " + status + " durumuna geçirilemez.");
+        if (!valid) throw new SaleConflictError("Satış " + existing.status + " durumundan " + status + " durumuna geçirilemez.");
         if (status === "TAMAMLANDI" && existing.approvalStatus !== "ONAYLANDI") {
-          throw new Error("Satış kesinleşmeden önce broker onayı gerekir.");
+          throw new SaleConflictError("Satış kesinleşmeden önce broker onayı gerekir.");
         }
       }
 
       if (requestedApproval && requestedApproval !== existing.approvalStatus) {
-        if (existing.approvalStatus === "ONAYLANDI") throw new Error("Onaylanmış satışın onay durumu geri alınamaz.");
+        if (existing.approvalStatus === "ONAYLANDI") throw new SaleConflictError("Onaylanmış satışın onay durumu geri alınamaz.");
         if (requestedApproval === "ONAYLANDI" && (!existing.commissionRate || !existing.officeShareRate)) {
           throw new Error("Broker onayı için komisyon oranı ve ofis payı oranı tamamlanmalıdır.");
         }
@@ -87,7 +88,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
       const commissionChanged = body.commissionRate !== undefined || body.officeShareRate !== undefined;
       if (commissionChanged && (existing.status !== "ACIK" || existing.payments.length > 0 || existing.approvalStatus === "ONAYLANDI")) {
-        throw new Error("Onaylanmış, tahsilat gerçekleşmiş veya kapanmış satışın komisyon bilgileri değiştirilemez.");
+        throw new SaleConflictError("Onaylanmış, tahsilat gerçekleşmiş veya kapanmış satışın komisyon bilgileri değiştirilemez.");
       }
 
       let commissionRate = existing.commissionRate;
@@ -180,6 +181,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ sale: updated });
   } catch (error) {
     if (error instanceof SaleNotFoundError) return notFound(error.message);
+    if (error instanceof SaleConflictError) return conflict(error.message);
     return validationError(error instanceof Error ? error.message : "Satış güncellenemedi.");
   }
 }
