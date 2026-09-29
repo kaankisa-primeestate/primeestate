@@ -635,6 +635,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
+  const duplicateSaleResponse = await api(
+    "/api/sales",
+    cookie,
+    { offerId: offerPayload.offer.id, note: "duplicate sale must fail" },
+    "POST",
+  );
+  await expectStatus(duplicateSaleResponse, 409, "duplicateSaleResponse");
+  await expectErrorCode(duplicateSaleResponse, "CONFLICT", "duplicateSaleResponse");
+
   // 9. Pre-approval finance must be blocked.
   const blockedPaymentResponse = await api(
     "/api/payments",
