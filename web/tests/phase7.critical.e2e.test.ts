@@ -635,6 +635,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
+  const prematureCloseResponse = await api(
+    `/api/sales/${salePayload.sale.id}`,
+    cookie,
+    { status: "TAMAMLANDI" },
+    "PATCH",
+  );
+  await expectStatus(prematureCloseResponse, 409, "prematureCloseResponse");
+  await expectErrorCode(prematureCloseResponse, "CONFLICT", "prematureCloseResponse");
+
   const duplicateSaleResponse = await api(
     "/api/sales",
     cookie,
@@ -756,6 +765,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
   assert.equal(Number(paymentPayload.payment.amount), 1000000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
+
+  const postPaymentCommissionChangeResponse = await api(
+    `/api/sales/${salePayload.sale.id}`,
+    cookie,
+    { commissionRate: 4 },
+    "PATCH",
+  );
+  await expectStatus(postPaymentCommissionChangeResponse, 409, "postPaymentCommissionChangeResponse");
+  await expectErrorCode(postPaymentCommissionChangeResponse, "CONFLICT", "postPaymentCommissionChangeResponse");
 
   const invalidPaymentPatchStatusResponse = await api(
     `/api/payments/${paymentPayload.payment.id}`,
