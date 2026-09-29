@@ -12,7 +12,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   let body: { status?: unknown; paidAt?: unknown; note?: unknown };
   try { body = await request.json(); } catch { return validationError("Geçersiz JSON."); }
-  const status = body.status === "ODENDI" || body.status === "IPTAL" || body.status === "BEKLIYOR" ? body.status : undefined;
+  const status = body.status === undefined
+    ? undefined
+    : body.status === "ODENDI" || body.status === "IPTAL" || body.status === "BEKLIYOR"
+      ? body.status
+      : null;
+  if (status === null) return validationError("Geçersiz tahsilat durumu.");
   if (!status && body.paidAt === undefined && body.note === undefined) return validationError("Güncellenecek alan bulunamadı.");
 
   const existing = await prisma.payment.findFirst({
