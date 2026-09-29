@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, internalError } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, internalError, notFound, conflict } from "@/lib/api-response";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -9,7 +9,10 @@ export async function GET(request: Request) {
   const context = await getUserContext();
   if (!context) return authenticationRequired();
   try { if (!can(context.role, "sales", "read")) return forbidden(); } catch { return forbidden(); }
-  const { searchParams } = new URL(request.url);
+  class SaleOfferUnavailableError extends Error {}
+class SaleAlreadyCreatedError extends Error {}
+
+const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId")?.trim();
   try {
     const sales = await prisma.sale.findMany({
@@ -46,8 +49,8 @@ export async function POST(request: Request) {
           listing: { select: { id: true, status: true, purpose: true, currency: true, consultantUserId: true } },
         },
       });
-      if (!offer) throw new Error("Teklif bulunamadı, kabul edilmemiş, portföy uygun değil veya yetkiniz yok.");
-      if (offer.sale) throw new Error("Bu teklif zaten satış kaydına dönüştürülmüş.");
+      if (!offer) throw new SaleOfferUnavailableError("Teklif bulunamadı, kabul edilmemiş, portföy uygun değil veya yetkiniz yok.");
+      if (offer.sale) throw new SaleAlreadyCreatedError("Bu teklif zaten satış kaydına dönüştürülmüş.");
       if (offer.currency !== offer.listing.currency) throw new Error("Teklif para birimi portföy para birimi ile aynı olmalıdır.");
 
       const consultantUserId = offer.listing.consultantUserId ?? context.userId;
@@ -110,6 +113,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ sale }, { status: 201 });
   } catch (error) {
+    if (error instanceof SaleAlreadyCreatedError) return conflict(error.message);
+    if (error instanceof SaleOfferUnavailableError) return notFound(error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return conflict("Bu teklif zaten satış kaydına dönüştürülmüş.");
+    }
     return validationError(error instanceof Error ? error.message : "Satış oluşturulamadı.");
   }
 }
