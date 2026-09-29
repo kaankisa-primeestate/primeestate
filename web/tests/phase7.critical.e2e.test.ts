@@ -754,6 +754,30 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(overchargeResponse, 409, "overchargeResponse");
   await expectErrorCode(overchargeResponse, "CONFLICT", "overchargeResponse");
 
+  const pendingPaymentResponse = await api(
+    "/api/payments",
+    cookie,
+    {
+      saleId: salePayload.sale.id,
+      amount: 3000000,
+      currency: "TRY",
+      status: "BEKLIYOR",
+    },
+    "POST",
+  );
+  await expectStatus(pendingPaymentResponse, 201, "pendingPaymentResponse");
+  const pendingPaymentPayload = await json<{ payment: { id: string; status: string } }>(pendingPaymentResponse);
+  assert.equal(pendingPaymentPayload.payment.status, "BEKLIYOR");
+
+  const pendingPaymentOverchargeResponse = await api(
+    `/api/payments/${pendingPaymentPayload.payment.id}`,
+    cookie,
+    { status: "ODENDI" },
+    "PATCH",
+  );
+  await expectStatus(pendingPaymentOverchargeResponse, 409, "pendingPaymentOverchargeResponse");
+  await expectErrorCode(pendingPaymentOverchargeResponse, "CONFLICT", "pendingPaymentOverchargeResponse");
+
   // 12. Payment plan / installments
   const planResponse = await api(
     "/api/payment-plans",
