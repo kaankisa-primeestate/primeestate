@@ -644,6 +644,24 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(duplicateSaleResponse, 409, "duplicateSaleResponse");
   await expectErrorCode(duplicateSaleResponse, "CONFLICT", "duplicateSaleResponse");
 
+  const duplicatePrimeCommercialResponse = await api(
+    "/api/prime/commercial",
+    cookie,
+    { action: "OFFER_STATUS", offerId: offerPayload.offer.id, status: "KABUL" },
+    "POST",
+  );
+  await expectStatus(duplicatePrimeCommercialResponse, 409, "duplicatePrimeCommercialResponse");
+  await expectErrorCode(duplicatePrimeCommercialResponse, "CONFLICT", "duplicatePrimeCommercialResponse");
+
+  const missingPrimeCommercialResponse = await api(
+    "/api/prime/commercial",
+    cookie,
+    { action: "OFFER_STATUS", offerId: "nonexistent-offer-id", status: "KABUL" },
+    "POST",
+  );
+  await expectStatus(missingPrimeCommercialResponse, 404, "missingPrimeCommercialResponse");
+  await expectErrorCode(missingPrimeCommercialResponse, "NOT_FOUND", "missingPrimeCommercialResponse");
+
   // 9. Pre-approval finance must be blocked.
   const blockedPaymentResponse = await api(
     "/api/payments",
