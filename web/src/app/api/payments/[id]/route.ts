@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
+
+class PaymentConflictError extends Error {}
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
@@ -33,7 +35,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (targetStatus === "ODENDI" && existing.status !== "ODENDI") {
         const otherPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId: existing.saleId, status: "ODENDI", id: { not: id } } });
         const total = (otherPaid._sum.amount ?? new Prisma.Decimal(0)).add(existing.amount);
-        if (total.gt(existing.sale.amount)) throw new Error("Toplam tahsilat satış tutarını aşamaz.");
+        if (total.gt(existing.sale.amount)) throw new PaymentConflictError("Toplam tahsilat satış tutarını aşamaz.");
         if (!existing.sale.commissionRate || !existing.sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
         const gross = existing.amount.mul(existing.sale.commissionRate).div(100).toDecimalPlaces(2);
         const office = gross.mul(existing.sale.officeShareRate).div(100).toDecimalPlaces(2);
@@ -69,6 +71,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
     return NextResponse.json({ payment: updated });
   } catch (error) {
+    if (error instanceof PaymentConflictError) return conflict(error.message);
     return validationError(error instanceof Error ? error.message : "Tahsilat güncellenemedi.");
   }
 }
