@@ -52,6 +52,7 @@ export async function PATCH(
     return authenticationRequired();
   }
 
+  if (!isManagerRole(context.role)) return forbidden("Kullanıcı yönetimi yetkiniz yok.");
   if (!can(context.role, "users", "update")) return forbidden();
 
   const { id } = await params;
