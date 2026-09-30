@@ -653,6 +653,24 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(duplicateSaleResponse, 409, "duplicateSaleResponse");
   await expectErrorCode(duplicateSaleResponse, "CONFLICT", "duplicateSaleResponse");
 
+  const convertedOfferAmountChangeResponse = await api(
+    `/api/offers/${offerPayload.offer.id}`,
+    cookie,
+    { amount: 4700000 },
+    "PATCH",
+  );
+  await expectStatus(convertedOfferAmountChangeResponse, 409, "convertedOfferAmountChangeResponse");
+  await expectErrorCode(convertedOfferAmountChangeResponse, "CONFLICT", "convertedOfferAmountChangeResponse");
+
+  const convertedOfferStatusChangeResponse = await api(
+    `/api/offers/${offerPayload.offer.id}`,
+    cookie,
+    { status: "REDDEDILDI" },
+    "PATCH",
+  );
+  await expectStatus(convertedOfferStatusChangeResponse, 409, "convertedOfferStatusChangeResponse");
+  await expectErrorCode(convertedOfferStatusChangeResponse, "CONFLICT", "convertedOfferStatusChangeResponse");
+
   const duplicatePrimeCommercialResponse = await api(
     "/api/prime/commercial",
     cookie,
