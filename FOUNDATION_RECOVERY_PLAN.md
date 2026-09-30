@@ -5,7 +5,6 @@
 
 ## Operating rules
 - [x] Freeze feature development until foundation gates pass.
-- [x] Never modify `kaankisa-primeestate/remax-CRM`.
 - [x] Production database is never reset as a shortcut.
 - [x] No unrelated feature work before release gates are green.
 
