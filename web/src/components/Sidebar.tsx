@@ -14,6 +14,7 @@ const menu = [
   { name: "Takvim", href: "/calendar", icon: "📅" },
   { name: "Müşteriler", href: "/clients", icon: "👤" },
   { name: "Aramalar", href: "/calls", icon: "📞" },
+  { name: "Global Arama", href: "/search", icon: "🔎" },
   { name: "Finans", href: "/finance", icon: "💰" },
 ];
 
