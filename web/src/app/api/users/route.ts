@@ -55,6 +55,7 @@ export async function GET() {
     return authenticationRequired();
   }
 
+  if (!isManagerRole(context.role)) return forbidden("Kullanıcı yönetimi yetkiniz yok.");
   if (!can(context.role, "users", "read")) return forbidden();
 
   const users = await prisma.user.findMany({
