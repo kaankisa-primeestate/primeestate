@@ -5,7 +5,6 @@
 ## 1. Release ilkeleri
 
 - Geliştirme yalnızca `kaankisa-primeestate/primeestate` üzerinde yapılır.
-- `kaankisa-primeestate/remax-CRM` değiştirilmez.
 - Production database reset edilmez.
 - Secret, connection string ve kullanıcı parolaları source code'a yazılmaz.
 - CI yeşil olmadan merge yapılmaz.
