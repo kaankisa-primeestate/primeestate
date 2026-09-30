@@ -2,7 +2,7 @@
 
 ## D001 — PrimeEstate ana geliştirme reposudur
 
-Live `remax-CRM` referans/özellik kaynağıdır. Yeni ürün PrimeEstate repo'sunda geliştirilir.
+PrimeEstate, bu çalışma alanındaki tek aktif ürün ve geliştirme kaynağıdır.
 
 ## D002 — App Router kullanılacak
 
