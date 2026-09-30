@@ -8,11 +8,7 @@
 >
 > **Yetkili ana branch:** `main`
 >
-> **KESİNLİKLE KARIŞTIRILMAYACAK REPO:** `kaankisa-primeestate/remax-CRM`
->
-> `remax-CRM` ayrı bir projedir. Kullanıcı açıkça istemediği sürece bu projeye **bakılmayacak, kontrol edilmeyecek, kod yazılmayacak, durumundan devam edilmeyecek ve referans alınmayacaktır.**
->
-> Kullanıcı “PrimeEstate”, “devam edelim”, “kaldığımız yerden devam et”, “GitHub'ı kontrol et”, “durumu kontrol et” veya benzeri bir devam komutu verdiğinde varsayılan ve zorunlu hedef **yalnızca** `kaankisa-primeestate/primeestate` olacaktır.
+> > Kullanıcı “PrimeEstate”, “devam edelim”, “kaldığımız yerden devam et”, “GitHub'ı kontrol et”, “durumu kontrol et” veya benzeri bir devam komutu verdiğinde varsayılan ve zorunlu hedef **yalnızca** `kaankisa-primeestate/primeestate` olacaktır.
 >
 > Her yeni devralmada işlem sırası zorunludur:
 > 1. Bu **AKTİF PROJE KİLİDİ** okunur.
@@ -38,7 +34,7 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`56d6e9c68d7ae0d3320738466493f37025cb5217`
+`4b34acc1a081398f33a5a05e6c7e2471d16ab872`
 
 ## Son Doğrulama
 - Legacy/obsolete PR cleanup → Web Quality #1143 ✅
@@ -82,4 +78,3 @@ Legacy/obsolete açık PR'lar #1, #22, #30, #62, #65 kapatıldı. Bu eski branch
 - Secret/connection string source'a girmez.
 - Server-side authorization zayıflatılmaz.
 - Tanımlanmamış REP / MAKSİMUM hesabı icat edilmez.
-- `kaankisa-primeestate/remax-CRM` PrimeEstate devamı değildir ve kullanıcı açıkça istemedikçe kullanılmaz.
