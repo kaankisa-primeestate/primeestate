@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`2725de8818069a0f64286b8e6e38fb660d733c9b`
+`5fee642e43d930c3e86d9aa471e4148e9187ba3d`
 
 ## Son Doğrulama
-- Dashboard live refresh + duplicate finance conflict regression → Web Quality #1109 ✅
-- Production auth/runtime smoke → Production Auth Smoke #193 ✅
+- Converted offer status locking + regression coverage → Web Quality #1135 ✅
+- Production auth/runtime smoke → Production Auth Smoke #219 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -62,11 +62,12 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Dashboard canlı veri yenileme davranışı ve finance-summary auth kontratı tamamlandı. Duplicate ödeme planı ile duplicate taksit tahsilatı için gerçek HTTP conflict kontratları da doğrulandı. Sıradaki adım kalan edge-case API kontratları; statik/demo veri eklenmeyecek.
+Dashboard canlı veri yenileme davranışı ve finance-summary auth kontratı tamamlandı. Duplicate ödeme planı ile duplicate taksit tahsilatı için gerçek HTTP conflict kontratları doğrulandı. Teklife satış sonrası status/amount kilidi doğrudan Offer API ve Prime ticari akışta da doğrulandı. Sıradaki adım kalan edge-case API kontratları; statik/demo veri eklenmeyecek.
 
 ## Sonraki Fazlar
 - Dashboard refresh UX / live-data refresh reliability ✅
 - Duplicate payment-plan / installment-payment conflict contracts ✅
+- Converted-offer status locking across Offer + Prime commercial flow ✅
 - Remaining edge-case API contracts
 - Deletion policy
 - Auth matrix documentation refinements
