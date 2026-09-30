@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`c80e156198e5e02765230452480d22b48eda3506`
+`3bf0f05c03d225a4fa6c3400ade1423150f1c0bf`
 
 ## Son Doğrulama
-- Prime commercial currency consistency + regression coverage → Web Quality #1138 ✅
-- Production auth/runtime smoke → Production Auth Smoke #222 ✅
+- Auth Matrix refinement → Web Quality #1141 ✅
+- Production auth/runtime smoke → Production Auth Smoke #225 ✅ (last executable commit 7e57250…)
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
@@ -63,7 +63,7 @@
 
 ## Sıradaki İş
 
-Core business deletion policy documented and locked by HTTP regression coverage. Sıradaki adım auth-matrix documentation refinements; ardından stale branch / obsolete PR cleanup.
+Authorization Matrix güncellendi; rol, veri kapsamı, kritik API ve sayfa erişim matrisi tek belgede netleştirildi. Sıradaki adım stale branch / obsolete PR cleanup; ardından matriste kod-belge farkı kalan noktalar için enforcement gap taraması.
 
 ## Sonraki Fazlar
 - Dashboard refresh UX / live-data refresh reliability ✅
