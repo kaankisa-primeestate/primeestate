@@ -38,7 +38,7 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`f3a6ed99cac55787d5ada5db7ecc753e707a14a5`
+`c80e156198e5e02765230452480d22b48eda3506`
 
 ## Son Doğrulama
 - Prime commercial currency consistency + regression coverage → Web Quality #1138 ✅
@@ -62,15 +62,16 @@
 - Ofis ortak portföyü ofis kapsamındaki danışmanlarca görünür.
 
 ## Sıradaki İş
-Dashboard canlı veri yenileme davranışı ve finance-summary auth kontratı tamamlandı. Duplicate ödeme planı ile duplicate taksit tahsilatı için gerçek HTTP conflict kontratları doğrulandı. Teklife satış sonrası status/amount kilidi doğrudan Offer API ve Prime ticari akışta doğrulandı. Prime ticari teklif oluşturma/kabul akışında para birimi ile portföy para birimi tutarlılığı da doğrulandı. Sıradaki adım kalan edge-case API kontratları; statik/demo veri eklenmeyecek.
+
+Core business deletion policy documented and locked by HTTP regression coverage. Sıradaki adım auth-matrix documentation refinements; ardından stale branch / obsolete PR cleanup.
 
 ## Sonraki Fazlar
 - Dashboard refresh UX / live-data refresh reliability ✅
 - Duplicate payment-plan / installment-payment conflict contracts ✅
 - Converted-offer status locking across Offer + Prime commercial flow ✅
 - Prime commercial currency consistency ✅
-- Remaining edge-case API contracts
-- Deletion policy
+- Remaining edge-case API contracts ✅
+- Deletion policy ✅
 - Auth matrix documentation refinements
 - Stale branch / obsolete PR cleanup
 
