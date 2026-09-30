@@ -217,7 +217,7 @@ After merge:
 - auth matrix documentation refinements
 - business transition documentation
 - release/migration documentation
-- stale branch / obsolete PR cleanup
+- stale branch / obsolete PR cleanup — open legacy PRs #1, #22, #30, #62, #65 closed as obsolete; legacy branches retained for history
 - consultant application T.C. display should remain privacy-conscious; prefer masked/last-four display unless full value is genuinely required
 - selected Prime customer should ideally be preserved by customer ID rather than list index across refresh
 - old positive/negative Prime learning signals can persist if sentiment reverses; improve the learning model deliberately rather than via ad-hoc cleanup
@@ -297,6 +297,6 @@ Keep these fields current:
 - ACTIVE_PR: none
 - LAST_GREEN_CHECKS: Web Quality #1141 ✅; Production Auth Smoke #225 ✅ (last executable commit 7e57250…; current main change is documentation-only)
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: stale branch / obsolete PR cleanup, then auth matrix enforcement gaps
+- NEXT_STEP: auth matrix enforcement gap scan, then remaining workflow reliability checks
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-30
