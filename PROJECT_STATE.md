@@ -293,10 +293,10 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
 - CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: c80e156198e5e02765230452480d22b48eda3506
+- BASE_MAIN_COMMIT: 3bf0f05c03d225a4fa6c3400ade1423150f1c0bf
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1140 ✅; Production Auth Smoke #224 ✅
+- LAST_GREEN_CHECKS: Web Quality #1141 ✅; Production Auth Smoke #225 ✅ (last executable commit 7e57250…; current main change is documentation-only)
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: auth matrix documentation refinements, then stale branch / obsolete PR cleanup
+- NEXT_STEP: stale branch / obsolete PR cleanup, then auth matrix enforcement gaps
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-30
