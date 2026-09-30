@@ -63,7 +63,7 @@
 
 ## Sıradaki İş
 
-Authorization Matrix güncellendi; rol, veri kapsamı, kritik API ve sayfa erişim matrisi tek belgede netleştirildi. Sıradaki adım stale branch / obsolete PR cleanup; ardından matriste kod-belge farkı kalan noktalar için enforcement gap taraması.
+Legacy/obsolete açık PR'lar #1, #22, #30, #62, #65 kapatıldı. Bu eski branch'ler aktif continuation yolu olmaktan çıkarıldı; branch'ler history için korunuyor. Sıradaki adım auth matrix enforcement gap taraması ve kalan workflow reliability kontrolleri.
 
 ## Sonraki Fazlar
 - Dashboard refresh UX / live-data refresh reliability ✅
@@ -73,7 +73,7 @@ Authorization Matrix güncellendi; rol, veri kapsamı, kritik API ve sayfa eriş
 - Remaining edge-case API contracts ✅
 - Deletion policy ✅
 - Auth matrix documentation refinements
-- Stale branch / obsolete PR cleanup
+- Stale branch / obsolete PR cleanup — open legacy PRs #1, #22, #30, #62, #65 closed
 
 ## Kurallar
 - Do not merge red.
