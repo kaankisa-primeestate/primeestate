@@ -3,7 +3,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { can, customerOwnershipScope, isManagerRole } from "@/lib/authz";
+import { can, canAssignTaskOwner, customerOwnershipScope, isManagerRole, taskOwnerScope } from "@/lib/authz";
 
 
 export async function GET(request: Request) {
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       ...(status ? { status: status as never } : {}),
       OR: [
         { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-        { customerId: null, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(isManagerRole(context.role) ? {} : { id: context.userId }) } },
+        { customerId: null, owner: { organizationId: context.organizationId, officeId: context.officeId, ...taskOwnerScope(context) } },
       ],
     },
     include: { customer: { select: { id: true, name: true, ownerUserId: true } }, owner: { select: { id: true, name: true, email: true } } },
@@ -48,9 +48,26 @@ export async function POST(request: Request) {
   }
 
   let ownerUserId = context.userId;
-  if (isManagerRole(context.role) && typeof body.ownerUserId === "string" && body.ownerUserId.trim()) {
-    const owner = await prisma.user.findFirst({ where: { id: body.ownerUserId.trim(), organizationId: context.organizationId, officeId: context.officeId, active: true }, select: { id: true } });
+  if (typeof body.ownerUserId === "string" && body.ownerUserId.trim()) {
+    if (!isManagerRole(context.role) && context.role !== "TEAM_LEADER") {
+      return forbidden("Görevi başka bir kullanıcıya atama yetkiniz yok.");
+    }
+
+    const owner = await prisma.user.findFirst({
+      where: {
+        id: body.ownerUserId.trim(),
+        organizationId: context.organizationId,
+        officeId: context.officeId,
+        active: true,
+        ...(context.role === "TEAM_LEADER" ? { teamId: context.teamId ?? "__no_team__" } : {}),
+      },
+      select: { id: true, teamId: true },
+    });
+
     if (!owner) return validationError("Geçerli bir sorumlu danışman bulunamadı.");
+    if (!canAssignTaskOwner(context, owner.teamId)) {
+      return forbidden("Görevi yalnızca kendi yetki kapsamınızdaki bir kullanıcıya atayabilirsiniz.");
+    }
     ownerUserId = owner.id;
   }
 
