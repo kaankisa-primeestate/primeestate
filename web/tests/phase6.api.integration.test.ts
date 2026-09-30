@@ -235,6 +235,49 @@ after(async () => {
   await prisma.$disconnect();
 });
 
+test("Phase 11 API: global search preserves customer and office-portfolio scopes", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.agent1);
+
+  const listing = await prisma.listing.create({
+    data: {
+      organizationId: fixture.agent1.organizationId,
+      officeId: fixture.agent1.officeId,
+      consultantUserId: fixture.agent2.id,
+      code: "SEARCH-001",
+      title: "Bostancı Search Listing",
+      purpose: "SATILIK" as never,
+      status: "AKTIF" as never,
+      price: 10000000,
+      currency: "TRY",
+      property: {
+        create: {
+          organizationId: fixture.agent1.organizationId,
+          officeId: fixture.agent1.officeId,
+          consultantUserId: fixture.agent2.id,
+          propertyType: "DAIRE" as never,
+          title: "Bostancı Search Listing",
+          city: "İstanbul",
+          district: "Kadıköy",
+          neighborhood: "Bostancı",
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  const response = await api("/api/search?q=Bostancı", { cookie });
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    customers: Array<{ id: string }>;
+    listings: Array<{ id: string }>;
+  };
+
+  assert.equal(payload.customers.some((customer) => customer.id === fixture.customer1Id), false);
+  assert.equal(payload.customers.some((customer) => customer.id === fixture.customer2Id), false);
+  assert.equal(payload.listings.some((item) => item.id === listing.id), true);
+});
+
 test("Phase 6 API: protected customer route returns 401 without a session", async () => {
   const response = await api("/api/customers");
   assert.equal(response.status, 401);
