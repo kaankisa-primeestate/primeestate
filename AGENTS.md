@@ -3,7 +3,6 @@
 Read `CODEX_PROJECT_HANDOFF.md` before changing code.
 
 ## Mandatory
-- Never modify `kaankisa-primeestate/remax-CRM`.
 - Work only in `kaankisa-primeestate/primeestate`.
 - Verify current GitHub main/branch/PR/CI before making changes.
 - Do not merge red CI.
@@ -18,4 +17,4 @@ Read `CODEX_PROJECT_HANDOFF.md` before changing code.
 - Update documentation/state only after verifying the real GitHub state.
 
 ## Current priority
-PR #81 is open and its CI is red. Find the actual CI root cause before changing product logic or merging anything.
+Main CI is green. Continue from the first incomplete PrimeEstate task and verify root cause before changing business logic.
