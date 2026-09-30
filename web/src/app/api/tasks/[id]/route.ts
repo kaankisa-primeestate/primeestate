@@ -3,7 +3,7 @@ import { authenticationRequired, forbidden, validationError, notFound } from "@/
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
-import { can, isManagerRole } from "@/lib/authz";
+import { can, taskOwnerScope } from "@/lib/authz";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
@@ -11,7 +11,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!can(context.role, "tasks", "update")) return forbidden();
   const { id } = await params;
   const task = await prisma.task.findFirst({
-    where: { id, owner: { organizationId: context.organizationId, officeId: context.officeId, ...(isManagerRole(context.role) ? {} : { id: context.userId }) } },
+    where: { id, owner: { organizationId: context.organizationId, officeId: context.officeId, ...taskOwnerScope(context) } },
     select: { id: true },
   });
   if (!task) return notFound("Görev bulunamadı veya yetkiniz yok.");
