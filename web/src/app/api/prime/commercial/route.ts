@@ -51,6 +51,7 @@ export async function POST(request: Request) {
         },
       });
       if (!existing) throw new PrimeCommercialNotFoundError("Teklif bulunamadı veya yetkiniz yok.");
+      if (existing.sale) throw new PrimeCommercialConflictError("Satışa dönüştürülmüş teklifin durumu değiştirilemez.");
 
       const offer = await tx.offer.update({
         where: { id: offerId },
