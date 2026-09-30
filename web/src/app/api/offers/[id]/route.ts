@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
 
 const OFFER_STATUSES = new Set(["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"]);
+
+class OfferConvertedConflictError extends Error {}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
@@ -22,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...customerOwnershipScope(context),
       },
     },
-    select: { id: true },
+    select: { id: true, sale: { select: { id: true } } },
   });
   if (!offer) return notFound("Teklif bulunamadı veya yetkiniz yok.");
 
@@ -39,21 +41,25 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.status !== undefined && !status) return validationError("Geçersiz teklif durumu.");
   if (amount !== undefined && (!Number.isFinite(amount) || amount <= 0)) return validationError("Geçerli bir teklif tutarı girilmelidir.");
   if (!status && body.nextAction === undefined && amount === undefined) return validationError("Güncellenecek alan bulunamadı.");
+  if (offer.sale && (status !== undefined || amount !== undefined)) {
+    throw new OfferConvertedConflictError("Satışa dönüştürülmüş teklifin durumu veya tutarı değiştirilemez.");
+  }
 
-  const updated = await prisma.offer.update({
+  try {
+    const updated = await prisma.offer.update({
     where: { id },
     data: {
       ...(status ? { status: status as never } : {}),
       ...(body.nextAction !== undefined ? { nextAction: typeof body.nextAction === "string" ? body.nextAction.trim() || null : null } : {}),
       ...(amount !== undefined ? { amount } : {}),
     },
-    include: {
-      customer: { select: { id: true, name: true, ownerUserId: true } },
-      listing: { select: { id: true, code: true, title: true, price: true, currency: true } },
-    },
-  });
+      include: {
+        customer: { select: { id: true, name: true, ownerUserId: true } },
+        listing: { select: { id: true, code: true, title: true, price: true, currency: true } },
+      },
+    });
 
-  await prisma.auditLog.create({
+    await prisma.auditLog.create({
     data: {
       organizationId: context.organizationId,
       actorUserId: context.userId,
@@ -66,7 +72,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...(body.nextAction !== undefined ? { nextAction: updated.nextAction } : {}),
       },
     },
-  });
+    });
 
-  return NextResponse.json({ offer: updated });
+    return NextResponse.json({ offer: updated });
+  } catch (error) {
+    if (error instanceof OfferConvertedConflictError) return conflict(error.message);
+    return validationError(error instanceof Error ? error.message : "Teklif güncellenemedi.");
+  }
 }
