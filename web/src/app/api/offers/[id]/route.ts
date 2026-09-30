@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { authenticationRequired, forbidden, validationError, notFound, conflict } from "@/lib/api-response";
 
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
 
 const OFFER_STATUSES = new Set(["TASLAK", "SUNULDU", "KARSILIKLI_TEKLIF", "KABUL", "REDDEDILDI"]);
-
-class OfferConvertedConflictError extends Error {}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const context = await getUserContext();
@@ -42,7 +41,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (amount !== undefined && (!Number.isFinite(amount) || amount <= 0)) return validationError("Geçerli bir teklif tutarı girilmelidir.");
   if (!status && body.nextAction === undefined && amount === undefined) return validationError("Güncellenecek alan bulunamadı.");
   if (offer.sale && (status !== undefined || amount !== undefined)) {
-    throw new OfferConvertedConflictError("Satışa dönüştürülmüş teklifin durumu veya tutarı değiştirilemez.");
+    return conflict("Satışa dönüştürülmüş teklifin durumu veya tutarı değiştirilemez.");
   }
 
   try {
@@ -76,7 +75,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ offer: updated });
   } catch (error) {
-    if (error instanceof OfferConvertedConflictError) return conflict(error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return notFound("Teklif bulunamadı veya artık güncellenemiyor.");
+    }
     return validationError(error instanceof Error ? error.message : "Teklif güncellenemedi.");
   }
 }
