@@ -285,6 +285,81 @@ test("Phase 6 API: AGENT cannot assign another agent's customer owner", async ()
   assert.equal(response.status, 403);
 });
 
+test("Phase 6 API: user management API is manager-only, not just page-protected", async () => {
+  const fixture = await createFixture();
+  const agentCookie = await login(fixture.agent1);
+
+  const readResponse = await api("/api/users", { cookie: agentCookie });
+  assert.equal(readResponse.status, 403);
+
+  const updateResponse = await api(`/api/users/${fixture.agent2.id}`, {
+    cookie: agentCookie,
+    method: "PATCH",
+    body: { action: "RESET_PASSWORD" },
+  });
+  assert.equal(updateResponse.status, 403);
+});
+
+test("Phase 6 API: TEAM_LEADER task scope includes team-owned tasks", async () => {
+  const fixture = await createFixture();
+  await prisma.task.create({
+    data: {
+      ownerUserId: fixture.agent2.id,
+      title: "Team scoped task",
+      dueAt: new Date(Date.now() + 60 * 60 * 1000),
+      priority: "NORMAL" as never,
+    },
+  });
+
+  const cookie = await login(fixture.teamLeader);
+  const response = await api("/api/tasks", { cookie });
+  assert.equal(response.status, 200);
+
+  const payload = (await response.json()) as { tasks: Array<{ ownerUserId: string }> };
+  assert.equal(payload.tasks.some((task) => task.ownerUserId === fixture.agent2.id), true);
+});
+
+test("Phase 6 API: TEAM_LEADER may create a task for a team member", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.teamLeader);
+
+  const response = await api("/api/tasks", {
+    cookie,
+    method: "POST",
+    body: {
+      customerId: fixture.customer1Id,
+      ownerUserId: fixture.agent2.id,
+      title: "Team member follow-up",
+      dueAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      priority: "NORMAL",
+    },
+  });
+
+  assert.equal(response.status, 201, await response.text());
+  const payload = (await response.json()) as { task: { ownerUserId: string } };
+  assert.equal(payload.task.ownerUserId, fixture.agent2.id);
+});
+
+test("Phase 6 API: TEAM_LEADER may create an activity for a team customer", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.teamLeader);
+
+  const response = await api("/api/activities", {
+    cookie,
+    method: "POST",
+    body: {
+      customerId: fixture.customer1Id,
+      type: "NOT",
+      summary: "Team leader activity",
+    },
+  });
+
+  assert.equal(response.status, 201, await response.text());
+  const payload = (await response.json()) as { activity: { customerId: string; ownerUserId: string } };
+  assert.equal(payload.activity.customerId, fixture.customer1Id);
+  assert.equal(payload.activity.ownerUserId, fixture.teamLeader.id);
+});
+
 test("Phase 6 API: VIEWER is denied write access by actual route handlers", async () => {
   const fixture = await createFixture();
   const cookie = await login(fixture.viewer);
