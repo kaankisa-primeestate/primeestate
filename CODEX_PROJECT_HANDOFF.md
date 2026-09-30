@@ -6,9 +6,7 @@
 
 ## 1. Proje ve repo
 
-- Ana geliştirme reposu: `kaankisa-primeestate/primeestate`
-- Canlı/referans repo: `kaankisa-primeestate/remax-CRM`
-- **`remax-CRM` kesinlikle değiştirilmez.**
+- Ana ve tek geliştirme reposu: `kaankisa-primeestate/primeestate`
 - Tüm geliştirme PrimeEstate üzerinde yapılır.
 - Ürün: gayrimenkule özel CRM + Office Operating System / SaaS.
 - Temel prensip: **TEK VERİ, ÇOK FONKSİYON.**
