@@ -680,6 +680,15 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(duplicatePrimeCommercialResponse, 409, "duplicatePrimeCommercialResponse");
   await expectErrorCode(duplicatePrimeCommercialResponse, "CONFLICT", "duplicatePrimeCommercialResponse");
 
+  const convertedPrimeCommercialStatusChangeResponse = await api(
+    "/api/prime/commercial",
+    cookie,
+    { action: "OFFER_STATUS", offerId: offerPayload.offer.id, status: "REDDEDILDI" },
+    "POST",
+  );
+  await expectStatus(convertedPrimeCommercialStatusChangeResponse, 409, "convertedPrimeCommercialStatusChangeResponse");
+  await expectErrorCode(convertedPrimeCommercialStatusChangeResponse, "CONFLICT", "convertedPrimeCommercialStatusChangeResponse");
+
   const missingPrimeCommercialResponse = await api(
     "/api/prime/commercial",
     cookie,
