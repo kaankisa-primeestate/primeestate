@@ -28,8 +28,9 @@ export async function POST(request: Request) {
     if (!customerId || !listingId || !Number.isFinite(amount) || amount <= 0) return validationError("Müşteri, portföy ve geçerli teklif tutarı zorunludur.");
     const customer = await prisma.customer.findFirst({ where: { id: customerId, organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) }, select: { id: true } });
     if (!customer) return forbidden("Bu müşteri için teklif oluşturma yetkiniz yok.");
-    const listing = await prisma.listing.findFirst({ where: { id: listingId, organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true } });
+    const listing = await prisma.listing.findFirst({ where: { id: listingId, organizationId: context.organizationId, officeId: context.officeId, status: { in: ["AKTIF", "REZERVE"] } }, select: { id: true, currency: true } });
     if (!listing) return validationError("Geçerli bir aktif ofis portföyü bulunamadı.");
+    if (currency !== listing.currency) return validationError("Teklif para birimi portföy para birimi ile aynı olmalıdır.");
     const offer = await prisma.offer.create({ data: { customerId, listingId, amount, currency, nextAction: typeof body.outcome === "string" ? body.outcome.trim() || null : null }, include: { customer: { select: { id: true, name: true, ownerUserId: true } }, listing: { select: { id: true, code: true, title: true, price: true, currency: true } } } });
     const next = commercialNextAction({ event: "OFFER_CREATED" });
     await prisma.customer.update({ where: { id: customerId }, data: { nextAction: next.label, nextActionAt: new Date(Date.now() + next.dueInHours * 60 * 60 * 1000) } });
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
         const consultantUserId = existing.listing.consultantUserId ?? context.userId;
         const commissionPlan = await tx.consultantCommissionPlan.findFirst({ where: { userId: consultantUserId, organizationId: context.organizationId, officeId: context.officeId, active: true, effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] }, select: { id: true, officeShareRate: true, consultantShareRate: true } });
         if (!["AKTIF", "REZERVE"].includes(existing.listing.status)) throw new PrimeCommercialConflictError("Kabul edilen teklif için portföy aktif veya rezerve durumda olmalıdır.");
+        if (existing.currency !== existing.listing.currency) throw new Error("Teklif para birimi portföy para birimi ile aynı olmalıdır.");
         sale = await tx.sale.create({
           data: { customerId: existing.customerId, listingId: existing.listingId, offerId: existing.id, amount: existing.amount, currency: existing.currency, consultantUserId, sourceCommissionPlanId: commissionPlan?.id ?? null, sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null, sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null, officeShareRate: commissionPlan?.officeShareRate ?? null },
           include: { customer: { select: { id: true, name: true } }, listing: { select: { id: true, code: true, title: true, status: true } }, offer: { select: { id: true, status: true } } },
