@@ -119,7 +119,7 @@ export async function POST(request: Request) {
     });
     if (!owner) return validationError("Geçerli bir sorumlu danışman bulunamadı.");
     ownerUserId = owner.id;
-  } else if (!isManagerRole(context.role) && ownerUserId !== customer.ownerUserId) {
+  } else if (context.role === "AGENT" && ownerUserId !== customer.ownerUserId) {
     return forbidden("Bu müşterinin aktivitesi yalnızca sorumlu danışman tarafından oluşturulabilir.");
   }
 
