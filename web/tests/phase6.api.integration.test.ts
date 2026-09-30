@@ -241,9 +241,9 @@ test("Phase 11 API: global search preserves customer and office-portfolio scopes
 
   const listing = await prisma.listing.create({
     data: {
-      organizationId: fixture.agent1.organizationId,
-      officeId: fixture.agent1.officeId,
-      consultantUserId: fixture.agent2.id,
+      organization: { connect: { id: fixture.agent1.organizationId } },
+      office: { connect: { id: fixture.agent1.officeId } },
+      consultant: { connect: { id: fixture.agent2.id } },
       code: "SEARCH-001",
       title: "Bostancı Search Listing",
       purpose: "SATILIK" as never,
@@ -252,9 +252,9 @@ test("Phase 11 API: global search preserves customer and office-portfolio scopes
       currency: "TRY",
       property: {
         create: {
-          organizationId: fixture.agent1.organizationId,
-          officeId: fixture.agent1.officeId,
-          consultantUserId: fixture.agent2.id,
+          organization: { connect: { id: fixture.agent1.organizationId } },
+          office: { connect: { id: fixture.agent1.officeId } },
+          consultant: { connect: { id: fixture.agent2.id } },
           propertyType: "DAIRE" as never,
           title: "Bostancı Search Listing",
           city: "İstanbul",
