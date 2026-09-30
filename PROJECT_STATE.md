@@ -66,7 +66,7 @@ Improve workflow reliability through stable API contracts, live dashboard behavi
 
 ### Current main commit
 
-`f3a6ed99cac55787d5ada5db7ecc753e707a14a5`
+`c80e156198e5e02765230452480d22b48eda3506`
 
 ### Branch state
 
@@ -74,16 +74,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1138 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #222 — **success**
+- PrimeEstate Web Quality #1140 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #224 — **success**
 
 ### Immediate next steps
 
-1. Dashboard live refresh behavior is stabilized: manual/30-second refresh, focus/visibility refresh, in-flight protection, partial-success preservation, and stable API error parsing are in place.
-2. Dashboard finance-summary authentication is now covered by the real HTTP API contract suite.
-3. Duplicate payment-plan and duplicate installment-payment conflict behavior is covered through real HTTP tests.
-4. Converted offer status changes are now blocked in both the direct Offer API and Prime commercial workflow; real HTTP conflict coverage is green.
-5. Prime commercial offer creation/acceptance now enforces offer currency = listing currency, with real HTTP validation coverage.
+1. Remaining edge-case API contracts were hardened across offer, sale, finance, and Prime commercial workflows.
+2. Core business deletion policy is now documented and real HTTP coverage confirms that core business entities are not hard-deletable through the application API.
+3. Continue with auth-matrix documentation refinements and stale branch / obsolete PR cleanup.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -212,7 +210,7 @@ After merge:
 
 - broader API response/error contract hardening
 - expanded API contract suite
-- deletion policy
+- deletion policy — documented and HTTP policy coverage added
 - remaining dashboard live-data edge cases
 - finance route naming cleanup
 - listing status filtering refinements
@@ -295,10 +293,10 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
 - CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: f3a6ed99cac55787d5ada5db7ecc753e707a14a5
+- BASE_MAIN_COMMIT: c80e156198e5e02765230452480d22b48eda3506
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1138 ✅; Production Auth Smoke #222 ✅
+- LAST_GREEN_CHECKS: Web Quality #1140 ✅; Production Auth Smoke #224 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: remaining edge-case API contracts and workflow reliability
+- NEXT_STEP: auth matrix documentation refinements, then stale branch / obsolete PR cleanup
 - BLOCKERS: None
 - LAST_UPDATED_UTC: 2026-09-30
