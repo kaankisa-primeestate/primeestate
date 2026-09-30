@@ -110,6 +110,25 @@ export function canAssignCustomerOwner(
   return false;
 }
 
+export function taskOwnerScope(context: AuthorizationContext) {
+  if (isManagerRole(context.role)) return {};
+  if (context.role === "TEAM_LEADER" && context.teamId) {
+    return { teamId: context.teamId };
+  }
+  return { id: context.userId };
+}
+
+export function canAssignTaskOwner(
+  context: AuthorizationContext,
+  ownerTeamId: string | null,
+): boolean {
+  if (isManagerRole(context.role)) return true;
+  if (context.role === "TEAM_LEADER") {
+    return Boolean(context.teamId && ownerTeamId === context.teamId);
+  }
+  return false;
+}
+
 export function officeListingScope(context: AuthorizationContext) {
   return {
     organizationId: context.organizationId,
