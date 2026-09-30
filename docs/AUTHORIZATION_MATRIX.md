@@ -15,6 +15,8 @@ PrimeEstate oturum kimliğini Better Auth üzerinden alır. Backend, her kritik 
 | Denetçi | `AUDITOR` | Salt okunur, kendi müşteri kapsamı |
 
 > **Önemli:** `can()` rolün temel capability seviyesini belirler. Gerçek erişim bununla bitmez. Route handler ayrıca tenant, ownership/team ve iş kuralı kontrollerini uygular.
+>
+> **Silme notu:** `Delete` capability'si manager seviyesinde tanımlı olsa da core business kayıtları için uygulama route'larında hard-delete endpoint'i bulunmaz. Core kayıtların tarihçesi korunur; yalnızca operasyonel medya gibi açıkça tanımlanmış alt kayıtlar silinebilir.
 
 ## 2. Temel capability matrisi
 
