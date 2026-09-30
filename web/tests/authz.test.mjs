@@ -103,6 +103,27 @@ test("customer ownership scope isolates agents and preserves team-leader scope",
   assert.equal(authz.canAssignCustomerOwner(manager, "team-2"), true);
 });
 
+test("task owner scope follows the same manager/team/private boundary", () => {
+  const agent = {
+    userId: "agent-1",
+    organizationId: "org-1",
+    officeId: "office-1",
+    teamId: "team-1",
+    role: "AGENT",
+  };
+  const teamLeader = { ...agent, userId: "leader-1", role: "TEAM_LEADER" };
+  const manager = { ...agent, userId: "admin-1", role: "OFFICE_ADMIN" };
+
+  assert.deepEqual(authz.taskOwnerScope(agent), { id: "agent-1" });
+  assert.deepEqual(authz.taskOwnerScope(teamLeader), { teamId: "team-1" });
+  assert.deepEqual(authz.taskOwnerScope(manager), {});
+
+  assert.equal(authz.canAssignTaskOwner(agent, "team-1"), false);
+  assert.equal(authz.canAssignTaskOwner(teamLeader, "team-1"), true);
+  assert.equal(authz.canAssignTaskOwner(teamLeader, "team-2"), false);
+  assert.equal(authz.canAssignTaskOwner(manager, "team-2"), true);
+});
+
 test("office listing scope always binds organization and office", () => {
   const context = {
     userId: "agent-1",
