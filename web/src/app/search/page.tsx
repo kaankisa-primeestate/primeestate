@@ -43,12 +43,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
-      setData(null);
-      setError("");
-      setLoading(false);
-      return;
-    }
+    if (q.length < 2) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -76,6 +71,7 @@ export default function SearchPage() {
     };
   }, [query]);
 
+  const hasSearchQuery = query.trim().length >= 2;
   const customerCount = data?.customers.length ?? 0;
   const listingCount = data?.listings.length ?? 0;
 
@@ -108,18 +104,18 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {error && (
+          {hasSearchQuery && error && (
             <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           )}
 
-          {!data && !loading && !error && (
+          {!hasSearchQuery && !loading && !error && (
             <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
               <p className="text-lg font-semibold text-slate-900">Aramaya başlayın</p>
               <p className="mt-2 text-sm text-slate-500">En az 2 karakter yazdığınızda sonuçlar canlı olarak gelir.</p>
             </div>
           )}
 
-          {data && (
+          {hasSearchQuery && data && (
             <div className="mt-8 space-y-6">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
