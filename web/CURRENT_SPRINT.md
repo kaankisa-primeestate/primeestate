@@ -38,11 +38,11 @@
 ✅ Core finance chain remains live and verified. Mobile-first polish is complete through Dashboard, Portfolio, Customer, Customer 360, Customer Edit, Sales Ops / İş Akışı, Finance, Calendar and Calls. Critical onboarding/user-admin API error contracts have now been standardized and verified.
 
 ## Mevcut Ana
-`3bf0f05c03d225a4fa6c3400ade1423150f1c0bf`
+`56d6e9c68d7ae0d3320738466493f37025cb5217`
 
 ## Son Doğrulama
-- Auth Matrix refinement → Web Quality #1141 ✅
-- Production auth/runtime smoke → Production Auth Smoke #225 ✅ (last executable commit 7e57250…)
+- Legacy/obsolete PR cleanup → Web Quality #1143 ✅
+- Production auth/runtime smoke → Production Auth Smoke #227 ✅
 
 ## Tamamlananlar
 - Danışman başvuru → broker onayı → kalıcı danışman profil/şirket/komisyon planı
