@@ -335,7 +335,7 @@ test("Phase 6 API: TEAM_LEADER may create a task for a team member", async () =>
     },
   });
 
-  assert.equal(response.status, 201, await response.text());
+  assert.equal(response.status, 201);
   const payload = (await response.json()) as { task: { ownerUserId: string } };
   assert.equal(payload.task.ownerUserId, fixture.agent2.id);
 });
@@ -354,7 +354,7 @@ test("Phase 6 API: TEAM_LEADER may create an activity for a team customer", asyn
     },
   });
 
-  assert.equal(response.status, 201, await response.text());
+  assert.equal(response.status, 201);
   const payload = (await response.json()) as { activity: { customerId: string; ownerUserId: string } };
   assert.equal(payload.activity.customerId, fixture.customer1Id);
   assert.equal(payload.activity.ownerUserId, fixture.teamLeader.id);
