@@ -671,6 +671,21 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(convertedOfferStatusChangeResponse, 409, "convertedOfferStatusChangeResponse");
   await expectErrorCode(convertedOfferStatusChangeResponse, "CONFLICT", "convertedOfferStatusChangeResponse");
 
+  const invalidPrimeCommercialCurrencyResponse = await api(
+    "/api/prime/commercial",
+    cookie,
+    {
+      action: "OFFER_CREATE",
+      customerId,
+      listingId: listingPayload.listing.id,
+      amount: 4700000,
+      currency: "EUR",
+    },
+    "POST",
+  );
+  await expectStatus(invalidPrimeCommercialCurrencyResponse, 400, "invalidPrimeCommercialCurrencyResponse");
+  await expectErrorCode(invalidPrimeCommercialCurrencyResponse, "VALIDATION_ERROR", "invalidPrimeCommercialCurrencyResponse");
+
   const duplicatePrimeCommercialResponse = await api(
     "/api/prime/commercial",
     cookie,
