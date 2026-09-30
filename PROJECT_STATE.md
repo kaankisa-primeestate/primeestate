@@ -66,7 +66,7 @@ Improve workflow reliability through stable API contracts, live dashboard behavi
 
 ### Current main commit
 
-`5fee642e43d930c3e86d9aa471e4148e9187ba3d`
+`f3a6ed99cac55787d5ada5db7ecc753e707a14a5`
 
 ### Branch state
 
@@ -74,8 +74,8 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1135 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #219 — **success**
+- PrimeEstate Web Quality #1138 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #222 — **success**
 
 ### Immediate next steps
 
@@ -83,6 +83,7 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 2. Dashboard finance-summary authentication is now covered by the real HTTP API contract suite.
 3. Duplicate payment-plan and duplicate installment-payment conflict behavior is covered through real HTTP tests.
 4. Converted offer status changes are now blocked in both the direct Offer API and Prime commercial workflow; real HTTP conflict coverage is green.
+5. Prime commercial offer creation/acceptance now enforces offer currency = listing currency, with real HTTP validation coverage.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -294,9 +295,9 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
 - CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 5fee642e43d930c3e86d9aa471e4148e9187ba3d
+- BASE_MAIN_COMMIT: f3a6ed99cac55787d5ada5db7ecc753e707a14a5
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1135 ✅; Production Auth Smoke #219 ✅
+- LAST_GREEN_CHECKS: Web Quality #1138 ✅; Production Auth Smoke #222 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
 - NEXT_STEP: remaining edge-case API contracts and workflow reliability
 - BLOCKERS: None
