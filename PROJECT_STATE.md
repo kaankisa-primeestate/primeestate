@@ -11,7 +11,6 @@
 - Type: Real-estate CRM / Office Operating System / SaaS
 - Main repository: `kaankisa-primeestate/primeestate`
 - **Canonical/live repository: `kaankisa-primeestate/primeestate`**
-- **`kaankisa-primeestate/remax-CRM` is a separate project and must NEVER be modified or treated as PrimeEstate continuation.**
 - Production: `https://primeestate-v9eo.onrender.com`
 - Primary stack: Next.js + React + TypeScript + Prisma + PostgreSQL/Neon + Better Auth
 - Architecture: multi-tenant, responsive, mobile-first, server-side authorization
@@ -66,7 +65,7 @@ Improve workflow reliability through stable API contracts, live dashboard behavi
 
 ### Current main commit
 
-`c80e156198e5e02765230452480d22b48eda3506`
+`4b34acc1a081398f33a5a05e6c7e2471d16ab872`
 
 ### Branch state
 
@@ -74,14 +73,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1140 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #224 — **success**
+- PrimeEstate Web Quality #1153 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #237 — **success**
 
 ### Immediate next steps
 
-1. Remaining edge-case API contracts were hardened across offer, sale, finance, and Prime commercial workflows.
-2. Core business deletion policy is now documented and real HTTP coverage confirms that core business entities are not hard-deletable through the application API.
-3. Continue with auth-matrix documentation refinements and stale branch / obsolete PR cleanup.
+1. Verify the auth-matrix enforcement surface against the real API routes.
+2. Close any remaining authorization enforcement/documentation gaps found by that scan.
+3. Continue workflow-reliability checks only where a concrete gap is evidenced.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -223,8 +222,6 @@ After merge:
 - old positive/negative Prime learning signals can persist if sentiment reverses; improve the learning model deliberately rather than via ad-hoc cleanup
 
 ## 12. DO NOT DO
-
-- Do not modify `kaankisa-primeestate/remax-CRM`.
 - Do not reset production DB.
 - Do not expose secrets.
 - Do not weaken authorization.
