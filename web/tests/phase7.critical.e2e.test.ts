@@ -921,6 +921,20 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(duplicateInstallmentPaymentResponse, 409, "duplicateInstallmentPaymentResponse");
   await expectErrorCode(duplicateInstallmentPaymentResponse, "CONFLICT", "duplicateInstallmentPaymentResponse");
 
+  // Core business records are intentionally not hard-deletable; workflow state changes preserve history.
+  const protectedDeleteCases = [
+    ["/api/customers/" + customerId, "customers"],
+    ["/api/listings/" + listingPayload.listing.id, "listings"],
+    ["/api/offers/" + offerPayload.offer.id, "offers"],
+    ["/api/sales/" + salePayload.sale.id, "sales"],
+    ["/api/payments/" + paymentPayload.payment.id, "payments"],
+    ["/api/payment-installments/" + installmentId, "payment-installments"],
+  ] as const;
+  for (const [path, label] of protectedDeleteCases) {
+    const response = await api(path, cookie, undefined, "DELETE");
+    await expectStatus(response, 405, label + " delete policy");
+  }
+
   // 12. Read-back: the chain is visible to the same scoped user and finance endpoints.
   const salesRead = await api("/api/sales", cookie);
   assert.equal(salesRead.status, 200);
