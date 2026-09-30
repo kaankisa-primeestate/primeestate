@@ -11,8 +11,6 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 **Ana prensip:** TEK VERİ, ÇOK FONKSİYON
 
 - Ana geliştirme repo: `kaankisa-primeestate/primeestate`
-- Canlı/referans repo: `kaankisa-primeestate/remax-CRM`
-- `remax-CRM` değiştirilmez.
 - Tüm geliştirme PrimeEstate üzerinde yapılır.
 
 ## 2. Mimari
@@ -49,7 +47,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 ### Aktif phase
 
-**Phase 9 — Release Gate / next feature-development baseline**
+**Phase 11 — API Contract Hardening / Workflow Reliability**
 
 ## 4. Doğrulanmış GitHub durumu
 
@@ -140,7 +138,6 @@ Release Gate hedefi:
 
 ## 9. Kırmızı çizgiler
 
-- `remax-CRM` değiştirilmez.
 - Production DB reset edilmez.
 - Secret/connection string source code'a yazılmaz.
 - Yetkilendirme frontend'e bırakılmaz.
@@ -150,11 +147,12 @@ Release Gate hedefi:
 
 ## 10. Canonical handoff — current product work
 
-- Active phase: **Prime Brain — Outcome Learning**
-- Active branch: `feat/prime-outcome-learning`
-- Base main commit: `6c5739e9695c1953a6e3d123fae59844960a428c`
-- Active PR: **#122 merged into main**
-- Immediate goal: outcome → Prime memory → rematch → changed recommendation
+- Active phase: **Phase 11 — API Contract Hardening / Workflow Reliability**
+- Active branch: `main`
+- Current main commit: `4b34acc1a081398f33a5a05e6c7e2471d16ab872`
+- Web Quality #1153: green
+- Production Auth Smoke #237: green
+- Immediate goal: auth-matrix enforcement gap scan and remaining workflow reliability checks
 
 ### Standard handoff
 
