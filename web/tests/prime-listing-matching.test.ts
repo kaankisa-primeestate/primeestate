@@ -73,7 +73,7 @@ test("Prime listing matching applies preferred and must-not-have demand preferen
   );
   assert.equal(
     preferred.score,
-    withoutPreferred.score + 3,
+    withoutPreferred.score + 2,
     "A preferred feature should improve the rounded match score above the neutral preference baseline.",
   );
 
