@@ -342,7 +342,13 @@ export default function ClientsPage() {
           locations, budgetMin: form.get("budgetMin") || null, budgetMax: form.get("budgetMax") || null,
           currency: form.get("currency") || "TRY", minSize: form.get("minSize") || null,
           maxSize: form.get("maxSize") || null, rooms: form.get("rooms"),
-          urgency: form.get("urgency") || "NORMAL", notes: form.get("notes"),
+          urgency: form.get("urgency") || "NORMAL",
+          preferences: {
+            mustHave: String(form.get("mustHave") || "").split(",").map((value) => value.trim()).filter(Boolean),
+            preferred: String(form.get("preferred") || "").split(",").map((value) => value.trim()).filter(Boolean),
+            mustNotHave: String(form.get("mustNotHave") || "").split(",").map((value) => value.trim()).filter(Boolean),
+          },
+          notes: form.get("notes"),
         }),
       });
       const data = await res.json();
@@ -532,6 +538,15 @@ export default function ClientsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block"><span className="text-sm font-semibold text-slate-700">Aciliyet</span><select name="urgency" defaultValue="NORMAL" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option value="YUKSEK">Yüksek</option><option value="NORMAL">Normal</option><option value="DUSUK">Düşük</option></select></label>
             <label className="block"><span className="text-sm font-semibold text-slate-700">Not</span><input name="notes" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-700">Tercihler · Prime eşleştirme</p>
+            <p className="mt-1 text-xs text-slate-400">Virgülle ayır. Prime bunları eşleşme skorunda kullanır.</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-3">
+              <label className="block"><span className="text-xs font-semibold text-slate-600">Kesin olmalı</span><input name="mustHave" placeholder="Otopark, balkon" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+              <label className="block"><span className="text-xs font-semibold text-slate-600">Tercih edilir</span><input name="preferred" placeholder="Site, deniz manzarası" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+              <label className="block"><span className="text-xs font-semibold text-slate-600">Kesin olmasın</span><input name="mustNotHave" placeholder="Bodrum, kiracılı" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+            </div>
           </div>
           <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowDemandCreate(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold">Vazgeç</button><button type="submit" disabled={demandSaving} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{demandSaving ? "Kaydediliyor…" : "Talebi Kaydet"}</button></div>
         </form>
