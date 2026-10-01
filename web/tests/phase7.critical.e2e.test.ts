@@ -923,6 +923,16 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectErrorCode(duplicatePlanResponse, "CONFLICT", "duplicatePlanResponse");
 
   const installmentId = planPayload.plan.installments[0].id;
+
+  const directPaidInstallmentResponse = await api(
+    `/api/payment-installments/${installmentId}`,
+    cookie,
+    { status: "ODENDI" },
+    "PATCH",
+  );
+  await expectStatus(directPaidInstallmentResponse, 409, "directPaidInstallmentResponse");
+  await expectErrorCode(directPaidInstallmentResponse, "CONFLICT", "directPaidInstallmentResponse");
+
   const installmentPaymentResponse = await api(
     `/api/payment-installments/${installmentId}/pay`,
     cookie,
