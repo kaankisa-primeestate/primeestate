@@ -488,11 +488,26 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
       maxSize: 140,
       rooms: "3+1",
       urgency: "YUKSEK",
+      preferences: {
+        mustHave: ["otopark"],
+        preferred: ["site"],
+        mustNotHave: ["bodrum"],
+      },
     },
     "POST",
   );
   await expectStatus(demandResponse, 201, "demandResponse");
-  const demandPayload = await json<{ demand: { id: string } }>(demandResponse);
+  const demandPayload = await json<{
+    demand: {
+      id: string;
+      preferences: { mustHave?: string[]; preferred?: string[]; mustNotHave?: string[] };
+    };
+  }>(demandResponse);
+  assert.deepEqual(demandPayload.demand.preferences, {
+    mustHave: ["otopark"],
+    preferred: ["site"],
+    mustNotHave: ["bodrum"],
+  }, "Demand preferences must survive the real HTTP create flow.");
   const demandId = demandPayload.demand.id;
 
   // 3. Listing / property
