@@ -190,7 +190,7 @@ export default function SalesPage() {
     const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, ...(note !== undefined ? { note } : {}) }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
-    setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
+    setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status, note: payload.showing.note ?? showing.note } : showing));
     if (payload.task) setTasks((current) => [payload.task, ...current]);
   }
 
@@ -327,7 +327,7 @@ export default function SalesPage() {
                   <textarea value={showingFeedback[item.id] ?? item.note ?? ""} onChange={(e) => setShowingFeedback((current) => ({ ...current, [item.id]: e.target.value }))} rows={3} placeholder="Müşterinin beğendiği/beğenmediği noktaları ve sonraki aksiyonu yazın…" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-400" />
                   <div className="mt-2 flex justify-end"><button type="button" disabled={showingFeedbackSaving === item.id} onClick={() => void saveShowingFeedback(item.id)} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{showingFeedbackSaving === item.id ? "Kaydediliyor…" : "Geri bildirimi kaydet"}</button></div>
                 </div>}
-                {item.status !== "GERCEKLESTI" && item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</div></section>}
+                {item.status !== "GERCEKLESTI" && item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}{item.status === "GERCEKLESTI" && <div className="mt-4 flex justify-end"><Link href={`/sales/offer/new?customerId=${item.customer.id}&listingId=${item.listing.id}`} className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white">Bu gösterimden teklif oluştur →</Link></div>}</article>)}</div></section>}
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
