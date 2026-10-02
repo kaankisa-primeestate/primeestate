@@ -65,7 +65,7 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Current main commit
 
-`5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96`
+**Live value:** always verify `main` directly in GitHub at session start. Do not hard-code a commit SHA here, because state-document commits can advance `main` without changing application runtime code.
 
 ### Branch state
 
