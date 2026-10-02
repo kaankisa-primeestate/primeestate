@@ -47,7 +47,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 ### Aktif phase
 
-**Phase 11 — API Contract Hardening / Workflow Reliability**
+**Phase 12 — Product Development / Core Workflow Experience**
 
 ## 4. Doğrulanmış GitHub durumu
 
@@ -122,7 +122,7 @@ Private repository dönemindeki zero-step runner failure problemi artık görül
 
 ## 8. Release gate
 
-Foundation release gate doğrulaması tamamlanmış olduğundan yeni ürün özelliği geliştirme Phase 9 kapsamında başlatılabilir.
+Foundation release gate doğrulaması tamamlandı. Yeni ürün özelliği geliştirme artık Phase 12 kapsamında yürütülür.
 
 Release Gate hedefi:
 - Main CI green
@@ -149,10 +149,11 @@ Release Gate hedefi:
 
 - Active phase: **Phase 11 — API Contract Hardening / Workflow Reliability**
 - Active branch: `main`
-- Current main commit: `4b34acc1a081398f33a5a05e6c7e2471d16ab872`
-- Web Quality #1153: green
-- Production Auth Smoke #237: green
-- Immediate goal: auth-matrix enforcement gap scan and remaining workflow reliability checks
+- Current main commit: `5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96`
+- Web Quality #1168: green
+- Production Auth Smoke #252: green
+- Foundation release gate: closed for current baseline
+- Immediate goal: product development of the customer → demand → matching workflow
 
 ### Standard handoff
 
