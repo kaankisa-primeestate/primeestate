@@ -34,8 +34,15 @@ export async function GET() {
   };
 
   try {
-  const [openSales, paidByCurrencyRows, pendingInstallments, overdueInstallments, paymentCount, paymentPlanCount] =
-    await Promise.all([
+    const [
+      openSales,
+      paidByCurrencyRows,
+      pendingInstallments,
+      overdueInstallments,
+      paymentCount,
+      paymentPlanCount,
+      ledgerByAccountRows,
+    ] = await Promise.all([
       prisma.sale.count({
         where: { status: "ACIK", customer: customerScope },
       }),
@@ -60,15 +67,32 @@ export async function GET() {
       prisma.paymentPlan.count({
         where: { sale: { customer: customerScope } },
       }),
+      prisma.ledgerEntry.groupBy({
+        by: ["account", "currency"],
+        where: { payment: paymentScope },
+        _sum: { amount: true },
+      }),
     ]);
 
-  const paidByCurrency = Object.fromEntries(
-    paidByCurrencyRows.map((row) => [row.currency, row._sum.amount?.toString() ?? "0"]),
-  );
+    const paidByCurrency = Object.fromEntries(
+      paidByCurrencyRows.map((row) => [row.currency, row._sum.amount?.toString() ?? "0"]),
+    );
+    const officeCollectedByCurrency = Object.fromEntries(
+      ledgerByAccountRows
+        .filter((row) => row.account === "OFFICE")
+        .map((row) => [row.currency, row._sum.amount?.toString() ?? "0"]),
+    );
+    const consultantCollectedByCurrency = Object.fromEntries(
+      ledgerByAccountRows
+        .filter((row) => row.account === "CONSULTANT")
+        .map((row) => [row.currency, row._sum.amount?.toString() ?? "0"]),
+    );
 
     return NextResponse.json({
       openSales,
       paidByCurrency,
+      officeCollectedByCurrency,
+      consultantCollectedByCurrency,
       pendingInstallments,
       overdueInstallments,
       paymentCount,
