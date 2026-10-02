@@ -2,10 +2,8 @@ name: PrimeEstate Web Quality
 
 on:
   push:
-    paths:
-      - "web/**"
-      - ".github/workflows/primeestate-web-quality.yml"
-      - ".github/workflows/production-auth-smoke.yml"
+    branches:
+      - main
   pull_request:
     paths:
       - "web/**"
