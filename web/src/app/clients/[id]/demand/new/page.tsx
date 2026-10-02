@@ -24,7 +24,13 @@ export default function NewDemandPage() {
           locations: String(form.get("locations") || "").split(",").map((x) => x.trim()).filter(Boolean),
           budgetMin: form.get("budgetMin") || null, budgetMax: form.get("budgetMax") || null,
           currency: form.get("currency") || "TRY", minSize: form.get("minSize") || null, maxSize: form.get("maxSize") || null,
-          rooms: form.get("rooms"), urgency: form.get("urgency") || "NORMAL", notes: form.get("notes"),
+          rooms: form.get("rooms"), urgency: form.get("urgency") || "NORMAL",
+          preferences: {
+            mustHave: String(form.get("mustHave") || "").split(",").map((x) => x.trim()).filter(Boolean),
+            preferred: String(form.get("preferred") || "").split(",").map((x) => x.trim()).filter(Boolean),
+            mustNotHave: String(form.get("mustNotHave") || "").split(",").map((x) => x.trim()).filter(Boolean),
+          },
+          notes: form.get("notes"),
         }),
       });
       const data = await response.json();
@@ -43,6 +49,11 @@ export default function NewDemandPage() {
       <label className="block"><span className="text-sm font-semibold text-slate-700">Lokasyonlar</span><input name="locations" placeholder="Bostancı, Suadiye, Kozyatağı" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
       <div className="grid gap-4 sm:grid-cols-3"><label className="block"><span className="text-sm font-semibold text-slate-700">Min. bütçe</span><input name="budgetMin" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">Max. bütçe</span><input name="budgetMax" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">Para birimi</span><select name="currency" defaultValue="TRY" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option>TRY</option><option>USD</option><option>EUR</option><option>GBP</option></select></label></div>
       <div className="grid gap-4 sm:grid-cols-3"><label className="block"><span className="text-sm font-semibold text-slate-700">Min. m²</span><input name="minSize" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">Max. m²</span><input name="maxSize" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label><label className="block"><span className="text-sm font-semibold text-slate-700">Oda</span><input name="rooms" placeholder="3+1" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label></div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Kesin olmalı</span><input name="mustHave" placeholder="Otopark, balkon" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Tercih edilir</span><input name="preferred" placeholder="Site, deniz manzarası" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+        <label className="block"><span className="text-sm font-semibold text-slate-700">Kesin olmasın</span><input name="mustNotHave" placeholder="Bodrum, kiracılı" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2"><label className="block"><span className="text-sm font-semibold text-slate-700">Aciliyet</span><select name="urgency" defaultValue="NORMAL" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option value="YUKSEK">Yüksek</option><option value="NORMAL">Normal</option><option value="DUSUK">Düşük</option></select></label><label className="block"><span className="text-sm font-semibold text-slate-700">Not</span><input name="notes" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label></div>
     </div></section><div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" onClick={() => router.back()} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700">Vazgeç</button><button type="submit" disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? "Kaydediliyor…" : "Talebi Kaydet"}</button></div></form>
   </div></main></div>;
