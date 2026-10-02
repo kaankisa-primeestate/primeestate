@@ -53,11 +53,11 @@ The product should help the consultant build relationships while PrimeEstate rem
 
 ### Current phase
 
-**Phase 11 — API Contract Hardening / Workflow Reliability**
+**Phase 12 — Product Development / Core Workflow Experience**
 
 ### Current objective
 
-Improve workflow reliability through stable API contracts, live dashboard behavior, and real HTTP edge-case coverage, preserving UI compatibility, business semantics, and tenant authorization.
+Foundation hardening is closed for the current release gate. Product development now focuses on making the core consultant workflow fully useful in the UI: customer → demand → matching → showing → offer → sale → commission → collection, while preserving live data, business rules, and tenant authorization.
 
 ### Active branch
 
@@ -65,7 +65,7 @@ Improve workflow reliability through stable API contracts, live dashboard behavi
 
 ### Current main commit
 
-`4b34acc1a081398f33a5a05e6c7e2471d16ab872`
+`5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96`
 
 ### Branch state
 
@@ -73,14 +73,14 @@ No active development PR. Remaining open PRs are older foundation/legacy branche
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1153 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #237 — **success**
+- PrimeEstate Web Quality #1168 — **success**
+- PrimeEstate Production Auth HTTP Smoke Test #252 — **success**
 
 ### Immediate next steps
 
-1. Verify the auth-matrix enforcement surface against the real API routes.
-2. Close any remaining authorization enforcement/documentation gaps found by that scan.
-3. Continue workflow-reliability checks only where a concrete gap is evidenced.
+1. Begin core product development from the consultant workflow, starting with the customer → demand → matching experience.
+2. Keep every new feature connected to live APIs, authorization, and real workflow tests.
+3. After each meaningful feature, verify GitHub CI before moving on.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -287,13 +287,13 @@ This gives us **one current source of truth without duplicating Git's history**.
 
 Keep these fields current:
 
-- CURRENT_PHASE: Phase 11 — API Contract Hardening / Workflow Reliability
-- CURRENT_TASK: Remaining edge-case API contracts and workflow reliability checks
-- ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 56d6e9c68d7ae0d3320738466493f37025cb5217
+- CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
+- CURRENT_TASK: Start core consultant workflow development with customer → demand → matching UI continuity
+- ACTIVE_BRANCH: main
+- BASE_MAIN_COMMIT: 5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1143 ✅; Production Auth Smoke #227 ✅
+- LAST_GREEN_CHECKS: Web Quality #1168 ✅; Production Auth Smoke #252 ✅
 - PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: auth matrix enforcement gap scan, then remaining workflow reliability checks
+- NEXT_STEP: Improve the customer → demand → matching experience with live data and explainable match results
 - BLOCKERS: None
-- LAST_UPDATED_UTC: 2026-09-30
+- LAST_UPDATED_UTC: 2026-10-02
