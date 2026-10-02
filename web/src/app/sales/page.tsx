@@ -47,6 +47,8 @@ export default function SalesPage() {
   const [offerForm, setOfferForm] = useState({ customerId: "", listingId: "", amount: "", nextAction: "" });
   const [offerSaving, setOfferSaving] = useState(false);
   const [showingActionError, setShowingActionError] = useState<string | null>(null);
+  const [showingFeedback, setShowingFeedback] = useState<Record<string, string>>({});
+  const [showingFeedbackSaving, setShowingFeedbackSaving] = useState<string | null>(null);
   const [offerError, setOfferError] = useState<string | null>(null);
   const [opsLoading, setOpsLoading] = useState(true);
   const [opsError, setOpsError] = useState<string | null>(null);
@@ -184,12 +186,25 @@ export default function SalesPage() {
     setSales((current) => current.map((sale) => sale.id === id ? payload.sale : sale));
   }
 
-  async function updateShowing(id: string, status: string) {
-    const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+  async function updateShowing(id: string, status: string, note?: string) {
+    const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, ...(note !== undefined ? { note } : {}) }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.message ?? "Gösterim güncellenemedi.");
     setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status } : showing));
     if (payload.task) setTasks((current) => [payload.task, ...current]);
+  }
+
+  async function saveShowingFeedback(id: string) {
+    setShowingFeedbackSaving(id);
+    setShowingActionError(null);
+    try {
+      await updateShowing(id, "GERCEKLESTI", showingFeedback[id] ?? "");
+    } catch (error) {
+      setShowingActionError(error instanceof Error ? error.message : "Gösterim geri bildirimi kaydedilemedi.");
+      return;
+    } finally {
+      setShowingFeedbackSaving(null);
+    }
   }
 
   async function updateOffer(id: string, data: { status?: string; nextAction?: string }) {
@@ -306,7 +321,13 @@ export default function SalesPage() {
           <div className="grid gap-4 md:grid-cols-2">{filteredShowings.map((item) => <article key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><Pill tone={showingTone[item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"]}>{item.status === "PLANLANDI" ? "Planlandı" : item.status === "GERCEKLESTI" ? "Gerçekleşti" : "İptal"}</Pill><span className="text-xs font-semibold text-slate-400">{new Date(item.dateTime).toLocaleString("tr-TR")}</span></div><h2 className="mt-4 text-lg font-semibold text-slate-950"><Link href={`/clients/${item.customer.id}`} className="hover:underline">{item.customer.name}</Link></h2><p className="mt-1 text-sm text-slate-600">{item.listing.title}</p><p className="mt-1 text-xs text-slate-400">{item.listing.code} · {item.listing.property?.district ?? "—"} / {item.listing.property?.neighborhood ?? "—"}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Katılımcı</p><p className="mt-1 text-sm font-semibold text-slate-800">{item.attendees} kişi</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-400">Durum</p><select value={item.status} onChange={(e) => {
                       setShowingActionError(null);
                       void updateShowing(item.id, e.target.value).catch((error) => setShowingActionError(error instanceof Error ? error.message : "Gösterim güncellenemedi."));
-                    }} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></div></div>{item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</div></section>}
+                    }} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></div></div>
+                {item.status === "GERCEKLESTI" && <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Gösterim geri bildirimi</p>
+                  <textarea value={showingFeedback[item.id] ?? item.note ?? ""} onChange={(e) => setShowingFeedback((current) => ({ ...current, [item.id]: e.target.value }))} rows={3} placeholder="Müşterinin beğendiği/beğenmediği noktaları ve sonraki aksiyonu yazın…" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-400" />
+                  <div className="mt-2 flex justify-end"><button type="button" disabled={showingFeedbackSaving === item.id} onClick={() => void saveShowingFeedback(item.id)} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{showingFeedbackSaving === item.id ? "Kaydediliyor…" : "Geri bildirimi kaydet"}</button></div>
+                </div>}
+                {item.status !== "GERCEKLESTI" && item.note && <p className="mt-4 text-sm leading-6 text-slate-500">{item.note}</p>}</article>)}</div></section>}
 
         {tab === "Teklifler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
