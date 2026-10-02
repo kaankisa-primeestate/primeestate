@@ -469,11 +469,33 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
       name: "Phase 7 Customer",
       phone: "+905555555555",
       roles: ["ALICI"],
+      demand: {
+        title: "İlk Talep Tercih Testi",
+        type: "SATIN_ALMA",
+        propertyType: "DAIRE",
+        locations: ["Bostanci"],
+        currency: "TRY",
+        preferences: {
+          mustHave: ["otopark"],
+          preferred: ["site"],
+          mustNotHave: ["bodrum"],
+        },
+      },
     },
     "POST",
   );
   await expectStatus(customerResponse, 201, "customerResponse");
-  const customerPayload = await json<{ customer: { id: string } }>(customerResponse);
+  const customerPayload = await json<{
+    customer: {
+      id: string;
+      demands: Array<{ title: string; preferences: { mustHave?: string[]; preferred?: string[]; mustNotHave?: string[] } }>;
+    };
+  }>(customerResponse);
+  assert.deepEqual(customerPayload.customer.demands.find((demand) => demand.title === "İlk Talep Tercih Testi")?.preferences, {
+    mustHave: ["otopark"],
+    preferred: ["site"],
+    mustNotHave: ["bodrum"],
+  }, "Initial customer demand preferences must survive the real HTTP create flow.");
   const customerId = customerPayload.customer.id;
 
   // 2. Demand
