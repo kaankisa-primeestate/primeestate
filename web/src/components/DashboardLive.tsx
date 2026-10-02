@@ -10,7 +10,7 @@ type A = { id: string; occurredAt: string; summary: string; customer: { name: st
 type S = { id: string; dateTime: string; customer: { name: string }; listing: { code: string; title: string } };
 type C = { id: string; name: string };
 type O = { id: string; status: string };
-type FinanceSummary = { openSales: number; paidByCurrency: Record<string, string>; pendingInstallments: number; overdueInstallments: number; paymentCount: number; paymentPlanCount: number };
+type FinanceSummary = { openSales: number; paidByCurrency: Record<string, string>; officeCollectedByCurrency: Record<string, string>; consultantCollectedByCurrency: Record<string, string>; pendingInstallments: number; overdueInstallments: number; paymentCount: number; paymentPlanCount: number };
 
 async function g<T>(u: string): Promise<T> {
   const r = await fetch(u, { cache: "no-store" });
@@ -147,6 +147,9 @@ export default function DashboardLive() {
   const activeListings = l.filter((x) => x.status === "AKTIF");
   const financeLoaded = finance !== null;
   const paidByCurrency = finance?.paidByCurrency ?? {};
+  const officeCollectedByCurrency = finance?.officeCollectedByCurrency ?? {};
+  const consultantCollectedByCurrency = finance?.consultantCollectedByCurrency ?? {};
+  const formatCurrencyMap = (values: Record<string, string>) => Object.entries(values).map(([currency, value]) => money(value, currency));
   const todayS = s.filter((x) => inRange(x.dateTime) && matchesQuery(`${x.customer.name} ${x.listing.code} ${x.listing.title}`));
   const recentActivities = a.filter((x) => inRange(x.occurredAt) && matchesQuery(`${x.customer.name} ${x.summary}`));
 
@@ -239,7 +242,7 @@ export default function DashboardLive() {
               <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Bekleyen taksit</p><p className="mt-1 text-2xl font-semibold">{financeLoaded ? finance.pendingInstallments : "—"}</p></div>
               <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Vadesi geçen</p><p className="mt-1 text-2xl font-semibold">{financeLoaded ? finance.overdueInstallments : "—"}</p></div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500"><span className="rounded-full bg-slate-100 px-3 py-1.5">{financeLoaded ? finance.paymentCount : "—"} tahsilat</span><span className="rounded-full bg-slate-100 px-3 py-1.5">{financeLoaded ? finance.paymentPlanCount : "—"} ödeme planı</span></div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-400">Ofis payı tahsilatı</p><div className="mt-1 space-y-1">{financeLoaded ? (formatCurrencyMap(officeCollectedByCurrency).length ? formatCurrencyMap(officeCollectedByCurrency).map((value) => <p key={value} className="text-lg font-semibold">{value}</p>) : <p className="text-lg font-semibold">0</p>) : <p className="text-lg font-semibold">—</p>}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-400">Danışman payı tahsilatı</p><div className="mt-1 space-y-1">{financeLoaded ? (formatCurrencyMap(consultantCollectedByCurrency).length ? formatCurrencyMap(consultantCollectedByCurrency).map((value) => <p key={value} className="text-lg font-semibold">{value}</p>) : <p className="text-lg font-semibold">0</p>) : <p className="text-lg font-semibold">—</p>}</div></div></div><div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500"><span className="rounded-full bg-slate-100 px-3 py-1.5">{financeLoaded ? finance.paymentCount : "—"} tahsilat</span><span className="rounded-full bg-slate-100 px-3 py-1.5">{financeLoaded ? finance.paymentPlanCount : "—"} ödeme planı</span></div>
           </section>
 
           <section className="mt-6 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
