@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticationRequired, forbidden, validationError, notFound, internalError } from "@/lib/api-response";
+import { authenticationRequired, forbidden, validationError, notFound, internalError, conflict } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getUserContext } from "@/lib/auth-context";
 import { can, customerOwnershipScope } from "@/lib/authz";
@@ -23,17 +23,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // through the atomic /pay workflow. Direct PATCH to ODENDI would bypass
     // payment creation and corrupt the financial workflow.
     if (body.status === "ODENDI") {
-      return NextResponse.json(
-        { error: { code: "CONFLICT", message: "Ödenmiş taksit durumu doğrudan değiştirilemez. Tahsilat için taksit ödeme işlemini kullanın." } },
-        { status: 409 },
-      );
+      return conflict("Ödenmiş taksit durumu doğrudan değiştirilemez. Tahsilat için taksit ödeme işlemini kullanın.");
     }
 
     if (existing.status === "ODENDI" || existing.payment) {
-      return NextResponse.json(
-        { error: { code: "CONFLICT", message: "Tahsilatı oluşmuş taksit doğrudan değiştirilemez." } },
-        { status: 409 },
-      );
+      return conflict("Tahsilatı oluşmuş taksit doğrudan değiştirilemez.");
     }
 
     const updated = await prisma.paymentInstallment.update({
