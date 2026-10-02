@@ -1024,5 +1024,5 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const showingRead = await api(`/api/showings?customerId=${customerId}`, cookie);
   assert.equal(showingRead.status, 200);
   const showingReadPayload = await json<{ showings: Array<{ customer: { id: string }; listing: { id: string } }> }>(showingRead);
-  assert.ok(showingPayload.showings.some((showing) => showing.customer.id === customerId && showing.listing.id === listingPayload.listing.id));
+  assert.ok(showingReadPayload.showings.some((showing) => showing.customer.id === customerId && showing.listing.id === listingPayload.listing.id));
 });
