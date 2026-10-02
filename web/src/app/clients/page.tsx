@@ -20,6 +20,11 @@ type ApiDemand = {
   urgency: string;
   notes: string | null;
   updatedAt: string;
+  preferences?: {
+    mustHave?: string[];
+    preferred?: string[];
+    mustNotHave?: string[];
+  } | null;
 };
 
 type ApiActivity = {
