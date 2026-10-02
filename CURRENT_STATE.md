@@ -147,9 +147,9 @@ Release Gate hedefi:
 
 ## 10. Canonical handoff — current product work
 
-- Active phase: **Phase 11 — API Contract Hardening / Workflow Reliability**
+- Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`
-- Current main commit: `5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96`
+- Current main commit: **verify live in GitHub at session start; do not hard-code the SHA here.**
 - Web Quality #1168: green
 - Production Auth Smoke #252: green
 - Foundation release gate: closed for current baseline
