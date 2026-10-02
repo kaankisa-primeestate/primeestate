@@ -593,6 +593,20 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     "POST",
   );
   await expectStatus(showingResponse, 201, "showingResponse");
+  const showingPayload = await json<{ showing: { id: string; status: string; note: string | null } }>(showingResponse);
+  assert.equal(showingPayload.showing.status, "PLANLANDI");
+
+  const showingFeedbackResponse = await api(
+    "/api/showings",
+    cookie,
+    { id: showingPayload.showing.id, status: "GERCEKLESTI", note: "Müşteri salonu beğendi; otopark konusunda olumlu geri bildirim verdi." },
+    "PATCH",
+  );
+  await expectStatus(showingFeedbackResponse, 200, "showingFeedbackResponse");
+  const showingFeedbackPayload = await json<{ showing: { id: string; status: string; note: string | null } }>(showingFeedbackResponse);
+  assert.equal(showingFeedbackPayload.showing.id, showingPayload.showing.id);
+  assert.equal(showingFeedbackPayload.showing.status, "GERCEKLESTI");
+  assert.equal(showingFeedbackPayload.showing.note, "Müşteri salonu beğendi; otopark konusunda olumlu geri bildirim verdi.");
 
   // 6. Offer
   const missingOfferUpdateResponse = await api(
