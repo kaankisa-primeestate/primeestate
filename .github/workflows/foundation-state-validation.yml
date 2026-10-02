@@ -1,9 +1,18 @@
 name: Foundation State Validation
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "CURRENT_STATE.md"
+      - "PROJECT_STATE.md"
+      - "FOUNDATION_RECOVERY_PLAN.md"
+      - ".github/workflows/foundation-state-validation.yml"
   pull_request:
     paths:
       - "CURRENT_STATE.md"
+      - "PROJECT_STATE.md"
       - "FOUNDATION_RECOVERY_PLAN.md"
       - ".github/workflows/foundation-state-validation.yml"
   workflow_dispatch:
