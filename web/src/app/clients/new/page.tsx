@@ -66,6 +66,11 @@ export default function NewCustomerPage() {
                 maxSize: numberValue(form.get("demandMaxSize")),
                 rooms: form.get("demandRooms") || null,
                 urgency: form.get("demandUrgency") || "NORMAL",
+                preferences: {
+                  mustHave: String(form.get("demandMustHave") || "").split(",").map((value) => value.trim()).filter(Boolean),
+                  preferred: String(form.get("demandPreferred") || "").split(",").map((value) => value.trim()).filter(Boolean),
+                  mustNotHave: String(form.get("demandMustNotHave") || "").split(",").map((value) => value.trim()).filter(Boolean),
+                },
                 notes: form.get("demandNotes") || null,
               }
             : null,
@@ -151,6 +156,11 @@ export default function NewCustomerPage() {
                   <label className="block"><span className="text-sm font-semibold text-slate-700">Min. m²</span><input name="demandMinSize" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
                   <label className="block"><span className="text-sm font-semibold text-slate-700">Max. m²</span><input name="demandMaxSize" inputMode="numeric" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
                   <label className="block"><span className="text-sm font-semibold text-slate-700">Oda</span><input name="demandRooms" placeholder="3+1" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <label className="block"><span className="text-sm font-semibold text-slate-700">Kesin olmalı</span><input name="demandMustHave" placeholder="Otopark, balkon" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                  <label className="block"><span className="text-sm font-semibold text-slate-700">Tercih edilir</span><input name="demandPreferred" placeholder="Site, deniz manzarası" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
+                  <label className="block"><span className="text-sm font-semibold text-slate-700">Kesin olmasın</span><input name="demandMustNotHave" placeholder="Bodrum, kiracılı" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm" /></label>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block"><span className="text-sm font-semibold text-slate-700">Aciliyet</span><select name="demandUrgency" defaultValue="NORMAL" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm"><option value="YUKSEK">Yüksek</option><option value="NORMAL">Normal</option><option value="DUSUK">Düşük</option></select></label>
