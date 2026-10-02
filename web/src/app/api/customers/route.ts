@@ -143,6 +143,9 @@ export async function POST(request: Request) {
   const demandUrgency = typeof rawDemand?.urgency === "string" && ["YUKSEK", "NORMAL", "DUSUK"].includes(rawDemand.urgency)
     ? rawDemand.urgency
     : "NORMAL";
+  const demandPreferences = rawDemand?.preferences && typeof rawDemand.preferences === "object" && !Array.isArray(rawDemand.preferences)
+    ? rawDemand.preferences
+    : undefined;
   if (demandTitle) {
     if (!["SATIN_ALMA", "KIRALAMA"].includes(demandType) || !["DAIRE", "VILLA", "ARSA", "IS_YERI", "BINA", "DEVRE_MULK"].includes(demandPropertyType)) {
       return validationError("İlk talep için geçerli talep ve gayrimenkul tipi seçin.");
@@ -180,6 +183,7 @@ export async function POST(request: Request) {
             maxSize: demandMaxSize,
             rooms: typeof rawDemand?.rooms === "string" ? rawDemand.rooms.trim() || null : null,
             urgency: demandUrgency as never,
+            preferences: demandPreferences,
             notes: typeof rawDemand?.notes === "string" ? rawDemand.notes.trim() || null : null,
           },
         },
