@@ -24,7 +24,23 @@ export default function SalePayments({ saleId, saleAmount, currency, approved }:
     finally { setLoading(false); }
   }
 
-  useEffect(() => { void load(); }, [saleId]);
+  useEffect(() => {
+    let active = true;
+    async function initialLoad() {
+      try {
+        const r = await fetch("/api/payment-plans", { cache: "no-store" });
+        const p = await r.json();
+        if (!r.ok) throw new Error(p.message ?? "Ödeme planları alınamadı.");
+        if (active) setPlan((p.plans ?? []).find((item: Plan & { sale: { id: string } }) => item.sale?.id === saleId) ?? null);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "Ödeme planı yüklenemedi.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    void initialLoad();
+    return () => { active = false; };
+  }, [saleId]);
 
   async function createPlan() {
     const n = Math.max(1, Math.min(24, Number(count) || 1));
