@@ -448,6 +448,93 @@ test("Phase 7: core CRM APIs keep the same unauthenticated error contract", asyn
   }
 });
 
+test("Phase 7: consultant fee API keeps authentication and manager boundaries", async () => {
+  const unauthenticatedCases = [
+    ["/api/consultant-fees", "GET"],
+    ["/api/consultant-fees", "POST"],
+    ["/api/consultant-fees", "PATCH"],
+  ] as const;
+
+  for (const [path, method] of unauthenticatedCases) {
+    const response = await api(path, "", method === "GET" ? undefined : {}, method);
+    await expectStatus(response, 401, path + " " + method + " unauthenticated");
+    await expectErrorCode(response, "AUTHENTICATION_REQUIRED", path + " " + method + " unauthenticated");
+  }
+
+  const fixture = await createAgent(randomUUID().slice(0, 8));
+  const broker = await createBroker(
+    fixture.organization.id,
+    fixture.office.id,
+    randomUUID().slice(0, 8),
+  );
+  const agentCookie = await login(fixture.email, fixture.password);
+  const brokerCookie = await login(broker.email, broker.password);
+
+  const agentResponse = await api("/api/consultant-fees", agentCookie);
+  await expectStatus(agentResponse, 403, "agent consultant fees");
+  await expectErrorCode(agentResponse, "FORBIDDEN", "agent consultant fees");
+
+  const brokerResponse = await api("/api/consultant-fees", brokerCookie);
+  await expectStatus(brokerResponse, 200, "broker consultant fees");
+  const brokerPayload = await json<{
+    fees: Array<{ consultantUserId: string; amount: string; currency: string }>;
+    consultants: Array<{ id: string; consultantCommissionPlan: { rentAmount: string | null } | null }>;
+  }>(brokerResponse);
+  assert.ok(
+    brokerPayload.consultants.some((consultant) => consultant.id === fixture.user.id && consultant.consultantCommissionPlan?.rentAmount === "20000"),
+    "Broker must see the active consultant rent plan.",
+  );
+
+  const period = "2035-01";
+  const generateResponse = await api(
+    "/api/consultant-fees",
+    brokerCookie,
+    { period },
+    "POST",
+  );
+  await expectStatus(generateResponse, 200, "generate consultant fee");
+  const generated = await json<{ fees: Array<{ consultantUserId: string; amount: string; currency: string; period: string }> }>(generateResponse);
+  const generatedFee = generated.fees.find((fee) => fee.consultantUserId === fixture.user.id);
+  assert.ok(generatedFee, "Fee generation must create a record for the active consultant.");
+  assert.equal(generatedFee?.amount, "20000", "Generated fee must use the consultant plan amount.");
+  assert.equal(generatedFee?.currency, "TRY", "Generated fee must use the consultant plan currency.");
+  assert.equal(generatedFee?.period.slice(0, 7), period, "Generated fee must use the requested period.");
+
+  const duplicateResponse = await api(
+    "/api/consultant-fees",
+    brokerCookie,
+    { period },
+    "POST",
+  );
+  await expectStatus(duplicateResponse, 200, "duplicate fee generation");
+  const duplicatePayload = await json<{ fees: Array<{ consultantUserId: string }> }>(duplicateResponse);
+  assert.equal(
+    duplicatePayload.fees.filter((fee) => fee.consultantUserId === fixture.user.id).length,
+    1,
+    "Generating the same period twice must remain idempotent.",
+  );
+
+  const generatedFeeId = generatedFee!.consultantUserId === fixture.user.id
+    ? generated.fees.find((fee) => fee.consultantUserId === fixture.user.id)
+    : undefined;
+  assert.ok(generatedFeeId, "Generated fee payload must contain the created fee.");
+  const listResponse = await api("/api/consultant-fees", brokerCookie);
+  const listPayload = await json<{ fees: Array<{ id: string; consultantUserId: string; status: string; paidAt: string | null }> }>(listResponse);
+  const feeRecord = listPayload.fees.find((fee) => fee.consultantUserId === fixture.user.id && fee.status === "BEKLIYOR");
+  assert.ok(feeRecord, "Generated fee must initially be pending.");
+
+  const payResponse = await api(
+    "/api/consultant-fees",
+    brokerCookie,
+    { id: feeRecord!.id, status: "ODENDI" },
+    "PATCH",
+  );
+  await expectStatus(payResponse, 200, "pay consultant fee");
+  const paidPayload = await json<{ fee: { status: string; paidAt: string | null } }>(payResponse);
+  assert.equal(paidPayload.fee.status, "ODENDI", "Fee must become paid.");
+  assert.ok(paidPayload.fee.paidAt, "Paid fee must receive paidAt.");
+});
+ 
 test("Phase 7: critical customer-to-finance business chain works through real HTTP routes", async () => {
   const fixture = await createAgent(randomUUID().slice(0, 8));
   const cookie = await login(fixture.email, fixture.password);
