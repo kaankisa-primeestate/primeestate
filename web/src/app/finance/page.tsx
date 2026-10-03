@@ -21,15 +21,6 @@ type Sale = {
   listing: { id: string; code: string; title: string };
 };
 
-type PaymentPlan = {
-  id: string;
-  title: string;
-  currency: string;
-  saleId: string;
-  installments: { id: string; sequence: number; amount: string | number; currency: string; dueAt: string; status: string; note: string | null }[];
-  sale: { id: string; amount: string | number; currency: string; customer: { id: string; name: string }; listing: { code: string; title: string } };
-};
-
 type Payment = {
   id: string;
   saleId: string;
@@ -50,8 +41,6 @@ const statusLabel: Record<Payment["status"], string> = { BEKLIYOR: "Bekliyor", O
 export default function FinancePage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
-  const [planSaving, setPlanSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [paymentSaving, setPaymentSaving] = useState<string | null>(null);
@@ -60,16 +49,13 @@ export default function FinancePage() {
   async function load() {
     setLoading(true);
     try {
-      const [salesResponse, paymentsResponse, plansResponse] = await Promise.all([fetch("/api/sales"), fetch("/api/payments"), fetch("/api/payment-plans")]);
+      const [salesResponse, paymentsResponse] = await Promise.all([fetch("/api/sales"), fetch("/api/payments")]);
       const salesPayload = await salesResponse.json();
       const paymentsPayload = await paymentsResponse.json();
-      const plansPayload = await plansResponse.json();
       if (!salesResponse.ok) throw new Error(salesPayload.message ?? "Satışlar yüklenemedi.");
       if (!paymentsResponse.ok) throw new Error(paymentsPayload.message ?? "Tahsilatlar yüklenemedi.");
-      if (!plansResponse.ok) throw new Error(plansPayload.message ?? "Ödeme planları yüklenemedi.");
       setSales(salesPayload.sales);
       setPayments(paymentsPayload.payments);
-      setPaymentPlans(plansPayload.plans);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Finans verileri yüklenemedi.");
     } finally {
@@ -129,25 +115,6 @@ export default function FinancePage() {
     }
   }
 
-  async function payInstallment(id: string) {
-    setPaymentSaving(id);
-    setError("");
-    try {
-      const response = await fetch(`/api/payment-installments/${id}/pay`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.message ?? "Taksit tahsil edilemedi.");
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Taksit tahsil edilemedi.");
-    } finally {
-      setPaymentSaving(null);
-    }
-  }
-
   async function updatePayment(id: string, status: Payment["status"]) {
     setPaymentSaving(id);
     setError("");
@@ -164,46 +131,6 @@ export default function FinancePage() {
       setError(e instanceof Error ? e.message : "Tahsilat güncellenemedi.");
     } finally {
       setPaymentSaving(null);
-    }
-  }
-
-  async function createPaymentPlan(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPlanSaving("new");
-    setError("");
-    const form = new FormData(event.currentTarget);
-    const saleId = String(form.get("saleId") ?? "");
-    const title = String(form.get("title") ?? "").trim();
-    const count = Math.max(1, Math.min(24, Number(form.get("count") ?? 1)));
-    const firstDueAt = String(form.get("firstDueAt") ?? "");
-    const sale = approvedSales.find((item) => item.id === saleId);
-    try {
-      if (!sale) throw new Error("Onaylanmış bir satış seçin.");
-      if (!Number.isFinite(count) || !firstDueAt) throw new Error("Taksit sayısı ve ilk vade tarihi zorunludur.");
-      if (paymentPlans.some((plan) => plan.saleId === saleId)) throw new Error("Bu satış için zaten bir ödeme planı var.");
-      const total = Number(sale.amount);
-      const base = Math.floor((total / count) * 100) / 100;
-      const installments = Array.from({ length: count }, (_, index) => ({
-        amount: index === count - 1 ? Number((total - base * (count - 1)).toFixed(2)) : Number(base.toFixed(2)),
-        dueAt: (() => {
-          const date = new Date(firstDueAt);
-          date.setMonth(date.getMonth() + index);
-          return date.toISOString();
-        })(),
-      }));
-      const response = await fetch("/api/payment-plans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ saleId, title, installments }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.message ?? "Ödeme planı oluşturulamadı.");
-      setPaymentPlans((current) => [payload.plan, ...current]);
-      event.currentTarget.reset();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Ödeme planı oluşturulamadı.");
-    } finally {
-      setPlanSaving(null);
     }
   }
 
@@ -281,34 +208,6 @@ export default function FinancePage() {
           </form>
         </section>
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div><h2 className="text-lg font-semibold text-slate-950">Ödeme planı / taksit</h2><p className="text-sm text-slate-500">Yalnızca broker tarafından onaylanmış satış için oluşturulur. Taksit toplamı satış tutarına otomatik eşitlenir.</p></div>
-          </div>
-          <form onSubmit={createPaymentPlan} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="text-xs font-semibold text-slate-600 lg:col-span-2">Onaylı satış
-              <select name="saleId" required className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900">
-                <option value="">Satış seçin</option>
-                {approvedSales.filter((sale) => sale.status !== "IPTAL" && !paymentPlans.some((plan) => plan.saleId === sale.id)).map((sale) => <option key={sale.id} value={sale.id}>{sale.customer.name} · {sale.listing.code} · {money(sale.amount, sale.currency)}</option>)}
-              </select>
-            </label>
-            <label className="text-xs font-semibold text-slate-600">Plan adı
-              <input name="title" required defaultValue="Standart ödeme planı" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
-            </label>
-            <label className="text-xs font-semibold text-slate-600">Taksit sayısı
-              <input name="count" required min="1" max="24" defaultValue="3" type="number" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
-            </label>
-            <label className="text-xs font-semibold text-slate-600">İlk vade
-              <input name="firstDueAt" required type="datetime-local" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
-            </label>
-            <button disabled={planSaving === "new"} type="submit" className="w-full self-end rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-50 sm:w-auto">{planSaving === "new" ? "Oluşturuluyor…" : "Ödeme planı oluştur"}</button>
-          </form>
-          {paymentPlans.length ? <div className="mt-5 grid gap-3 lg:grid-cols-2">{paymentPlans.map((plan) => <div key={plan.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-900">{plan.title}</p><p className="mt-1 text-xs text-slate-500">{plan.sale.customer.name} · {plan.sale.listing.code}</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{plan.installments.length} taksit</span></div>
-            <div className="mt-3 space-y-2">{plan.installments.map((installment) => <div key={installment.id} className="flex flex-col gap-2 rounded-xl bg-white px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between"><div><span className="font-semibold">{installment.sequence}. taksit</span><span className="ml-2 text-xs text-slate-400">{new Date(installment.dueAt).toLocaleDateString("tr-TR")}</span><span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-semibold ${installment.status === "ODENDI" ? "bg-emerald-50 text-emerald-700" : installment.status === "IPTAL" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{installment.status === "ODENDI" ? "Ödendi" : installment.status === "IPTAL" ? "İptal" : "Bekliyor"}</span></div><div className="flex items-center justify-between gap-3 sm:justify-end"><span className="font-semibold text-slate-900">{money(installment.amount, installment.currency)}</span>{installment.status === "BEKLIYOR" && <button disabled={paymentSaving === installment.id} onClick={() => void payInstallment(installment.id)} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{paymentSaving === installment.id ? "İşleniyor…" : "Tahsil et"}</button>}</div></div>)}</div>
-          </div>)}</div> : <p className="mt-4 text-xs text-slate-400">Henüz oluşturulmuş ödeme planı yok.</p>}
-        </section>
-
         <section className="mt-6 space-y-4">
           {loading && <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">Finans verileri yükleniyor…</div>}
           {!loading && approvedSales.map((sale) => {
@@ -327,11 +226,10 @@ export default function FinancePage() {
                    </div>
                   <h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2>
                   <p className="mt-1 text-2xl font-semibold text-slate-950">{money(sale.amount, sale.currency)}</p>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Komisyon</span><p className="mt-1 font-semibold">{money(sale.grossCommission, sale.currency)}</p></div>
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Ofis</span><p className="mt-1 font-semibold">{money(sale.officeShare, sale.currency)}</p></div>
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Danışman</span><p className="mt-1 font-semibold">{money(sale.consultantShare, sale.currency)}</p></div>
-                    <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Kalan</span><p className="mt-1 font-semibold">{money(Math.max(0, Number(sale.amount) - salePayments.filter((payment) => payment.status === "ODENDI").reduce((sum, payment) => sum + Number(payment.amount), 0)), sale.currency)}</p></div>
                   </div>
                   <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-slate-800">Tahsilatlar</h3><span className="text-xs text-slate-400">{salePayments.length} kayıt</span></div>
