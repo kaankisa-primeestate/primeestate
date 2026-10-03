@@ -327,10 +327,11 @@ export default function FinancePage() {
                    </div>
                   <h2 className="mt-2 text-lg font-semibold text-slate-950">{sale.customer.name} → {sale.listing.title}</h2>
                   <p className="mt-1 text-2xl font-semibold text-slate-950">{money(sale.amount, sale.currency)}</p>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Komisyon</span><p className="mt-1 font-semibold">{money(sale.grossCommission, sale.currency)}</p></div>
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Ofis</span><p className="mt-1 font-semibold">{money(sale.officeShare, sale.currency)}</p></div>
                     <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Danışman</span><p className="mt-1 font-semibold">{money(sale.consultantShare, sale.currency)}</p></div>
+                    <div className="rounded-xl bg-slate-50 p-3"><span className="text-slate-400">Kalan</span><p className="mt-1 font-semibold">{money(Math.max(0, Number(sale.amount) - salePayments.filter((payment) => payment.status === "ODENDI").reduce((sum, payment) => sum + Number(payment.amount), 0)), sale.currency)}</p></div>
                   </div>
                   <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-slate-800">Tahsilatlar</h3><span className="text-xs text-slate-400">{salePayments.length} kayıt</span></div>
