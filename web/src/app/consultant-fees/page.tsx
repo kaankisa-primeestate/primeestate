@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 type Consultant = {
   id: string;
   name: string;
+  active: boolean;
   consultantCommissionPlan: {
     rentAmount: string | null;
     rentCurrency: string;
