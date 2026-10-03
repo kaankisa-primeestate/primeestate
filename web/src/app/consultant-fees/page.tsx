@@ -138,7 +138,7 @@ export default function ConsultantFeesPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm" />
               <button type="button" onClick={generateMonth} disabled={saving} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
-                {saving ? "İşleniyor…" : "Bu ayın aidatlarını oluştur"}
+                {saving ? "İşleniyor…" : "Seçili dönemin aidatlarını oluştur"}
               </button>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function ConsultantFeesPage() {
                     <article key={consultant.id} className="p-4 sm:p-5">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                          <h3 className="font-semibold text-slate-950">{consultant.name}</h3>
+                          <h3 className="font-semibold text-slate-950">{consultant.name} {!consultant.active && <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-500">Pasif</span>}</h3>
                           <p className="mt-1 text-sm text-slate-500">
                             Plan: {plan?.rentAmount ? money(plan.rentAmount, plan.rentCurrency) : "Aidat tutarı tanımlı değil"}
                             {plan?.rentDueDay ? ` · Vade günü: ${plan.rentDueDay}` : ""}
