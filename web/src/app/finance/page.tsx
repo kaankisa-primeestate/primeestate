@@ -214,6 +214,12 @@ export default function FinancePage() {
     acc[payment.currency] = (acc[payment.currency] ?? 0) + Number(payment.amount);
     return acc;
   }, {});
+  const collectedByAccount = payments.filter((p) => p.status === "ODENDI").reduce<{ OFFICE: Record<string, number>; CONSULTANT: Record<string, number> }>((acc, payment) => {
+    for (const entry of payment.ledgerEntries) {
+      acc[entry.account][entry.currency] = (acc[entry.account][entry.currency] ?? 0) + Number(entry.amount);
+    }
+    return acc;
+  }, { OFFICE: {}, CONSULTANT: {} });
 
   return <div className="min-h-screen bg-slate-50 md:flex">
     <Sidebar />
@@ -223,7 +229,7 @@ export default function FinancePage() {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Komisyon & Tahsilat</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Broker tarafından onaylanmış satışların komisyon ve tahsilatını takip et. Onay bekleyen satışlar önce İş Akışı üzerinden kesinleşir.</p>
 
-        <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs text-slate-400">Tamamlanan satış</p>
             <p className="mt-1 text-2xl font-semibold text-slate-950">{completed.length}</p>
@@ -233,9 +239,17 @@ export default function FinancePage() {
             <div className="mt-1 space-y-1">{Object.entries(paidByCurrency).length ? Object.entries(paidByCurrency).map(([currency, value]) => <p key={currency} className="text-xl font-semibold text-slate-950">{money(value, currency)}</p>) : <p className="text-2xl font-semibold text-slate-950">0</p>}</div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs text-slate-400">Aktif para birimleri</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-950">{currencies.length ? currencies.join(" · ") : "—"}</p>
+            <p className="text-xs text-slate-400">Ofis payı tahsilatı</p>
+            <div className="mt-1 space-y-1">{Object.entries(collectedByAccount.OFFICE).length ? Object.entries(collectedByAccount.OFFICE).map(([currency, value]) => <p key={currency} className="text-xl font-semibold text-slate-950">{money(value, currency)}</p>) : <p className="text-2xl font-semibold text-slate-950">0</p>}</div>
           </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs text-slate-400">Danışman payı tahsilatı</p>
+            <div className="mt-1 space-y-1">{Object.entries(collectedByAccount.CONSULTANT).length ? Object.entries(collectedByAccount.CONSULTANT).map(([currency, value]) => <p key={currency} className="text-xl font-semibold text-slate-950">{money(value, currency)}</p>) : <p className="text-2xl font-semibold text-slate-950">0</p>}</div>
+          </div>
+        </section>
+        <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-400">Aktif para birimleri</p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">{currencies.length ? currencies.join(" · ") : "—"}</p>
         </section>
 
         {error && <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
