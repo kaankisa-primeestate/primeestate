@@ -323,6 +323,7 @@ model User {
   consultantProfile ConsultantProfile?
   consultantCompany ConsultantCompany?
   consultantCommissionPlan ConsultantCommissionPlan?
+  consultantFees ConsultantFee[]
   salesAsConsultant Sale[] @relation("SaleConsultant")
   approvedSales Sale[] @relation("SaleApprovedBy")
 
@@ -659,6 +660,12 @@ model PaymentInstallment {
   @@unique([planId, sequence])
 }
 
+enum ConsultantFeeStatus {
+  BEKLIYOR
+  ODENDI
+  IPTAL
+}
+
 enum SaleApprovalStatus {
   BEKLIYOR
   ONAYLANDI
@@ -716,6 +723,30 @@ model LedgerEntry {
 
   @@unique([paymentId, account])
   @@index([saleId, account, createdAt])
+}
+
+model ConsultantFee {
+  id               String             @id @default(uuid())
+  organizationId   String
+  officeId         String
+  consultantUserId String
+  period           DateTime
+  amount           Decimal            @db.Decimal(18, 2)
+  currency         String             @default("TRY")
+  dueAt            DateTime
+  status           ConsultantFeeStatus @default(BEKLIYOR)
+  paidAt           DateTime?
+  note             String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  office       Office       @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  consultant   User         @relation(fields: [consultantUserId], references: [id], onDelete: Cascade)
+
+  @@unique([consultantUserId, period])
+  @@index([officeId, status, dueAt])
+  @@index([organizationId, officeId, period])
 }
 
 model AuditLog {
