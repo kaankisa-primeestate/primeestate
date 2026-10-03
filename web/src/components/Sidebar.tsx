@@ -145,6 +145,15 @@ export default function Sidebar() {
       </li>
       <li>
         <Link
+          href="/consultant-fees"
+          onClick={() => setMobileOpen(false)}
+          className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        >
+          Aidat Takibi
+        </Link>
+      </li>
+      <li>
+        <Link
           href="/consultant-applications"
           onClick={() => setMobileOpen(false)}
           className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
