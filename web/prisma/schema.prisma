@@ -252,6 +252,7 @@ model Organization {
   consultantProfiles ConsultantProfile[]
   consultantCompanies ConsultantCompany[]
   consultantCommissionPlans ConsultantCommissionPlan[]
+  consultantFees ConsultantFee[]
 
   @@index([slug])
 }
@@ -274,6 +275,7 @@ model Office {
   consultantProfiles ConsultantProfile[]
   consultantCompanies ConsultantCompany[]
   consultantCommissionPlans ConsultantCommissionPlan[]
+  consultantFees ConsultantFee[]
 
   @@unique([organizationId, slug])
   @@unique([id, organizationId])
