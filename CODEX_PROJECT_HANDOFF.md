@@ -23,7 +23,7 @@ Release-gate baseline:
 Bu commit PR #90'ın merge commitidir. Sonraki PR #91 state reconciliation çalışması yalnızca dokümantasyon/validation içindir; runtime kodunu değiştirmez. `main` tipindeki merge SHA'ları ayrıca oluşabilir; bu nedenle handoff release-gate baseline commitini referans alır.
 
 - PR #80 — Phase 7 Critical E2E business chain
-- customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment → payment plan/installments
+- customer → demand → listing → matching → showing → offer → accepted offer → sale → commission → payment
 
 PR #80 merge edilmiş ve onun kritik E2E zinciri main'e alınmıştır.
 
@@ -500,18 +500,6 @@ Sale status:
 - TAMAMLANDI
 - IPTAL
 
-### PaymentPlan
-
-Sale başına tek plan:
-
-`saleId @unique`
-
-### PaymentInstallment
-
-Plan altındaki taksit.
-
-`@@unique([planId, sequence])`
-
 ### Payment
 
 Sale tahsilatı:
@@ -634,11 +622,6 @@ Tahsilat gerçekleşmiş veya satış kapanmışsa komisyon oranı/pay oranı de
 - `/api/payments`
 - `/api/payments/[id]`
 
-### Payment Plans
-
-- `/api/payment-plans`
-- `/api/payment-installments/[id]`
-
 ### Tasks
 
 - `/api/tasks`
@@ -725,21 +708,15 @@ Model tarafında:
 
 Sale → Payment → Ledger
 
-ve
+bağlantısı vardır.
 
-Sale → PaymentPlan → PaymentInstallment
-
-bağlantıları vardır.
-
-Burada yeni geliştirme yapmadan önce gerçek production verisi ile:
+Burada yeni geliştirme yapmadan önce:
 
 - komisyon
 - tahsilat
 - ofis payı
 - danışman payı
 - ledger
-- plan
-- installment
 
 eşleşmeleri doğrulanmalıdır.
 
@@ -825,9 +802,6 @@ Gerçek HTTP route handlers / running Next app üzerinden:
 ### Finans invariant testleri
 
 - Payment ↔ Ledger office/consultant split
-- PaymentPlan ↔ Installment currency/total/sequence
-- duplicate PaymentPlan deny
-- duplicate installment sequence deny
 
 ## 18. Phase 7 E2E testi
 
@@ -847,8 +821,7 @@ Gerçek Next.js HTTP route'larını zincir halinde çalıştırır:
 10. sale
 11. commission
 12. payment
-13. payment plan
-14. installments
+13. payment
 15. read-back
 
 ### Daha önce yaşanan Phase 7 hataları ve kök nedenleri
@@ -1097,7 +1070,7 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 | Matching UI | `web/src/app/matching/page.tsx` |
 | Sales UI | `web/src/app/sales/page.tsx` |
 | Finance UI | `web/src/app/finance/page.tsx` |
-| Finance cari / ödeme planı | `web/src/app/finance/cari/page.tsx` |
+| Finance | `web/src/app/finance/page.tsx` |
 | Matching engine | `web/src/core/matching-engine.ts` |
 | Legacy matching | `web/src/core/matching.ts` |
 | Prime Brain | `web/src/core/prime-brain/decision.ts` |
@@ -1120,7 +1093,7 @@ Dashboard → Finance → Render production verification → CURRENT_STATE recon
 
 **PR #81:** closed / obsolete
 
-**Production Render:** `2aca0b1` üzerinde auth, session, customers, health, Dashboard, Finance, listings, sales, payments ve payment plans doğrulandı.
+**Production Render:** auth, session, customers, health, Dashboard, Finance, listings, sales ve payments doğrulaması production smoke ile yapılır.
 
 **remax-CRM:** dokunulmayacak.
 
