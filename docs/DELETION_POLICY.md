@@ -16,7 +16,6 @@ The following records remain in the database and are changed through their exist
 - Sale records
 - Payment records
 - Payment plans
-- Payment installments
 - Showing records
 - Activity records
 - Task records
@@ -29,7 +28,7 @@ A hard-delete API must not be introduced for these entities without an explicit 
 - Listings use their existing lifecycle statuses such as `PASIF`, `SATILDI`, and `KIRALANDI`.
 - Offers use their existing status lifecycle and, once converted to a sale, their commercial state is locked where required.
 - Sales use `ACIK`, `TAMAMLANDI`, and `IPTAL`.
-- Payments and installments use their existing financial statuses.
+- Payments use their existing financial statuses.
 - Tasks and showings use their existing workflow statuses.
 
 These are workflow transitions, not record deletion.
@@ -50,7 +49,7 @@ The current Prisma model uses restrictive/cascade relationships that protect his
 - Customer → Owner: `onDelete: Restrict`
 - Activity → Owner: `onDelete: Restrict`
 - Task → Owner: `onDelete: Restrict`
-- PaymentPlan / Payment / Ledger relationships retain their business chain through explicit relations.
+- Payment / Ledger relationships retain their business chain through explicit relations.
 
 No schema migration is required for this policy.
 
