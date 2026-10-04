@@ -133,7 +133,7 @@ Release Gate hedefi:
 - runtime health green
 - Dashboard/Finance production sayfaları 500 döndürmez
 - `/api/health` database bağlantısı ile başarılıdır
-- `/api/listings`, `/api/sales`, `/api/payments`, `/api/payment-plans` production smoke kapsamında başarılıdır
+- `/api/listings`, `/api/sales`, `/api/payments` production smoke kapsamında başarılıdır
 - CURRENT_STATE gerçek main commit'i ile eşleşir
 
 ## 9. Kırmızı çizgiler
