@@ -12,7 +12,6 @@ export async function GET() {
     if (
       !can(context.role, "sales", "read") ||
       !can(context.role, "payments", "read") ||
-      !can(context.role, "paymentPlans", "read")
     ) {
       return forbidden();
     }
@@ -41,10 +40,7 @@ export async function GET() {
     const [
       openSales,
       paidByCurrencyRows,
-      pendingInstallments,
-      overdueInstallments,
       paymentCount,
-      paymentPlanCount,
       ledgerByAccountRows,
       consultantFees,
     ] = await Promise.all([
