@@ -34,12 +34,10 @@ async function main() {
     customers: { status: null, ok: false, authenticated: false },
     dashboardPage: { status: null, ok: false, no500: false },
     financePage: { status: null, ok: false, no500: false },
-    financeCariPage: { status: null, ok: false, no500: false },
     financeDashboardLegacy: { status: null, ok: false, redirected: false, no500: false },
     listings: { status: null, ok: false },
     sales: { status: null, ok: false },
     payments: { status: null, ok: false },
-    paymentPlans: { status: null, ok: false },
   };
 
   const commonHeaders = {
@@ -100,10 +98,9 @@ async function main() {
   result.customers.ok = customersResponse.ok;
   result.customers.authenticated = customersResponse.status !== 401;
 
-  const [dashboardResponse, financeResponse, financeCariResponse, financeDashboardLegacyResponse] = await Promise.all([
+  const [dashboardResponse, financeResponse, financeDashboardLegacyResponse] = await Promise.all([
     fetch(`${baseUrl}/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/finance`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
-    fetch(`${baseUrl}/finance/cari`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/cari` } }),
     fetch(`${baseUrl}/finance/dashboard`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
   ]);
 
@@ -113,19 +110,15 @@ async function main() {
   result.financePage.status = financeResponse.status;
   result.financePage.ok = financeResponse.ok;
   result.financePage.no500 = financeResponse.status !== 500;
-  result.financeCariPage.status = financeCariResponse.status;
-  result.financeCariPage.ok = financeCariResponse.ok;
-  result.financeCariPage.no500 = financeCariResponse.status !== 500;
   result.financeDashboardLegacy.status = financeDashboardLegacyResponse.status;
   result.financeDashboardLegacy.ok = financeDashboardLegacyResponse.ok;
-  result.financeDashboardLegacy.redirected = financeDashboardLegacyResponse.url.endsWith("/finance/cari");
+  result.financeDashboardLegacy.redirected = financeDashboardLegacyResponse.url.endsWith("/finance");
   result.financeDashboardLegacy.no500 = financeDashboardLegacyResponse.status !== 500;
 
-  const [listingsResponse, salesResponse, paymentsResponse, paymentPlansResponse] = await Promise.all([
+  const [listingsResponse, salesResponse, paymentsResponse] = await Promise.all([
     fetch(`${baseUrl}/api/listings?limit=1`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/api/sales`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/dashboard` } }),
     fetch(`${baseUrl}/api/payments`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance` } }),
-    fetch(`${baseUrl}/api/payment-plans`, { headers: { Cookie: cookies, Origin: baseUrl, Referer: `${baseUrl}/finance/dashboard` } }),
   ]);
 
   result.listings.status = listingsResponse.status;
@@ -134,15 +127,13 @@ async function main() {
   result.sales.ok = salesResponse.ok;
   result.payments.status = paymentsResponse.status;
   result.payments.ok = paymentsResponse.ok;
-  result.paymentPlans.status = paymentPlansResponse.status;
-  result.paymentPlans.ok = paymentPlansResponse.ok;
 
   console.log(JSON.stringify(result, null, 2));
 
   if (!result.session.present) { process.exitCode = 4; return; }
   if (!result.health.healthy) { process.exitCode = 5; return; }
   if (!result.customers.authenticated) { process.exitCode = 6; return; }
-  if (!result.dashboardPage.ok || !result.dashboardPage.no500 || !result.financePage.ok || !result.financePage.no500 || !result.financeCariPage.ok || !result.financeCariPage.no500 || !result.financeDashboardLegacy.ok || !result.financeDashboardLegacy.no500 || !result.financeDashboardLegacy.redirected) {
+  if (!result.dashboardPage.ok || !result.dashboardPage.no500 || !result.financePage.ok || !result.financePage.no500 || !result.financeDashboardLegacy.ok || !result.financeDashboardLegacy.no500 || !result.financeDashboardLegacy.redirected) {
     process.exitCode = 7;
     return;
   }
