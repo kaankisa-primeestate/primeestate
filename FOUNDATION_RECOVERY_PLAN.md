@@ -18,13 +18,12 @@
 - [x] Safe production migration path.
 - [x] CI migration validation.
 - [x] Runtime schema health checks.
-- [x] Sales / Commission / Payment / Ledger / PaymentPlan / Installment parity.
+- [x] Sales / Commission / Payment / Ledger parity.
 
 ## Phase 2 — Data model integrity
 - [x] Tenant/office/team FK consistency.
 - [x] Sale ↔ Offer ↔ Listing consistency.
 - [x] Sale ↔ Payment ↔ Ledger consistency.
-- [x] PaymentPlan / Installment uniqueness and currency/total invariants.
 - [x] Sale status-transition invariants.
 - [x] Financial immutability after settlement.
 - [ ] Explicit deletion policies.
@@ -73,7 +72,6 @@
 - [x] Accepted Offer → Sale.
 - [x] Commission.
 - [x] Payment → Ledger.
-- [x] Payment Plan → Installments.
 - [x] Dashboard reflection.
 - [x] Finance reflection.
 
