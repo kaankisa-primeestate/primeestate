@@ -685,7 +685,7 @@ Aynı dashboard'da:
 - finans özeti
 - tahsilatlar
 - ödeme planları
-- bekleyen / gecikmiş taksitler
+- bekleyen / geçmiş tahsilatlar
 
 gibi canlı metrikler gösterilebilir.
 
