@@ -43,7 +43,6 @@ Bu zincirden biri başarısızsa release kabul edilmez.
 - authorization isolation
 - gerçek API route integration
 - Payment/Ledger invariantleri
-- PaymentPlan/Installment invariantleri
 - Phase 7 kritik E2E zinciri
 
 kontrol edilir.
@@ -57,7 +56,7 @@ Sıra:
 1. yeni commit'in Render'a deploy edilmesini bekler;
 2. `GET /api/deployment-check` üzerinden Render branch/commit bilgisini kontrol eder;
 3. beklenen commit gerçekten canlı değilse auth smoke çalıştırmaz;
-4. canlı commit eşleşirse login, session, customer, sales, payments ve payment-plan endpoint'lerini smoke test eder.
+4. canlı commit eşleşirse login, session, customer, sales, payments endpoint'lerini smoke test eder.
 
 Bilinen production URL:
 
