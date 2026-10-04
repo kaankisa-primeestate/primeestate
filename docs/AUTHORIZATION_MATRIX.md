@@ -45,7 +45,6 @@ Kaynağın tek policy dosyası: `web/src/lib/authz.ts`
 | Teklif | İlgili müşteri + portföy kapsamı | Aynı takım/müşteri + ortak portföy | Kendi müşteri + ortak portföy | Salt okuma, yetkili kapsam |
 | Satış | Yetkili müşteri/ofis kapsamı | Takım/müşteri kapsamı | Kendi müşteri kapsamı | Salt okuma, yetkili kapsam |
 | Tahsilat | Yetkili satış kapsamı | Takım/satış kapsamı | Kendi müşteri/satış kapsamı | Salt okuma, yetkili kapsam |
-| Ödeme planı / taksit | Yetkili satış kapsamı | Takım/satış kapsamı | Kendi müşteri/satış kapsamı | Salt okuma, yetkili kapsam |
 | Kullanıcılar | Organization yönetim kapsamı | Erişim yok | Erişim yok | Erişim yok |
 | Platform sayfası | SUPER_ADMIN | — | — | — |
 
@@ -88,9 +87,6 @@ Bu nedenle aynı ofisteki danışmanlar ortak ofis portföyünü görebilir. Por
 | `/api/sales/[id]` | — | — | ✓ | — |
 | `/api/payments` | ✓ | ✓ | — | — |
 | `/api/payments/[id]` | — | — | ✓ | — |
-| `/api/payment-plans` | ✓ | ✓ | — | — |
-| `/api/payment-installments/[id]` | — | — | ✓ | — |
-| `/api/payment-installments/[id]/pay` | — | ✓ | — | — |
 | `/api/tasks` | ✓ | ✓ | — | — |
 | `/api/tasks/[id]` | — | — | ✓ | — |
 | `/api/activities` | ✓ | ✓ | — | — |
@@ -124,8 +120,8 @@ Danışman profil/şirket/komisyon güncellemesi yalnızca yetkili manager akı�
 Capability tek başına finans işlemini yetkilendirmez:
 
 - satış scope'u tenant + müşteri ownership ile kontrol edilir;
-- ödeme / ödeme planı için satışın broker onayı gerekir;
-- ödeme ve taksit durum değişimleri mevcut finansal iş kurallarına bağlıdır;
+- tahsilat için satışın broker onayı gerekir;
+- tahsilat ve ledger durum değişimleri mevcut finansal iş kurallarına bağlıdır;
 - satış onayı manager rolüne özeldir.
 
 ### Ticari akış
