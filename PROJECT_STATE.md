@@ -167,11 +167,10 @@ Important components:
 
 - Sale has unique `offerId` and `listingId`.
 - Sale stores commission snapshots for historical correctness.
-- PaymentPlan is unique per sale.
-- PaymentInstallment is unique per plan + sequence.
 - Financial APIs and dashboard must use live data.
 - Never replace live data with static demo values.
-- Accepted offer → sale → commission → payment/ledger → payment plan/installments is the validated business chain.
+- Accepted offer → sale → commission → one-time payment/ledger collection is the validated financial chain.
+- Consultant fees are tracked separately from sales commissions.
 
 ## 9. PRODUCTION / MIGRATION RULES
 
