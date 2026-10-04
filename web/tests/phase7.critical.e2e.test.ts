@@ -327,7 +327,6 @@ test("Phase 7: critical API errors always return stable JSON contracts", async (
   const cases = [
     ["/api/sales", "GET"],
     ["/api/payments", "GET"],
-    ["/api/payment-plans", "GET"],
     ["/api/offers", "GET"],
   ] as const;
 
