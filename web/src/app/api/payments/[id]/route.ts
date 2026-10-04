@@ -52,10 +52,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       const paidAt = body.paidAt !== undefined ? new Date(String(body.paidAt)) : (targetStatus === "ODENDI" ? (existing.paidAt ?? new Date()) : null);
       if (paidAt && Number.isNaN(paidAt.getTime())) throw new Error("Geçersiz tahsilat tarihi.");
 
-      if (existing.installment) {
-        await tx.paymentInstallment.update({ where: { id: existing.installment.id }, data: { status: targetStatus === "ODENDI" ? "ODENDI" : "BEKLIYOR" } });
-      }
-
       const payment = await tx.payment.update({
         where: { id },
         data: {
