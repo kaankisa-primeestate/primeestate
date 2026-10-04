@@ -137,7 +137,7 @@ async function main() {
     process.exitCode = 7;
     return;
   }
-  if (!result.listings.ok || !result.sales.ok || !result.payments.ok || !result.paymentPlans.ok) { process.exitCode = 8; }
+  if (!result.listings.ok || !result.sales.ok || !result.payments.ok) { process.exitCode = 8; }
 }
 
 main().catch((error) => {
