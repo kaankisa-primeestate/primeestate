@@ -97,16 +97,6 @@ Payment oluşturma sırasında:
 - toplam tahsilat sale amount'u aşmamalıdır;
 - ODENDI ödeme için gerekli commission configuration bulunmalıdır.
 
-## 6. Payment Plan / Installment
-
-PaymentPlan sale başına tektir.
-
-Installment:
-
-- plan içinde sequence ile sıralanır;
-- sequence tekrarlanamaz;
-- toplam installment tutarı sale amount'una eşit olmalıdır;
-- currency sale currency ile aynı olmalıdır.
 
 ## 7. Commission immutability
 
