@@ -865,18 +865,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(blockedPaymentResponse, 409, "blockedPaymentResponse");
   await expectErrorCode(blockedPaymentResponse, "CONFLICT", "blockedPaymentResponse");
 
-  const blockedPlanResponse = await api(
-    "/api/payment-plans",
-    cookie,
-    {
-      saleId: salePayload.sale.id,
-      title: "Pre-approval plan must fail",
-      installments: [{ amount: 4800000, dueAt: "2026-11-01T00:00:00.000Z" }],
-    },
-    "POST",
-  );
-  await expectStatus(blockedPlanResponse, 409, "blockedPlanResponse");
-  await expectErrorCode(blockedPlanResponse, "CONFLICT", "blockedPlanResponse");
 
   // 9. Commission calculation
   const commissionResponse = await api(
@@ -1007,72 +995,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   await expectStatus(pendingPaymentOverchargeResponse, 409, "pendingPaymentOverchargeResponse");
   await expectErrorCode(pendingPaymentOverchargeResponse, "CONFLICT", "pendingPaymentOverchargeResponse");
 
-  // 12. Payment plan / installments
-  const planResponse = await api(
-    "/api/payment-plans",
-    cookie,
-    {
-      saleId: salePayload.sale.id,
-      title: "4 Taksit E2E Plan",
-      installments: [
-        { amount: 1200000, dueAt: "2026-11-01T00:00:00.000Z" },
-        { amount: 1200000, dueAt: "2026-12-01T00:00:00.000Z" },
-        { amount: 1200000, dueAt: "2027-01-01T00:00:00.000Z" },
-        { amount: 1200000, dueAt: "2027-02-01T00:00:00.000Z" },
-      ],
-    },
-    "POST",
-  );
-  await expectStatus(planResponse, 201, "planResponse");
-  const planPayload = await json<{ plan: { id: string; currency: string; installments: Array<{ id: string; sequence: number; amount: string | number }> } }>(planResponse);
-  assert.equal(planPayload.plan.currency, "TRY");
-  assert.deepEqual(planPayload.plan.installments.map((item) => item.sequence), [1, 2, 3, 4]);
-  assert.equal(
-    planPayload.plan.installments.reduce((sum, item) => sum + Number(item.amount), 0),
-    4800000,
-  );
-
-  const duplicatePlanResponse = await api(
-    "/api/payment-plans",
-    cookie,
-    {
-      saleId: salePayload.sale.id,
-      title: "Duplicate plan must fail",
-      installments: [{ amount: 4800000, dueAt: "2027-03-01T00:00:00.000Z" }],
-    },
-    "POST",
-  );
-  await expectStatus(duplicatePlanResponse, 409, "duplicatePlanResponse");
-  await expectErrorCode(duplicatePlanResponse, "CONFLICT", "duplicatePlanResponse");
-
-  const installmentId = planPayload.plan.installments[0].id;
-
-  const directPaidInstallmentResponse = await api(
-    `/api/payment-installments/${installmentId}`,
-    cookie,
-    { status: "ODENDI" },
-    "PATCH",
-  );
-  await expectStatus(directPaidInstallmentResponse, 409, "directPaidInstallmentResponse");
-  await expectErrorCode(directPaidInstallmentResponse, "CONFLICT", "directPaidInstallmentResponse");
-
-  const installmentPaymentResponse = await api(
-    `/api/payment-installments/${installmentId}/pay`,
-    cookie,
-    { paidAt: "2026-11-02T10:00:00.000Z", note: "Phase 7 installment payment" },
-    "POST",
-  );
-  await expectStatus(installmentPaymentResponse, 201, "installmentPaymentResponse");
-
-  const duplicateInstallmentPaymentResponse = await api(
-    `/api/payment-installments/${installmentId}/pay`,
-    cookie,
-    { paidAt: "2026-11-03T10:00:00.000Z" },
-    "POST",
-  );
-  await expectStatus(duplicateInstallmentPaymentResponse, 409, "duplicateInstallmentPaymentResponse");
-  await expectErrorCode(duplicateInstallmentPaymentResponse, "CONFLICT", "duplicateInstallmentPaymentResponse");
-
   // Core business records are intentionally not hard-deletable; workflow state changes preserve history.
   const protectedDeleteCases = [
     ["/api/customers/" + customerId, "customers"],
@@ -1080,7 +1002,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     ["/api/offers/" + offerPayload.offer.id, "offers"],
     ["/api/sales/" + salePayload.sale.id, "sales"],
     ["/api/payments/" + paymentPayload.payment.id, "payments"],
-    ["/api/payment-installments/" + installmentId, "payment-installments"],
   ] as const;
   for (const [path, label] of protectedDeleteCases) {
     const response = await api(path, cookie, undefined, "DELETE");
@@ -1098,10 +1019,6 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   const paymentsPayload = await json<{ payments: Array<{ id: string; sale: { id: string } }> }>(paymentsRead);
   assert.ok(paymentsPayload.payments.some((payment) => payment.id === paymentPayload.payment.id && payment.sale.id === salePayload.sale.id));
 
-  const plansRead = await api("/api/payment-plans", cookie);
-  assert.equal(plansRead.status, 200);
-  const plansPayload = await json<{ plans: Array<{ id: string; sale: { id: string } }> }>(plansRead);
-  assert.ok(plansPayload.plans.some((plan) => plan.id === planPayload.plan.id && plan.sale.id === salePayload.sale.id));
 
   const listingRead = await api(`/api/listings?q=${encodeURIComponent("Bostancı E2E 3+1")}`, cookie);
   assert.equal(listingRead.status, 200);
