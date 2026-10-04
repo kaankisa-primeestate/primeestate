@@ -11,7 +11,7 @@ export async function GET() {
   try {
     if (
       !can(context.role, "sales", "read") ||
-      !can(context.role, "payments", "read") ||
+      !can(context.role, "payments", "read")
     ) {
       return forbidden();
     }
@@ -52,20 +52,7 @@ export async function GET() {
         where: paymentScope,
         _sum: { amount: true },
       }),
-      prisma.paymentInstallment.count({
-        where: { status: "BEKLIYOR", plan: { sale: saleScope } },
-      }),
-      prisma.paymentInstallment.count({
-        where: {
-          status: "BEKLIYOR",
-          dueAt: { lt: new Date() },
-          plan: { sale: saleScope },
-        },
-      }),
       prisma.payment.count({
-        where: { sale: { customer: customerScope } },
-      }),
-      prisma.paymentPlan.count({
         where: { sale: { customer: customerScope } },
       }),
       prisma.ledgerEntry.groupBy({
@@ -119,10 +106,7 @@ export async function GET() {
       paidByCurrency,
       officeCollectedByCurrency,
       consultantCollectedByCurrency,
-      pendingInstallments,
-      overdueInstallments,
       paymentCount,
-      paymentPlanCount,
       consultantFeeSummary,
     });
   } catch {
