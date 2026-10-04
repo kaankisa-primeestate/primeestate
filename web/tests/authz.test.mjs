@@ -37,8 +37,6 @@ const resources = [
   "offers",
   "sales",
   "payments",
-  "paymentPlans",
-  "installments",
   "tasks",
   "activities",
   "matching",
