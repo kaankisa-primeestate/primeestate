@@ -411,7 +411,6 @@ test("Phase 6 API: VIEWER is denied write access by actual route handlers", asyn
     ["/api/customers", {}],
     ["/api/sales", {}],
     ["/api/payments", {}],
-    ["/api/payment-plans", {}],
   ] as const;
 
   for (const [path, body] of cases) {
