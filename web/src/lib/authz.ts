@@ -28,8 +28,6 @@ export type AuthorizationResource =
   | "offers"
   | "sales"
   | "payments"
-  | "paymentPlans"
-  | "installments"
   | "tasks"
   | "activities"
   | "matching"
