@@ -28,10 +28,6 @@ export async function GET() {
     status: "ODENDI" as const,
     sale: { customer: customerScope },
   };
-  const saleScope = {
-    customer: customerScope,
-  };
-
   try {
     const currentMonthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
     const nextMonthStart = new Date(Date.UTC(currentMonthStart.getUTCFullYear(), currentMonthStart.getUTCMonth() + 1, 1));
