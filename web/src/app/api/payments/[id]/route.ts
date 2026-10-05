@@ -24,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const existing = await prisma.payment.findFirst({
     where: { id, sale: { customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } } },
-    include: { sale: { select: { id: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true } }, ledgerEntries: true },
+    include: { sale: { select: { id: true, amount: true, currency: true, commissionRate: true, grossCommission: true, officeShareRate: true, approvalStatus: true } }, ledgerEntries: true },
   });
   if (!existing) return notFound("Tahsilat bulunamadı veya yetkiniz yok.");
   if (existing.sale.approvalStatus !== "ONAYLANDI") return conflict("Tahsilat işlemleri için satışın broker tarafından onaylanmış olması gerekir.");
@@ -35,11 +35,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (targetStatus === "ODENDI" && existing.status !== "ODENDI") {
         const otherPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId: existing.saleId, status: "ODENDI", id: { not: id } } });
         const total = (otherPaid._sum.amount ?? new Prisma.Decimal(0)).add(existing.amount);
-        if (total.gt(existing.sale.amount)) throw new PaymentConflictError("Toplam tahsilat satış tutarını aşamaz.");
-        if (!existing.sale.commissionRate || !existing.sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
-        const gross = existing.amount.mul(existing.sale.commissionRate).div(100).toDecimalPlaces(2);
-        const office = gross.mul(existing.sale.officeShareRate).div(100).toDecimalPlaces(2);
-        const consultant = gross.sub(office).toDecimalPlaces(2);
+        const grossCommission = existing.sale.grossCommission ?? (
+          existing.sale.amount.mul(existing.sale.commissionRate ?? new Prisma.Decimal(0)).div(100).toDecimalPlaces(2)
+        );
+        if (total.gt(grossCommission)) throw new PaymentConflictError("Toplam komisyon tahsilatı satışın hesaplanan brüt komisyonunu aşamaz.");
+        if (!existing.sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
+        const office = existing.amount.mul(existing.sale.officeShareRate).div(100).toDecimalPlaces(2);
+        const consultant = existing.amount.sub(office).toDecimalPlaces(2);
         await tx.ledgerEntry.deleteMany({ where: { paymentId: id } });
         await tx.ledgerEntry.createMany({ data: [
           { saleId: existing.saleId, paymentId: id, account: "OFFICE", amount: office, currency: existing.currency, description: "Tahsilat üzerinden ofis payı" },
