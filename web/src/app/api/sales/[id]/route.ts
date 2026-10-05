@@ -23,7 +23,7 @@ function parseRate(value: unknown, label: string) {
 
 function calculateCommission(amount: Prisma.Decimal, commissionRate: Prisma.Decimal | null, officeShareRate: Prisma.Decimal | null) {
   if (commissionRate === null || officeShareRate === null) return { grossCommission: null, officeShare: null, consultantShare: null };
-  const grossCommission = amount.mul(commissionRate).div(100).toDecimalPlaces(2);
+  const grossCommission = amount.mul(commissionRate ?? new Prisma.Decimal(0)).div(100).toDecimalPlaces(2);
   const officeShare = grossCommission.mul(officeShareRate).div(100).toDecimalPlaces(2);
   const consultantShare = grossCommission.sub(officeShare).toDecimalPlaces(2);
   return { grossCommission, officeShare, consultantShare };
