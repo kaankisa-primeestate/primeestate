@@ -82,6 +82,9 @@ export async function POST(request: Request) {
           sourceCommissionPlanId: commissionPlan?.id ?? null,
           sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null,
           sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null,
+          buyerCommissionRate: new Prisma.Decimal("2"),
+          sellerCommissionRate: new Prisma.Decimal("2"),
+          commissionRate: new Prisma.Decimal("4"),
           officeShareRate: commissionPlan?.officeShareRate ?? null,
         },
         include: {
