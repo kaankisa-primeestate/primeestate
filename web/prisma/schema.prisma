@@ -605,7 +605,9 @@ model Sale {
   sourceCommissionPlanId String?
   sourceOfficeShareRate Decimal? @db.Decimal(7, 4)
   sourceConsultantShareRate Decimal? @db.Decimal(7, 4)
-  commissionRate     Decimal? @db.Decimal(7, 4)
+  buyerCommissionRate  Decimal? @db.Decimal(7, 4)
+  sellerCommissionRate Decimal? @db.Decimal(7, 4)
+  commissionRate       Decimal? @db.Decimal(7, 4)
   grossCommission   Decimal? @db.Decimal(18, 2)
   officeShareRate   Decimal? @db.Decimal(7, 4)
   officeShare       Decimal? @db.Decimal(18, 2)
