@@ -8,11 +8,10 @@ import { commercialNextAction } from "@/core/prime-commercial";
 
 class PaymentConflictError extends Error {}
 
-function commissionForPayment(amount: Prisma.Decimal, sale: { commissionRate: Prisma.Decimal | null; officeShareRate: Prisma.Decimal | null }) {
+function commissionSplit(amount: Prisma.Decimal, sale: { commissionRate: Prisma.Decimal | null; officeShareRate: Prisma.Decimal | null }) {
   if (!sale.commissionRate || !sale.officeShareRate) throw new Error("Tahsilatı kapatmak için önce komisyon ve ofis payı oranlarını girin.");
-  const gross = amount.mul(sale.commissionRate).div(100).toDecimalPlaces(2);
-  const office = gross.mul(sale.officeShareRate).div(100).toDecimalPlaces(2);
-  return { office, consultant: gross.sub(office).toDecimalPlaces(2) };
+  const office = amount.mul(sale.officeShareRate).div(100).toDecimalPlaces(2);
+  return { office, consultant: amount.sub(office).toDecimalPlaces(2) };
 }
 
 export async function GET(request: Request) {
@@ -54,7 +53,7 @@ export async function POST(request: Request) {
   if (!saleId || !Number.isFinite(amount) || amount <= 0) return validationError("Satış ve pozitif tahsilat tutarı zorunludur.");
   const sale = await prisma.sale.findFirst({
     where: { id: saleId, status: { not: "IPTAL" }, customer: { organizationId: context.organizationId, officeId: context.officeId, ...customerOwnershipScope(context) } },
-    select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, approvalStatus: true },
+    select: { id: true, customerId: true, amount: true, currency: true, commissionRate: true, officeShareRate: true, grossCommission: true, approvalStatus: true },
   });
   if (!sale) return notFound("Satış bulunamadı veya yetkiniz yok.");
   if (sale.approvalStatus !== "ONAYLANDI") return conflict("Tahsilat için broker tarafından onaylanmış satış gerekir.");
@@ -68,14 +67,15 @@ export async function POST(request: Request) {
       const existingPaid = await tx.payment.aggregate({ _sum: { amount: true }, where: { saleId, status: "ODENDI" } });
       const alreadyPaid = existingPaid._sum.amount ?? new Prisma.Decimal(0);
       const nextPaid = status === "ODENDI" ? alreadyPaid.add(new Prisma.Decimal(String(amount))) : alreadyPaid;
-      if (nextPaid.gt(sale.amount)) throw new PaymentConflictError("Toplam tahsilat satış tutarını aşamaz.");
-      if (status === "ODENDI") commissionForPayment(new Prisma.Decimal(String(amount)), sale);
+      const grossCommission = sale.grossCommission ?? (sale.amount.mul(sale.commissionRate ?? 0).div(100).toDecimalPlaces(2));
+      if (nextPaid.gt(grossCommission)) throw new PaymentConflictError("Toplam komisyon tahsilatı satışın hesaplanan brüt komisyonunu aşamaz.");
+      if (status === "ODENDI") commissionSplit(new Prisma.Decimal(String(amount)), sale);
 
       const created = await tx.payment.create({
         data: { saleId, amount: new Prisma.Decimal(String(amount)), currency, status, paidAt: status === "ODENDI" ? paidAt : null, note: typeof body.note === "string" ? body.note.trim() || null : null },
       });
       if (status === "ODENDI") {
-        const split = commissionForPayment(new Prisma.Decimal(String(amount)), sale);
+        const split = commissionSplit(new Prisma.Decimal(String(amount)), sale);
         await tx.ledgerEntry.createMany({ data: [
           { saleId, paymentId: created.id, account: "OFFICE", amount: split.office, currency, description: "Tahsilat üzerinden ofis payı" },
           { saleId, paymentId: created.id, account: "CONSULTANT", amount: split.consultant, currency, description: "Tahsilat üzerinden danışman payı" },
