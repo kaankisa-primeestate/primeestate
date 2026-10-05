@@ -81,7 +81,7 @@ export async function POST(request: Request) {
           { saleId, paymentId: created.id, account: "CONSULTANT", amount: split.consultant, currency, description: "Tahsilat üzerinden danışman payı" },
         ] });
       }
-      const remaining = sale.amount.sub(nextPaid);
+      const remaining = grossCommission.sub(nextPaid);
       const next = commercialNextAction({ event: "PAYMENT_RECEIVED", remainingAmount: remaining });
       await tx.customer.update({
         where: { id: sale.customerId },
