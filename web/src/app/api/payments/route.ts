@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       const alreadyPaid = existingPaid._sum.amount ?? new Prisma.Decimal(0);
       const nextPaid = status === "ODENDI" ? alreadyPaid.add(new Prisma.Decimal(String(amount))) : alreadyPaid;
       const grossCommission = sale.grossCommission ?? (sale.amount.mul(sale.commissionRate ?? 0).div(100).toDecimalPlaces(2));
-      if (nextPaid.gt(grossCommission)) throw new PaymentConflictError("Toplam komisyon tahsilatı satışın hesaplanan brüt komisyonunu aşamaz.");
+      if (new Prisma.Decimal(String(amount)).gt(grossCommission) || nextPaid.gt(grossCommission)) throw new PaymentConflictError("Toplam komisyon tahsilatı satışın hesaplanan brüt komisyonunu aşamaz.");
       if (status === "ODENDI") commissionSplit(new Prisma.Decimal(String(amount)), sale);
 
       const created = await tx.payment.create({
