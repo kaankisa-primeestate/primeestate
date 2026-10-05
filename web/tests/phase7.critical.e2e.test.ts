@@ -925,7 +925,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     cookie,
     {
       saleId: salePayload.sale.id,
-      amount: 1000000,
+      amount: 144000,
       currency: "TRY",
       status: "ODENDI",
       paidAt: "2026-10-20T10:00:00.000Z",
@@ -934,7 +934,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(paymentResponse, 201, "paymentResponse");
   const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
-  assert.equal(Number(paymentPayload.payment.amount), 1000000);
+  assert.equal(Number(paymentPayload.payment.amount), 144000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
 
   const postPaymentCommissionChangeResponse = await api(
