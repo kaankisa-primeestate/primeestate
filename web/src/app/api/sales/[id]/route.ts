@@ -39,6 +39,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     status?: unknown;
     note?: unknown;
     commissionRate?: unknown;
+    buyerCommissionRate?: unknown;
+    sellerCommissionRate?: unknown;
     officeShareRate?: unknown;
     approvalStatus?: unknown;
     approvalNote?: unknown;
@@ -86,14 +88,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         }
       }
 
-      const commissionChanged = body.commissionRate !== undefined || body.officeShareRate !== undefined;
+      const commissionChanged = body.commissionRate !== undefined || body.buyerCommissionRate !== undefined || body.sellerCommissionRate !== undefined || body.officeShareRate !== undefined;
       if (commissionChanged && (existing.status !== "ACIK" || existing.payments.length > 0 || existing.approvalStatus === "ONAYLANDI")) {
         throw new SaleConflictError("Onaylanmış, tahsilat gerçekleşmiş veya kapanmış satışın komisyon bilgileri değiştirilemez.");
       }
 
+      let buyerCommissionRate = existing.buyerCommissionRate;
+      let sellerCommissionRate = existing.sellerCommissionRate;
       let commissionRate = existing.commissionRate;
       let officeShareRate = existing.officeShareRate;
-      if (body.commissionRate !== undefined) commissionRate = parseRate(body.commissionRate, "Komisyon oranı");
+      if (body.buyerCommissionRate !== undefined) buyerCommissionRate = parseRate(body.buyerCommissionRate, "Alıcı/kiracı komisyon oranı");
+      if (body.sellerCommissionRate !== undefined) sellerCommissionRate = parseRate(body.sellerCommissionRate, "Satıcı/malik komisyon oranı");
+      if (body.buyerCommissionRate !== undefined || body.sellerCommissionRate !== undefined) {
+        if (buyerCommissionRate === null || sellerCommissionRate === null) throw new Error("İki tarafın komisyon oranı da belirtilmelidir.");
+        commissionRate = buyerCommissionRate.add(sellerCommissionRate);
+      }
+      if (body.commissionRate !== undefined) {
+        commissionRate = parseRate(body.commissionRate, "Toplam komisyon oranı");
+        buyerCommissionRate = commissionRate.div(2).toDecimalPlaces(4);
+        sellerCommissionRate = commissionRate.sub(buyerCommissionRate).toDecimalPlaces(4);
+      }
       if (body.officeShareRate !== undefined) officeShareRate = parseRate(body.officeShareRate, "Ofis payı oranı");
 
       if (commissionChanged && officeShareRate !== null) {
@@ -116,6 +130,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           ...(status ? { status: nextStatus, closedAt: closing ? new Date() : null } : {}),
           ...(body.note !== undefined ? { note: typeof body.note === "string" ? body.note.trim() || null : null } : {}),
           ...(commissionChanged ? {
+            buyerCommissionRate,
+            sellerCommissionRate,
             commissionRate,
             officeShareRate,
             grossCommission: commission.grossCommission,
