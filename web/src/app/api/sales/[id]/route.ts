@@ -104,9 +104,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         commissionRate = buyerCommissionRate.add(sellerCommissionRate);
       }
       if (body.commissionRate !== undefined) {
-        commissionRate = parseRate(body.commissionRate, "Toplam komisyon oranı");
-        buyerCommissionRate = commissionRate.div(2).toDecimalPlaces(4);
-        sellerCommissionRate = commissionRate.sub(buyerCommissionRate).toDecimalPlaces(4);
+        const parsedCommissionRate = parseRate(body.commissionRate, "Toplam komisyon oranı");
+        if (parsedCommissionRate === null) throw new Error("Toplam komisyon oranı belirtilmelidir.");
+        commissionRate = parsedCommissionRate;
+        buyerCommissionRate = parsedCommissionRate.div(2).toDecimalPlaces(4);
+        sellerCommissionRate = parsedCommissionRate.sub(buyerCommissionRate).toDecimalPlaces(4);
       }
       if (body.officeShareRate !== undefined) officeShareRate = parseRate(body.officeShareRate, "Ofis payı oranı");
 
