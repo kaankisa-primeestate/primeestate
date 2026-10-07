@@ -9,6 +9,8 @@ type Sale = {
   currency: string;
   status: string;
   approvalStatus: "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI";
+  buyerCommissionRate: string | number | null;
+  sellerCommissionRate: string | number | null;
   commissionRate: string | number | null;
   grossCommission: string | number | null;
   officeShareRate: string | number | null;
@@ -18,7 +20,7 @@ type Sale = {
   officeShare: string | number | null;
   consultantShare: string | number | null;
   customer: { id: string; name: string };
-  listing: { id: string; code: string; title: string };
+  listing: { id: string; code: string; title: string; purpose: "SATILIK" | "KIRALAMA" };
 };
 
 type Payment = {
@@ -68,14 +70,14 @@ export default function FinancePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  async function saveCommission(id: string, commissionRate: string, officeShareRate: string) {
+  async function saveCommission(id: string, buyerCommissionRate: string, sellerCommissionRate: string, officeShareRate: string) {
     setSaving(id);
     setError("");
     try {
       const response = await fetch(`/api/sales/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commissionRate, officeShareRate }),
+        body: JSON.stringify({ buyerCommissionRate, sellerCommissionRate, officeShareRate }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.message ?? "Komisyon güncellenemedi.");
@@ -211,7 +213,8 @@ export default function FinancePage() {
         <section className="mt-6 space-y-4">
           {loading && <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">Finans verileri yükleniyor…</div>}
           {!loading && approvedSales.map((sale) => {
-            const commissionRate = sale.commissionRate == null ? "" : String(sale.commissionRate);
+            const buyerCommissionRate = sale.buyerCommissionRate == null ? "" : String(sale.buyerCommissionRate);
+            const sellerCommissionRate = sale.sellerCommissionRate == null ? "" : String(sale.sellerCommissionRate);
             const officeShareRate = sale.officeShareRate == null ? "" : String(sale.officeShareRate);
             const salePayments = payments.filter((payment) => payment.saleId === sale.id);
              const statusClass = sale.status === "TAMAMLANDI" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700" : sale.status === "IPTAL" ? "rounded-full px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-700" : "rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700";
@@ -239,17 +242,20 @@ export default function FinancePage() {
                     </div>)}</div> : <p className="mt-3 text-xs text-slate-400">Bu satış için henüz tahsilat yok.</p>}
                   </div>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); const form = new FormData(e.currentTarget); void saveCommission(sale.id, String(form.get("commissionRate") ?? ""), String(form.get("officeShareRate") ?? "")); }} className="w-full rounded-2xl bg-slate-50 p-4 xl:max-w-sm">
+                <form onSubmit={(e) => { e.preventDefault(); const form = new FormData(e.currentTarget); void saveCommission(sale.id, String(form.get("buyerCommissionRate") ?? ""), String(form.get("sellerCommissionRate") ?? ""), String(form.get("officeShareRate") ?? "")); }} className="w-full rounded-2xl bg-slate-50 p-4 xl:max-w-sm">
                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Satış oranları</p><div className="mt-3 rounded-xl border border-slate-200 bg-white p-3"><p className="text-xs font-semibold text-slate-700">Ofis kaynağı</p><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><div><span className="text-slate-400">Ofis payı</span><p className="mt-1 font-semibold text-slate-900">{sale.sourceOfficeShareRate != null ? "%" + sale.sourceOfficeShareRate : "Tanımlı değil"}</p></div><div><span className="text-slate-400">Danışman payı</span><p className="mt-1 font-semibold text-slate-900">{sale.sourceConsultantShareRate != null ? "%" + sale.sourceConsultantShareRate : "Tanımlı değil"}</p></div></div><p className="mt-2 text-[11px] leading-4 text-slate-500">Satış oluşturulurken ofisteki danışman kaydından alınan sabit kaynak oranları.</p></div>
                   <div className="mt-3 grid grid-cols-2 gap-3">
-                    <label className="text-xs font-semibold text-slate-600">Komisyon %
-                      <input name="commissionRate" defaultValue={commissionRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 2" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
+                    <label className="text-xs font-semibold text-slate-600">{sale.listing.purpose === "KIRALAMA" ? "Kiracı komisyonu %" : "Alıcı komisyonu %"}
+                      <input name="buyerCommissionRate" defaultValue={buyerCommissionRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 2" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
+                    </label>
+                    <label className="text-xs font-semibold text-slate-600">{sale.listing.purpose === "KIRALAMA" ? "Malik komisyonu %" : "Satıcı komisyonu %"}
+                      <input name="sellerCommissionRate" defaultValue={sellerCommissionRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 2" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
                     </label>
                     <label className="text-xs font-semibold text-slate-600">Ofis payı % <span className="font-normal text-slate-400">(manuel)</span>
                       <input name="officeShareRate" defaultValue={officeShareRate} required min="0" max="100" step="0.01" type="number" placeholder="Örn. 50" className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900" />
                     </label>
                   </div>
-                  <p className="mt-3 text-[11px] leading-4 text-slate-500">Gerekirse bu satış için manuel oran girilebilir. Broker onayından sonra oranlar kilitlenir.</p><button disabled={saving === sale.id || sale.approvalStatus !== "BEKLIYOR"} type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
+                  <p className="mt-3 text-[11px] leading-4 text-slate-500">Varsayılan olarak alıcı/kiracı %2 + satıcı/malik %2 uygulanır. Gerekirse bu satış için iki tarafın oranı ayrı ayrı manuel değiştirilebilir. Broker onayından sonra oranlar kilitlenir.</p><button disabled={saving === sale.id || sale.approvalStatus !== "BEKLIYOR"} type="submit" className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === sale.id ? "Hesaplanıyor…" : "Komisyonu hesapla"}</button>
                 </form>
               </div>
             </article>;
