@@ -765,7 +765,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(saleResponse, 201, "saleResponse");
   const salePayload = await json<{
-    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; approvalStatus: string; buyerCommissionRate: string | number | null; sellerCommissionRate: string | number | null; commissionRate: string | number | null; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null };
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; approvalStatus: string; buyerCommissionRate: string | number | null; sellerCommissionRate: string | number | null; commissionRate: string | number | null; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null; grossCommission: string | number | null; officeShare: string | number | null; consultantShare: string | number | null };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   // The Sale -> Listing invariant is enforced directly by the Phase 6 database test.
@@ -776,6 +776,9 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.buyerCommissionRate), 2, "New sales must default to 2% buyer/tenant commission.");
   assert.equal(Number(salePayload.sale.sellerCommissionRate), 2, "New sales must default to 2% seller/landlord commission.");
   assert.equal(Number(salePayload.sale.commissionRate), 4, "New sales must default to 4% total commission.");
+  assert.equal(Number(salePayload.sale.grossCommission), 192000, "Default gross commission must be 4% of the sale amount.");
+  assert.equal(Number(salePayload.sale.officeShare), 96000, "Default office share must follow the 40% office plan.");
+  assert.equal(Number(salePayload.sale.consultantShare), 96000, "Default consultant share must follow the 60% consultant plan.");
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
