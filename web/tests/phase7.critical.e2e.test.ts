@@ -882,6 +882,32 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(commissionPayload.sale.grossCommission), 144000);
   assert.equal(Number(commissionPayload.sale.officeShare), 72000);
   assert.equal(Number(commissionPayload.sale.consultantShare), 72000);
+
+  // Manual two-sided override: buyer 3% + seller 1% keeps total at 4% and
+  // recalculates the same gross commission while preserving the office split.
+  const twoSidedOverrideResponse = await api(
+    `/api/sales/${salePayload.sale.id}`,
+    cookie,
+    { buyerCommissionRate: 3, sellerCommissionRate: 1, officeShareRate: 40 },
+    "PATCH",
+  );
+  await expectStatus(twoSidedOverrideResponse, 200, "twoSidedOverrideResponse");
+  const twoSidedOverridePayload = await json<{
+    sale: {
+      buyerCommissionRate: string | number | null;
+      sellerCommissionRate: string | number | null;
+      commissionRate: string | number | null;
+      grossCommission: string | number;
+      officeShare: string | number;
+      consultantShare: string | number;
+    };
+  }>(twoSidedOverrideResponse);
+  assert.equal(Number(twoSidedOverridePayload.sale.buyerCommissionRate), 3);
+  assert.equal(Number(twoSidedOverridePayload.sale.sellerCommissionRate), 1);
+  assert.equal(Number(twoSidedOverridePayload.sale.commissionRate), 4);
+  assert.equal(Number(twoSidedOverridePayload.sale.grossCommission), 144000);
+  assert.equal(Number(twoSidedOverridePayload.sale.officeShare), 57600);
+  assert.equal(Number(twoSidedOverridePayload.sale.consultantShare), 86400);
   // Manual override changes current transaction values but preserves the original office source snapshot.
   assert.equal(Number(commissionPayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(commissionPayload.sale.sourceConsultantShareRate), 60);
