@@ -954,7 +954,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
     cookie,
     {
       saleId: salePayload.sale.id,
-      amount: 144000,
+      amount: 192000,
       currency: "TRY",
       status: "ODENDI",
       paidAt: "2026-10-20T10:00:00.000Z",
