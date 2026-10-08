@@ -905,9 +905,9 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(twoSidedOverridePayload.sale.buyerCommissionRate), 3);
   assert.equal(Number(twoSidedOverridePayload.sale.sellerCommissionRate), 1);
   assert.equal(Number(twoSidedOverridePayload.sale.commissionRate), 4);
-  assert.equal(Number(twoSidedOverridePayload.sale.grossCommission), 144000);
-  assert.equal(Number(twoSidedOverridePayload.sale.officeShare), 57600);
-  assert.equal(Number(twoSidedOverridePayload.sale.consultantShare), 86400);
+  assert.equal(Number(twoSidedOverridePayload.sale.grossCommission), 192000);
+  assert.equal(Number(twoSidedOverridePayload.sale.officeShare), 76800);
+  assert.equal(Number(twoSidedOverridePayload.sale.consultantShare), 115200);
   // Manual override changes current transaction values but preserves the original office source snapshot.
   assert.equal(Number(commissionPayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(commissionPayload.sale.sourceConsultantShareRate), 60);
@@ -963,7 +963,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(paymentResponse, 201, "paymentResponse");
   const paymentPayload = await json<{ payment: { id: string; amount: string | number; status: string } }>(paymentResponse);
-  assert.equal(Number(paymentPayload.payment.amount), 144000);
+  assert.equal(Number(paymentPayload.payment.amount), 192000);
   assert.equal(paymentPayload.payment.status, "ODENDI");
 
   const postPaymentCommissionChangeResponse = await api(
