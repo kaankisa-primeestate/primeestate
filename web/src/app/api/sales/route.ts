@@ -70,6 +70,15 @@ export async function POST(request: Request) {
         },
       });
 
+      const buyerCommissionRate = new Prisma.Decimal("2");
+      const sellerCommissionRate = new Prisma.Decimal("2");
+      const commissionRate = buyerCommissionRate.add(sellerCommissionRate);
+      const grossCommission = offer.amount.mul(commissionRate).div(100).toDecimalPlaces(2);
+      const officeShare = commissionPlan?.officeShareRate
+        ? grossCommission.mul(commissionPlan.officeShareRate).div(100).toDecimalPlaces(2)
+        : null;
+      const consultantShare = officeShare === null ? null : grossCommission.sub(officeShare).toDecimalPlaces(2);
+
       const sale = await tx.sale.create({
         data: {
           customerId: offer.customerId,
@@ -82,10 +91,13 @@ export async function POST(request: Request) {
           sourceCommissionPlanId: commissionPlan?.id ?? null,
           sourceOfficeShareRate: commissionPlan?.officeShareRate ?? null,
           sourceConsultantShareRate: commissionPlan?.consultantShareRate ?? null,
-          buyerCommissionRate: new Prisma.Decimal("2"),
-          sellerCommissionRate: new Prisma.Decimal("2"),
-          commissionRate: new Prisma.Decimal("4"),
+          buyerCommissionRate,
+          sellerCommissionRate,
+          commissionRate,
           officeShareRate: commissionPlan?.officeShareRate ?? null,
+          grossCommission,
+          officeShare,
+          consultantShare,
         },
         include: {
           customer: { select: { id: true, name: true } },
