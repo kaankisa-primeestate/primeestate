@@ -765,7 +765,7 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   );
   await expectStatus(saleResponse, 201, "saleResponse");
   const salePayload = await json<{
-    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; approvalStatus: string; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null };
+    sale: { id: string; offerId: string; listingId: string; amount: string | number; currency: string; approvalStatus: string; buyerCommissionRate: string | number | null; sellerCommissionRate: string | number | null; commissionRate: string | number | null; sourceOfficeShareRate: string | number | null; sourceConsultantShareRate: string | number | null };
   }>(saleResponse);
   assert.equal(salePayload.sale.offerId, offerPayload.offer.id);
   // The Sale -> Listing invariant is enforced directly by the Phase 6 database test.
@@ -773,6 +773,9 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.amount), 4800000);
   assert.equal(salePayload.sale.currency, "TRY");
   assert.equal(salePayload.sale.approvalStatus, "BEKLIYOR");
+  assert.equal(Number(salePayload.sale.buyerCommissionRate), 2, "New sales must default to 2% buyer/tenant commission.");
+  assert.equal(Number(salePayload.sale.sellerCommissionRate), 2, "New sales must default to 2% seller/landlord commission.");
+  assert.equal(Number(salePayload.sale.commissionRate), 4, "New sales must default to 4% total commission.");
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
