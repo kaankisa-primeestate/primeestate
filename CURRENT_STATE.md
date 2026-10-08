@@ -51,6 +51,13 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 ## 4. Doğrulanmış GitHub durumu
 
+**Foundation final audit: CLOSED — 2026-10-08.**
+
+Current verified main: `1cfd5a83153759ed5c732d47bb0ca90e8e4ff09c`.
+- Web Quality #1283: green
+- Production Auth Smoke #347: green
+- Both checks run against the same main commit.
+
 ### Main / Release-gate baseline
 
 Current main tip is the latest merge commit. The verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
@@ -93,7 +100,7 @@ Production servis:
 
 `https://primeestate-v9eo.onrender.com`
 
-22.09.2026 tarihinde main commit `2aca0b1...` için Production Auth Smoke başarılıdır.
+Production runtime has been continuously verified through the current production smoke workflow. The Render health-check path is `/api/health`.
 
 Doğrulananlar:
 - Render deployment commit eşleşmesi
@@ -102,7 +109,7 @@ Doğrulananlar:
 - customers
 - sales
 - payments
-- payment plans
+- one-time commission payment and ledger collection
 
 Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıcı tarafından sağlanan Render doğrulamasıyla kabul edilir.
 
@@ -150,9 +157,9 @@ Release Gate hedefi:
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`
 - Current main commit: **verify live in GitHub at session start; do not hard-code the SHA here.**
-- Web Quality #1168: green
-- Production Auth Smoke #252: green
-- Foundation release gate: closed for current baseline
+- Web Quality #1283: green
+- Production Auth Smoke #347: green
+- Foundation release gate: CLOSED
 - Immediate goal: product development of the customer → demand → matching workflow
 
 ### Standard handoff
@@ -165,4 +172,6 @@ Future sessions begin with:
 4. Continue from the first incomplete step.
 5. Update `PROJECT_STATE.md` when the meaningful state changes.
 
-_Last reconciled as part of the canonical project-memory setup._
+**Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
+
+_Last reconciled: 2026-10-08._
