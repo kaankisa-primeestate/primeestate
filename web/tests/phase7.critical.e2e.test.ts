@@ -777,8 +777,8 @@ test("Phase 7: critical customer-to-finance business chain works through real HT
   assert.equal(Number(salePayload.sale.sellerCommissionRate), 2, "New sales must default to 2% seller/landlord commission.");
   assert.equal(Number(salePayload.sale.commissionRate), 4, "New sales must default to 4% total commission.");
   assert.equal(Number(salePayload.sale.grossCommission), 192000, "Default gross commission must be 4% of the sale amount.");
-  assert.equal(Number(salePayload.sale.officeShare), 96000, "Default office share must follow the 40% office plan.");
-  assert.equal(Number(salePayload.sale.consultantShare), 96000, "Default consultant share must follow the 60% consultant plan.");
+  assert.equal(Number(salePayload.sale.officeShare), 76800, "Default office share must follow the 40% office plan.");
+  assert.equal(Number(salePayload.sale.consultantShare), 115200, "Default consultant share must follow the 60% consultant plan.");
   assert.equal(Number(salePayload.sale.sourceOfficeShareRate), 40);
   assert.equal(Number(salePayload.sale.sourceConsultantShareRate), 60);
 
