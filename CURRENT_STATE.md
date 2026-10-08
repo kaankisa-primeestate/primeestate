@@ -159,7 +159,7 @@ Release Gate hedefi:
 - Current main commit: **verify live in GitHub at session start; do not hard-code the SHA here.**
 - Web Quality #1283: green
 - Production Auth Smoke #347: green
-- Foundation release gate: CLOSED
+- Foundation release gate: closed
 - Immediate goal: product development of the customer → demand → matching workflow
 
 ### Standard handoff
