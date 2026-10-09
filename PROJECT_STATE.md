@@ -3,6 +3,8 @@
 > **Canonical project handoff and operating memory.**
 > This is the standard starting point for every future PrimeEstate development session.
 >
+> **Binding AI product guide:** `AI_PRODUCT_ROADMAP.md`. Read it before AI-related work and use it as the product decision checklist for all relevant development.
+>
 > **Shortcut:** When the user says **“PrimeEstate”**, first read this file, then verify the live GitHub state (main, active branch/PR, CI, and relevant code) before continuing.
 
 ## 1. PROJECT IDENTITY
