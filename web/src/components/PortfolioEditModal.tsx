@@ -17,7 +17,7 @@ type Listing = {
   };
 };
 
-export default function PortfolioEditModal({ item, onClose, onSaved }: { item: Listing; onClose: () => void; onSaved: () => Promise<void> }) {
+export default function PortfolioEditModal({ item, onClose, onSaved }: { item: Listing; onClose: () => void; onSaved: (opportunities?: { customerId: string; customerName: string; phone: string | null; score: number }[]) => Promise<void> }) {
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
@@ -43,7 +43,10 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
       const res = await fetch("/api/listings/" + item.id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       const payload = await res.json();
       if (!res.ok) throw new Error(payload.message || "Portföy güncellenemedi.");
-      await onSaved();
+      const opportunities = Array.isArray(payload.primeOpportunities)
+        ? payload.primeOpportunities.filter((entry: unknown): entry is { customerId: string; customerName: string; phone: string | null; score: number } => !!entry && typeof entry === "object" && "customerId" in entry && "customerName" in entry && "score" in entry).map((entry) => ({ customerId: entry.customerId, customerName: entry.customerName, phone: entry.phone ?? null, score: entry.score }))
+        : undefined;
+      await onSaved(opportunities);
       onClose();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Portföy güncellenemedi.");
