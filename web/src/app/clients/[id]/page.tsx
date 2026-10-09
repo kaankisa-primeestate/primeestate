@@ -40,6 +40,10 @@ export default function Customer360Page(){
   const [sales,setSales]=useState<Sale[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
+  const [showingDrafts,setShowingDrafts]=useState<Record<string,{status:string;note:string}>>({});
+  const [showingSaving,setShowingSaving]=useState<string|null>(null);
+  const [showingError,setShowingError]=useState("");
+  const [showingSaved,setShowingSaved]=useState<string|null>(null);
 
   async function load(){
     setLoading(true); setError("");
@@ -61,6 +65,21 @@ export default function Customer360Page(){
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(()=>{if(id) void load();},[id]);
+
+  async function saveShowing(id:string){
+    const draft=showingDrafts[id];
+    if(!draft)return;
+    setShowingSaving(id); setShowingError(""); setShowingSaved(null);
+    try{
+      const response=await fetch("/api/showings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,status:draft.status,note:draft.note})});
+      const payload=await response.json();
+      if(!response.ok)throw new Error(payload.message||"Gösterim sonucu kaydedilemedi.");
+      setCustomer(current=>current?{...current,showings:current.showings.map(item=>item.id===id?{...item,status:payload.showing.status,note:payload.showing.note}:item)}:current);
+      setShowingDrafts(current=>({...current,[id]:{status:payload.showing.status,note:payload.showing.note??""}}));
+      setShowingSaved(id);
+    }catch(e){setShowingError(e instanceof Error?e.message:"Gösterim sonucu kaydedilemedi.");}
+    finally{setShowingSaving(null);}
+  }
 
   const timeline=useMemo(()=>{
     if(!customer)return [];
@@ -94,7 +113,11 @@ export default function Customer360Page(){
       </section>
 
       <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.14em] text-slate-400">Ticari akış</p><h2 className="mt-1 text-xl font-semibold">Gösterim · Teklif · Satış</h2></div><div className="flex flex-wrap gap-2"><Link href={"/sales/showing/new?customerId="+encodeURIComponent(id)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold">+ Gösterim</Link><Link href={"/sales/offer/new?customerId="+encodeURIComponent(id)} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">+ Teklif</Link></div></div><div className="mt-4 grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-400">Gösterimler</p>{customer.showings.slice(0,5).map(x=><div key={x.id} className="mt-3 rounded-lg bg-white p-3"><Link href="/calendar" className="block"><p className="text-sm font-semibold">{x.listing.title}</p><p className="mt-1 text-xs text-slate-500">{x.listing.code} · {status[x.status]??x.status} · {date(x.dateTime)}</p></Link>{x.status==="GERCEKLESTI"&&<Link href={"/sales/offer/new?customerId="+encodeURIComponent(id)+"&listingId="+encodeURIComponent(x.listing.id)} className="mt-3 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Bu gösterimden teklif oluştur →</Link>}</div>)}{!customer.showings.length&&<p className="mt-3 text-sm text-slate-500">Yok.</p>}</div>
+        <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-400">Gösterimler</p>{customer.showings.slice(0,5).map(x=><div key={x.id} className="mt-3 rounded-lg bg-white p-3"><Link href="/calendar" className="block"><p className="text-sm font-semibold">{x.listing.title}</p><p className="mt-1 text-xs text-slate-500">{x.listing.code} · {status[x.status]??x.status} · {date(x.dateTime)}</p></Link>{x.status==="GERCEKLESTI"&&<Link href={"/sales/offer/new?customerId="+encodeURIComponent(id)+"&listingId="+encodeURIComponent(x.listing.id)} className="mt-3 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Bu gösterimden teklif oluştur →</Link>}
+            <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+              {(()=>{const draft=showingDrafts[x.id]??{status:x.status,note:x.note??""};return <><label className="block"><span className="text-xs font-semibold text-slate-500">Gösterim sonucu</span><select value={draft.status} onChange={event=>setShowingDrafts(current=>({...current,[x.id]:{...draft,status:event.target.value}}))} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"><option value="PLANLANDI">Planlandı</option><option value="GERCEKLESTI">Gerçekleşti</option><option value="IPTAL">İptal</option></select></label><label className="block"><span className="text-xs font-semibold text-slate-500">Müşteri geri bildirimi</span><textarea value={draft.note} onChange={event=>setShowingDrafts(current=>({...current,[x.id]:{...draft,note:event.target.value}}))} rows={2} placeholder="Neyi beğendi, neyi beğenmedi?" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"/></label><button type="button" onClick={()=>void saveShowing(x.id)} disabled={showingSaving===x.id} className="w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{showingSaving===x.id?"Kaydediliyor…":"Sonucu kaydet"}</button>{showingSaved===x.id&&<p className="text-xs font-medium text-emerald-700">Gösterim sonucu kaydedildi.</p>}</>})()}
+              {showingError&&<p className="text-xs text-red-600">{showingError}</p>}
+            </div></div>)}{!customer.showings.length&&<p className="mt-3 text-sm text-slate-500">Yok.</p>}</div>
         <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-400">Teklifler</p>{offers.slice(0,5).map(x=><Link key={x.id} href="/sales" className="mt-3 block rounded-lg bg-white p-3"><div className="flex justify-between gap-2"><p className="truncate text-sm font-semibold">{x.listing.title}</p><span className="text-[11px]">{status[x.status]??x.status}</span></div><p className="mt-1 text-xs font-semibold">{money(x.amount,x.currency)}</p></Link>)}{!offers.length&&<p className="mt-3 text-sm text-slate-500">Yok.</p>}</div>
         <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-400">Satışlar</p>{sales.slice(0,5).map(x=><Link key={x.id} href={"/sales/"+x.id} className="mt-3 block rounded-lg bg-white p-3"><p className="text-sm font-semibold">{x.listing.title}</p><p className="mt-1 text-xs font-semibold">{money(x.amount,x.currency)}</p></Link>)}{!sales.length&&<p className="mt-3 text-sm text-slate-500">Yok.</p>}</div>
       </div></section>
