@@ -85,7 +85,7 @@ export default function Customer360Page(){
     if(!customer)return [];
     const items=[
       ...customer.activities.map(x=>({key:"a"+x.id,date:x.occurredAt,type:"Aktivite",title:x.summary,detail:x.outcome})),
-      ...customer.showings.map(x=>({key:"g"+x.id,date:x.dateTime,type:"Gösterim",title:x.listing.title,detail:status[x.status]??x.status})),
+      ...customer.showings.map(x=>({key:"g"+x.id,date:x.dateTime,type:"Gösterim",title:x.listing.title,detail:[status[x.status]??x.status,x.note?.trim()].filter(Boolean).join(" · ")})),
       ...offers.map(x=>({key:"o"+x.id,date:x.offeredAt,type:"Teklif",title:x.listing.title,detail:money(x.amount,x.currency)+" · "+(status[x.status]??x.status)})),
       ...sales.map(x=>({key:"s"+x.id,date:x.createdAt,type:"Satış",title:x.listing.title,detail:money(x.amount,x.currency)})),
     ];
