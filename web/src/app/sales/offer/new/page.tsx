@@ -8,6 +8,12 @@ type Customer={id:string;name:string};
 type Listing={id:string;code:string;title:string;price:string|number;currency:string};
 type Showing={id:string;status:string;note:string|null;dateTime:string;listing:{id:string}};
 
+function localDateTimeValue(){
+ const now=new Date();
+ now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+ return now.toISOString().slice(0,16);
+}
+
 function OfferForm(){
  const router=useRouter(); const params=useSearchParams();
  const preCustomerId=params.get("customerId")??""; const preListingId=params.get("listingId")??"";
@@ -29,7 +35,7 @@ function OfferForm(){
  <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Portföy *</span>{preListingId?<><input type="hidden" name="listingId" value={preListingId}/><div className="mt-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-900">{selectedListing?selectedListing.code+" · "+selectedListing.title:"Portföy yükleniyor…"}</div></>:<select required name="listingId" defaultValue="" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option value="">Portföy seçin</option>{listings.map(l=><option key={l.id} value={l.id}>{l.code} · {l.title}</option>)}</select>}</label>
  <label className="block"><span className="text-sm font-semibold text-slate-700">Teklif tutarı *</span><input required name="amount" type="number" min="0.01" step="0.01" key={selectedListing?.id??"listing-loading"} defaultValue={selectedListing?.price?Number(selectedListing.price):""} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
  <label className="block"><span className="text-sm font-semibold text-slate-700">Para birimi</span><select name="currency" key={(selectedListing?.id??"listing-loading")+"-currency"} defaultValue={selectedListing?.currency??"TRY"} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"><option>TRY</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
- <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Teklif tarihi</span><input required name="offeredAt" type="datetime-local" defaultValue={new Date().toISOString().slice(0,16)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
+ <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Teklif tarihi</span><input required name="offeredAt" type="datetime-local" defaultValue={localDateTimeValue()} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
  <label className="block sm:col-span-2"><span className="text-sm font-semibold text-slate-700">Sonraki aksiyon</span><input name="nextAction" placeholder="Örn. 2 gün sonra müşteriyle tekrar görüş" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm"/></label>
  </div></section><div className="flex justify-end gap-2"><button type="button" onClick={()=>router.back()} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600">Vazgeç</button><button disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving?"Kaydediliyor…":"Teklifi kaydet"}</button></div></form>
  </div></main></div>;
