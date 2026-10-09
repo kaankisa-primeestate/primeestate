@@ -35,7 +35,7 @@ export default function NewDemandPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Talep oluşturulamadı.");
-      router.push("/clients"); router.refresh();
+      router.push("/clients/" + encodeURIComponent(id)); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Talep oluşturulamadı."); setSaving(false); }
   }
 
