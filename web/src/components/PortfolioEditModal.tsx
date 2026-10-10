@@ -44,7 +44,7 @@ export default function PortfolioEditModal({ item, onClose, onSaved }: { item: L
       const payload = await res.json();
       if (!res.ok) throw new Error(payload.message || "Portföy güncellenemedi.");
       const opportunities = Array.isArray(payload.primeOpportunities)
-        ? payload.primeOpportunities.filter((entry: unknown): entry is { customerId: string; customerName: string; phone: string | null; score: number } => !!entry && typeof entry === "object" && "customerId" in entry && "customerName" in entry && "score" in entry).map((entry) => ({ customerId: entry.customerId, customerName: entry.customerName, phone: entry.phone ?? null, score: entry.score }))
+        ? payload.primeOpportunities.filter((entry: unknown): entry is { customerId: string; customerName: string; phone?: string | null; score: number } => !!entry && typeof entry === "object" && "customerId" in entry && typeof entry.customerId === "string" && "customerName" in entry && typeof entry.customerName === "string" && "score" in entry && typeof entry.score === "number").map((entry: { customerId: string; customerName: string; phone?: string | null; score: number }) => ({ customerId: entry.customerId, customerName: entry.customerName, phone: entry.phone ?? null, score: entry.score }))
         : undefined;
       await onSaved(opportunities);
       onClose();
