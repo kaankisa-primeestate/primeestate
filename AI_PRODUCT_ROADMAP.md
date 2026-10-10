@@ -109,6 +109,19 @@ Gösterim, geri bildirim, teklif ve satış sonuçlarını ilişkilendir. Tercih
 ### Aşama 6 — Pilot ve ölçüm
 Gerçek danışman senaryolarını uçtan uca ve mobilde test et. Yalnızca ölçülebilir fayda sağlayan özellikleri genişlet.
 
+### Öncelikli backlog — Ofis Hızlı Notlar ve Prime Brain Bilgi Merkezi
+
+Bu özellik önemli ve unutulmaması gereken ürün gereksinimidir. Mevcut aktif müşteri → talep → eşleştirme akışını yarıda kesmeden, sıradaki ürün planlamasında görünür bir backlog maddesi olarak korunur.
+
+- Ofis sekreteri ana ekrandan telefon görüşmesi sırasında tek alana hızlıca serbest not girebilmeli.
+- Orijinal not, oluşturan kişi ve zaman damgasıyla değiştirilemez kaynak kayıt olarak saklanmalı.
+- Prime Brain notu analiz ederek müşteri talebi, yeni portföy, takip görevi, fiyat bilgisi veya genel ofis bilgisi gibi olası türleri çıkarmalı; emin olmadığı alanları uydurmamalı.
+- Çıkarılan bilgiler kaynak nota bağlı kalmalı; mükerrer kayıt kontrolü yapılmalı.
+- Mevcut yetkilendirme ve gizlilik kuralları korunarak uygun müşteri/portföylerle eşleştirme ve ilgili danışmana öneri sunulmalı.
+- Yüksek etkili veya belirsiz CRM değişiklikleri kullanıcı onayı olmadan kesinleştirilmemeli.
+- Aşamalı teslimat: (1) hızlı not ekranı ve kalıcı kayıt, (2) AI sınıflandırması, (3) müşteri/portföy eşleştirmesi, (4) görev ve takip, (5) test ve ölçüm.
+- Bu backlog maddesi mevcut aktif işin tamamlandığı anlamına gelmez; geliştirmeye başlamadan önce mevcut kod ve API yeniden incelenmeli, ardından gerçek iş akışı testleri ve GitHub CI ile doğrulanmalı.
+
 ## 8. Başarı ölçütleri
 
 - Kritik müşteri/portföy eksiklerinin tespit edilme oranı.
