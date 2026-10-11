@@ -55,3 +55,23 @@ test("mixed outcome does not change existing preference signals", () => {
   assert.deepEqual(result.learning.negative, ["balkon"]);
   assert.equal(result.learning.history[0]?.direction, "neutral");
 });
+
+test("equivalent property-feature forms cannot leave contradictory learned signals", () => {
+  const negative = applyOutcomeLearning(
+    { positive: ["otoparklı"], negative: [], history: [] },
+    "activity-negative",
+    "Otopark istemiyor, beğenmedi.",
+  );
+
+  assert.deepEqual(negative.learning.positive, []);
+  assert.deepEqual(negative.learning.negative, ["otopark"]);
+
+  const positive = applyOutcomeLearning(
+    { positive: [], negative: ["balkon"], history: [] },
+    "activity-positive",
+    "Balkonlu daireyi beğendi.",
+  );
+
+  assert.deepEqual(positive.learning.positive, ["balkon"]);
+  assert.deepEqual(positive.learning.negative, []);
+});
