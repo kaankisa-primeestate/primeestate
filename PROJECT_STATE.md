@@ -71,13 +71,16 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Branch state
 
-No active development PR; GitHub open-PR check returned none after PR #154 merged.
+PR #157 is merged. No open development PR was found at the time of the latest live check; verify again at session start.
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1306 — **success** (main commit `18dee510bf310aa44a5283f4bbf84bbf19bec1de`)
-- PrimeEstate Production Auth HTTP Smoke Test #363 — **success** (same main commit)
-- PR #154 — merged; matching UI API error handling hardened; see https://github.com/kaankisa-primeestate/primeestate/pull/154
+- Main commit after PR #157: `732b4f178af3c183ccb3c99e4b3c77b07bcf6acd`.
+- PR #154 — merged; matching UI API error handling hardened: https://github.com/kaankisa-primeestate/primeestate/pull/154
+- PR #156 — merged; stale matching requests cannot overwrite newer demand results: https://github.com/kaankisa-primeestate/primeestate/pull/156
+- PR #157 — merged; Relationship Workspace contact outcomes now call `/api/prime/action`, connecting outcome capture to Prime learning and active-demand rematching: https://github.com/kaankisa-primeestate/primeestate/pull/157
+- PR #157 pre-merge Web Quality #1311 and Critical Tests #192 — **success**.
+- Post-merge Web Quality #1312 and Production Auth HTTP Smoke Test #365 were still in progress at the time of this reconciliation; confirm before marking the main release checks green.
 
 ### Immediate next steps
 

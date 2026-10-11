@@ -53,11 +53,11 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified main: `18dee510bf310aa44a5283f4bbf84bbf19bec1de`.
-- Web Quality #1306: green
-- Production Auth Smoke #363: green
-- Both checks run against the same main commit.
-- PR #154 merged: matching UI safely handles malformed/empty API responses and resets stale match/error state on selection changes.
+Current verified main: `732b4f178af3c183ccb3c99e4b3c77b07bcf6acd` (PR #157 merge; verify latest main and post-merge CI at each session start).
+- PR #154 merged: matching UI safely handles malformed/empty API responses.
+- PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
+- PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
+- PR #157 pre-merge Web Quality #1311 and Critical Tests #192 passed. Post-merge Web Quality #1312 and Production Auth HTTP Smoke #365 were queued/in progress at documentation update time; do not mark them green until confirmed.
 
 ### Main / Release-gate baseline
 
@@ -158,11 +158,13 @@ Release Gate hedefi:
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`
-- Current main commit: **verify live in GitHub at session start; do not hard-code the SHA here.**
-- Web Quality #1306: green
-- Production Auth Smoke #363: green
-- Foundation release gate: closed
-- Immediate goal: product development of the customer → demand → matching workflow
+- Current main commit at this reconciliation: `732b4f178af3c183ccb3c99e4b3c77b07bcf6acd` (always verify live at session start).
+- PR #154: matching UI API error handling.
+- PR #156: matching request race protection.
+- PR #157: relationship contact outcomes connected to Prime learning and rematching.
+- Post-merge Web Quality #1312 and Production Auth Smoke #365 were in progress when this file was updated; confirm before declaring green.
+- Foundation release gate: closed.
+- Immediate goal: continue Phase 12 core workflow and ensure outcome feedback reliably changes subsequent matching.
 
 ### Standard handoff
 
