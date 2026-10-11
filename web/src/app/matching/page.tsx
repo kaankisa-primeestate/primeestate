@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
@@ -33,13 +33,14 @@ async function readApiPayload(response:Response,fallbackMessage:string):Promise<
 
 export default function MatchingPage(){
  const [customers,setCustomers]=useState<Customer[]>([]),[customerId,setCustomerId]=useState(""),[demandId,setDemandId]=useState(""),[matches,setMatches]=useState<Match[]>([]),[loading,setLoading]=useState(true),[running,setRunning]=useState(false),[error,setError]=useState("");
+ const matchingRequestRef=useRef(0);
  const customer=customers.find(x=>x.id===customerId)??null;
  const demand=customer?.demands.find(x=>x.id===demandId)??customer?.demands[0]??null;
 
  useEffect(()=>{let cancelled=false;fetch("/api/customers").then(async r=>{const data=await readApiPayload(r,"Müşteriler alınamadı.");if(!Array.isArray(data.customers))throw new Error("Müşteri yanıtı beklenen formatta değil.");return {customers:data.customers as Customer[]};}).then(data=>{if(cancelled)return;setCustomers(data.customers);const params=new URLSearchParams(window.location.search);const requestedCustomerId=params.get("customerId")??"";const requestedDemandId=params.get("demandId")??"";const selectedCustomer=data.customers.find((item)=>item.id===requestedCustomerId)??data.customers[0];const selectedDemand=selectedCustomer?.demands.find((item)=>item.id===requestedDemandId)??selectedCustomer?.demands[0];setCustomerId(selectedCustomer?.id??"");setDemandId(selectedDemand?.id??"");}).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:"Veri alınamadı.");}).finally(()=>{if(!cancelled)setLoading(false);});return()=>{cancelled=true;};},[]);
 
- const runMatching=async(id=demand?.id)=>{if(!id)return;setRunning(true);setError("");setMatches([]);try{const r=await fetch("/api/matching",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({demandId:id})});const data=await readApiPayload(r,"Eşleştirme çalıştırılamadı.");setMatches(Array.isArray(data.matches)?data.matches as Match[]:[]);}catch(e){setError(e instanceof Error?e.message:"Eşleştirme çalıştırılamadı.");}finally{setRunning(false);}};
- useEffect(()=>{if(!demand?.id)return;let cancelled=false;const load=async()=>{setRunning(true);try{const r=await fetch("/api/matching",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({demandId:demand.id})});const data=await readApiPayload(r,"Eşleştirme çalıştırılamadı.");if(!cancelled)setMatches(Array.isArray(data.matches)?data.matches as Match[]:[]);}catch(e){if(!cancelled)setError(e instanceof Error?e.message:"Eşleştirme çalıştırılamadı.");}finally{if(!cancelled)setRunning(false);}};void load();return()=>{cancelled=true;};},[demand?.id]);
+ const runMatching=async(id=demand?.id)=>{if(!id)return;const requestId=++matchingRequestRef.current;setRunning(true);setError("");setMatches([]);try{const r=await fetch("/api/matching",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({demandId:id})});const data=await readApiPayload(r,"Eşleştirme çalıştırılamadı.");if(matchingRequestRef.current===requestId)setMatches(Array.isArray(data.matches)?data.matches as Match[]:[]);}catch(e){if(matchingRequestRef.current===requestId)setError(e instanceof Error?e.message:"Eşleştirme çalıştırılamadı.");}finally{if(matchingRequestRef.current===requestId)setRunning(false);}};
+ useEffect(()=>{if(!demand?.id)return;let cancelled=false;const requestId=++matchingRequestRef.current;const load=async()=>{setRunning(true);try{const r=await fetch("/api/matching",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({demandId:demand.id})});const data=await readApiPayload(r,"Eşleştirme çalıştırılamadı.");if(!cancelled&&matchingRequestRef.current===requestId)setMatches(Array.isArray(data.matches)?data.matches as Match[]:[]);}catch(e){if(!cancelled&&matchingRequestRef.current===requestId)setError(e instanceof Error?e.message:"Eşleştirme çalıştırılamadı.");}finally{if(!cancelled&&matchingRequestRef.current===requestId)setRunning(false);}};void load();return()=>{cancelled=true;if(matchingRequestRef.current===requestId)matchingRequestRef.current++;};},[demand?.id]);
 
  const stats=useMemo(()=>({strong:matches.filter(m=>m.score>=75).length,review:matches.filter(m=>m.score>=55&&m.score<75).length}),[matches]);
  if(loading)return <main className="min-h-screen bg-slate-50 p-8 text-slate-500">Müşteriler ve talepler yükleniyor…</main>;
