@@ -53,10 +53,11 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified main: `1cfd5a83153759ed5c732d47bb0ca90e8e4ff09c`.
-- Web Quality #1283: green
-- Production Auth Smoke #347: green
+Current verified main: `18dee510bf310aa44a5283f4bbf84bbf19bec1de`.
+- Web Quality #1306: green
+- Production Auth Smoke #363: green
 - Both checks run against the same main commit.
+- PR #154 merged: matching UI safely handles malformed/empty API responses and resets stale match/error state on selection changes.
 
 ### Main / Release-gate baseline
 
@@ -115,10 +116,11 @@ Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıc
 
 ## 7. CI
 
-Main commit `2aca0b1...` için:
-- PrimeEstate Web Quality ✅
-- Production Auth Smoke ✅
-- Production Prisma Migration Status ✅ (`Database schema is up to date!`)
+Main commit `18dee510bf310aa44a5283f4bbf84bbf19bec1de` için:
+- PrimeEstate Web Quality #1306 ✅ (tests, lint, typecheck, production build)
+- Production Auth Smoke #363 ✅ (Render deployment commit check, login/session, customer authorization)
+- PR #154 checks: Web Quality #1305 ✅; Critical Tests #189 ✅
+- PR #154 changed no schema; no production migration was required.
 
 PR #82'nin public repository sonrasında yeniden çalıştırılan CI'sinde:
 - Web Quality ✅
@@ -157,8 +159,8 @@ Release Gate hedefi:
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`
 - Current main commit: **verify live in GitHub at session start; do not hard-code the SHA here.**
-- Web Quality #1283: green
-- Production Auth Smoke #347: green
+- Web Quality #1306: green
+- Production Auth Smoke #363: green
 - Foundation release gate: closed
 - Immediate goal: product development of the customer → demand → matching workflow
 
@@ -174,4 +176,4 @@ Future sessions begin with:
 
 **Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
 
-_Last reconciled: 2026-10-08._
+_Last reconciled: 2026-10-11._

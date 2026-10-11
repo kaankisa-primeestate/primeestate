@@ -71,12 +71,13 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Branch state
 
-No active development PR. Remaining open PRs are older foundation/legacy branches and are not the active continuation path.
+No active development PR; GitHub open-PR check returned none after PR #154 merged.
 
 ### Latest main verification
 
-- PrimeEstate Web Quality #1168 — **success**
-- PrimeEstate Production Auth HTTP Smoke Test #252 — **success**
+- PrimeEstate Web Quality #1306 — **success** (main commit `18dee510bf310aa44a5283f4bbf84bbf19bec1de`)
+- PrimeEstate Production Auth HTTP Smoke Test #363 — **success** (same main commit)
+- PR #154 — merged; matching UI API error handling hardened; see https://github.com/kaankisa-primeestate/primeestate/pull/154
 
 ### Immediate next steps
 
@@ -291,10 +292,10 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
 - CURRENT_TASK: Start core consultant workflow development with customer → demand → matching UI continuity
 - ACTIVE_BRANCH: main
-- BASE_MAIN_COMMIT: 5d5cbed0f1622e20c13e7d438e8c0f70e78d8b96
+- BASE_MAIN_COMMIT: 18dee510bf310aa44a5283f4bbf84bbf19bec1de
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1168 ✅; Production Auth Smoke #252 ✅
-- PRODUCTION_MIGRATION: No schema change; no migration required
-- NEXT_STEP: Improve the customer → demand → matching experience with live data and explainable match results
-- BLOCKERS: None
-- LAST_UPDATED_UTC: 2026-10-02
+- LAST_GREEN_CHECKS: Web Quality #1306 ✅; Production Auth Smoke #363 ✅ (both against the same main commit)
+- PRODUCTION_MIGRATION: PR #154 changed only matching UI error handling; no schema change or migration required
+- NEXT_STEP: Inspect the customer → demand → matching workflow end-to-end, identify the next concrete user-visible gap, and implement it behind green CI
+- BLOCKERS: None currently identified
+- LAST_UPDATED_UTC: 2026-10-11
