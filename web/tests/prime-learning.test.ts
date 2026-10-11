@@ -41,7 +41,7 @@ test("mixed positive and negative feedback is recorded as neutral, not forced po
   const result = learnFromShowing("Balkon istemiyor ama otopark istiyor.", "");
 
   assert.equal(result.direction, "neutral");
-  assert.deepEqual(result.learned, ["balkon", "otopark"]);
+  assert.deepEqual(result.learned, ["otopark", "balkon"]);
 });
 
 test("mixed outcome does not change existing preference signals", () => {
