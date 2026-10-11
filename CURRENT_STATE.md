@@ -53,11 +53,14 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified main: `732b4f178af3c183ccb3c99e4b3c77b07bcf6acd` (PR #157 merge; verify latest main and post-merge CI at each session start).
+Current verified main: `b1f69275e9e5cfaa51f2bf77477380434d822766` (PR #159 merge; verify latest main and post-merge CI at each session start).
 - PR #154 merged: matching UI safely handles malformed/empty API responses.
 - PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
 - PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
-- PR #157 pre-merge Web Quality #1311 and Critical Tests #192 passed. Post-merge Web Quality #1312 and Production Auth HTTP Smoke #365 were queued/in progress at documentation update time; do not mark them green until confirmed.
+- PR #157 pre-merge Web Quality #1311 and Critical Tests #192 passed; post-merge Web Quality #1312 and Production Auth HTTP Smoke #365 later passed.
+- PR #158 state reconciliation checks passed and the documentation update was merged.
+- PR #159 merged: Prime learning now removes a feature from the opposite sentiment list when a clear new outcome reverses it; mixed positive/negative outcomes are treated as neutral. Regression tests cover reversals and mixed feedback.
+- PR #159 pre-merge Web Quality #1315 and Critical Tests #194 passed. Post-merge Web Quality #1316 and Production Auth HTTP Smoke #366 were queued at the latest verification; do not mark them green until confirmed.
 
 ### Main / Release-gate baseline
 
@@ -158,11 +161,12 @@ Release Gate hedefi:
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`
-- Current main commit at this reconciliation: `732b4f178af3c183ccb3c99e4b3c77b07bcf6acd` (always verify live at session start).
+- Current main commit at this reconciliation: `b1f69275e9e5cfaa51f2bf77477380434d822766` (always verify live at session start).
 - PR #154: matching UI API error handling.
 - PR #156: matching request race protection.
 - PR #157: relationship contact outcomes connected to Prime learning and rematching.
-- Post-merge Web Quality #1312 and Production Auth Smoke #365 were in progress when this file was updated; confirm before declaring green.
+- PR #159: contradictory positive/negative preference signals are reconciled; mixed feedback is neutral.
+- PR #159 post-merge Web Quality #1316 and Production Auth Smoke #366 were queued at last check; confirm before declaring green.
 - Foundation release gate: closed.
 - Immediate goal: continue Phase 12 core workflow and ensure outcome feedback reliably changes subsequent matching.
 
