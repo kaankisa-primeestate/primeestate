@@ -45,9 +45,23 @@ function unique(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
 
+const ATTRIBUTE_ALIASES: Record<string, string> = {
+  otoparkli: "otopark",
+  balkonlu: "balkon",
+  terasli: "teras",
+  havuzlu: "havuz",
+  asansorlu: "asansor",
+  guvenlikli: "guvenlik",
+};
+
+function canonicalizeAttribute(value: string) {
+  const normalized = normalize(value);
+  return ATTRIBUTE_ALIASES[normalized] ?? normalized;
+}
+
 function removeLearnedSignals(values: string[], learned: string[]) {
-  const learnedTerms = new Set(learned.map(normalize));
-  return values.filter((value) => !learnedTerms.has(normalize(value)));
+  const learnedTerms = new Set(learned.map(canonicalizeAttribute));
+  return values.filter((value) => !learnedTerms.has(canonicalizeAttribute(value)));
 }
 
 function applyDirectionalLearning(
@@ -60,15 +74,16 @@ function applyDirectionalLearning(
     negative: [...learning.negative],
     history: [...learning.history],
   };
+  const learnedAttributes = unique(learned.map(canonicalizeAttribute));
 
-  if (!learned.length) return next;
+  if (!learnedAttributes.length) return next;
 
   if (direction === "positive") {
-    next.positive = unique([...removeLearnedSignals(next.positive, learned), ...learned]).slice(-30);
-    next.negative = removeLearnedSignals(next.negative, learned);
+    next.positive = unique([...removeLearnedSignals(next.positive, learnedAttributes), ...learnedAttributes]).slice(-30);
+    next.negative = removeLearnedSignals(next.negative, learnedAttributes);
   } else if (direction === "negative") {
-    next.negative = unique([...removeLearnedSignals(next.negative, learned), ...learned]).slice(-30);
-    next.positive = removeLearnedSignals(next.positive, learned);
+    next.negative = unique([...removeLearnedSignals(next.negative, learnedAttributes), ...learnedAttributes]).slice(-30);
+    next.positive = removeLearnedSignals(next.positive, learnedAttributes);
   }
 
   return next;
