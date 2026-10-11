@@ -45,6 +45,35 @@ function unique(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
 
+function removeLearnedSignals(values: string[], learned: string[]) {
+  const learnedTerms = new Set(learned.map(normalize));
+  return values.filter((value) => !learnedTerms.has(normalize(value)));
+}
+
+function applyDirectionalLearning(
+  learning: PrimeLearning,
+  learned: string[],
+  direction: "positive" | "negative" | "neutral",
+) {
+  const next = {
+    positive: [...learning.positive],
+    negative: [...learning.negative],
+    history: [...learning.history],
+  };
+
+  if (!learned.length) return next;
+
+  if (direction === "positive") {
+    next.positive = unique([...removeLearnedSignals(next.positive, learned), ...learned]).slice(-30);
+    next.negative = removeLearnedSignals(next.negative, learned);
+  } else if (direction === "negative") {
+    next.negative = unique([...removeLearnedSignals(next.negative, learned), ...learned]).slice(-30);
+    next.positive = removeLearnedSignals(next.positive, learned);
+  }
+
+  return next;
+}
+
 export function emptyPrimeLearning(): PrimeLearning {
   return { positive: [], negative: [], history: [] };
 }
@@ -79,23 +108,17 @@ export function learnFromShowing(note: string | null, listingText: string) {
 
   return {
     learned: unique([...learned, ...listingAttributes]),
-    direction: negative && !positive ? "negative" as const : "positive" as const,
+    // Mixed positive/negative feedback is ambiguous at attribute level. Do not
+    // turn a mixed sentence into a positive signal just because it contains
+    // one positive word; wait for a clearer outcome instead.
+    direction: positive && negative ? "neutral" as const : negative ? "negative" as const : "positive" as const,
   };
 }
 
 export function applyOutcomeLearning(current: unknown, activityId: string, outcome: string) {
   const learning = readPrimeLearning(current);
   const result = learnFromShowing(outcome, outcome);
-  const next = {
-    positive: [...learning.positive],
-    negative: [...learning.negative],
-    history: [...learning.history],
-  };
-
-  if (result.learned.length) {
-    if (result.direction === "positive") next.positive = unique([...next.positive, ...result.learned]).slice(-30);
-    if (result.direction === "negative") next.negative = unique([...next.negative, ...result.learned]).slice(-30);
-  }
+  const next = applyDirectionalLearning(learning, result.learned, result.direction);
 
   next.history = [
     ...next.history.filter((item) => item.showingId !== activityId),
@@ -115,16 +138,7 @@ export function applyOutcomeLearning(current: unknown, activityId: string, outco
 export function applyShowingLearning(current: unknown, showingId: string, status: "GERCEKLESTI" | "IPTAL", note: string | null, listingText: string) {
   const learning = readPrimeLearning(current);
   const result = learnFromShowing(note, listingText);
-  const next = {
-    positive: [...learning.positive],
-    negative: [...learning.negative],
-    history: [...learning.history],
-  };
-
-  if (result.learned.length) {
-    if (result.direction === "positive") next.positive = unique([...next.positive, ...result.learned]).slice(-30);
-    if (result.direction === "negative") next.negative = unique([...next.negative, ...result.learned]).slice(-30);
-  }
+  const next = applyDirectionalLearning(learning, result.learned, result.direction);
 
   next.history = [
     ...next.history.filter((item) => item.showingId !== showingId),
