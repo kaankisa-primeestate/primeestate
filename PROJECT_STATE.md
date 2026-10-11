@@ -224,7 +224,7 @@ After merge:
 - stale branch / obsolete PR cleanup — open legacy PRs #1, #22, #30, #62, #65 closed as obsolete; legacy branches retained for history
 - consultant application T.C. display should remain privacy-conscious; prefer masked/last-four display unless full value is genuinely required
 - selected Prime customer should ideally be preserved by customer ID rather than list index across refresh
-- old positive/negative Prime learning signals can persist if sentiment reverses; improve the learning model deliberately rather than via ad-hoc cleanup
+- Prime learning now removes opposite sentiment for a feature when clear feedback reverses; mixed-sentiment feedback is treated as neutral (PR #159). Monitor for future parsing/attribute-level edge cases.
 
 ## 12. DO NOT DO
 - Do not reset production DB.
@@ -293,12 +293,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Start core consultant workflow development with customer → demand → matching UI continuity
+- CURRENT_TASK: Verify PR #159 post-merge main CI, then inspect customer → demand → matching continuity for the next concrete user-visible gap
 - ACTIVE_BRANCH: main
-- BASE_MAIN_COMMIT: 18dee510bf310aa44a5283f4bbf84bbf19bec1de
+- BASE_MAIN_COMMIT: b1f69275e9e5cfaa51f2bf77477380434d822766
 - ACTIVE_PR: none
-- LAST_GREEN_CHECKS: Web Quality #1306 ✅; Production Auth Smoke #363 ✅ (both against the same main commit)
-- PRODUCTION_MIGRATION: PR #154 changed only matching UI error handling; no schema change or migration required
-- NEXT_STEP: Inspect the customer → demand → matching workflow end-to-end, identify the next concrete user-visible gap, and implement it behind green CI
-- BLOCKERS: None currently identified
+- LAST_GREEN_CHECKS: PR #159 Web Quality #1315 ✅; Critical Tests #194 ✅ (PR head 72b3eda436a98dd4b8b809d8265fa3e53d2af562). Main Web Quality #1316 and Production Auth Smoke #366 were queued at snapshot time.
+- PRODUCTION_MIGRATION: PR #159 changes learning logic and tests only; no schema change or migration required
+- NEXT_STEP: Confirm post-merge main CI/smoke are green, then inspect customer → demand → matching workflow end-to-end and implement the next concrete gap
+- BLOCKERS: Awaiting post-merge main checks at last verification
 - LAST_UPDATED_UTC: 2026-10-11
