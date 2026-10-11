@@ -215,21 +215,19 @@ export default function RelationshipLive({ customerId }: { customerId: string })
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/api/activities", {
+      const response = await fetch("/api/prime/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: customer.id,
-          type,
-          summary: type === "ARAMA" ? "Prime önerisiyle telefon görüşmesi başlatıldı." : "Prime önerisiyle WhatsApp teması başlatıldı.",
+          action: type,
           outcome: outcome.trim() || null,
-          metadata: { source: "PRIME_BRAIN", workspace: "RELATIONSHIP" },
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message ?? "Aktivite kaydedilemedi.");
       setOutcome("");
-      setMessage("Temas kaydedildi. Prime hafızası güncellendi.");
+      setMessage("Temas kaydedildi. Prime hafızası güncellendi ve aktif talepler yeniden eşleştirildi.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Aktivite kaydedilemedi.");
