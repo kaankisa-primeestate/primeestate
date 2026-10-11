@@ -106,3 +106,51 @@ test("Prime listing matching applies preferred and must-not-have demand preferen
     "A must-not-have match must be visible in mismatches.",
   );
 });
+
+test("feature preferences do not match unrelated words by substring", () => {
+  const listing = {
+    id: "listing-sitesiz",
+    propertyId: "property-sitesiz",
+    purpose: "SATILIK" as const,
+    status: "AKTIF" as const,
+    price: 8_000_000,
+    currency: "TRY",
+    tags: ["sitesiz"],
+    highlights: [],
+    property: {
+      propertyType: "DAIRE" as const,
+      city: "İstanbul",
+      district: "Kadıköy",
+      neighborhood: "Bostancı",
+      sizeM2: 120,
+      rooms: "3+1",
+    },
+  };
+  const demand = {
+    propertyType: "DAIRE" as const,
+    type: "SATIN_ALMA" as const,
+    locations: ["Kadıköy"],
+    budgetMin: null,
+    budgetMax: 10_000_000,
+    currency: "TRY",
+    minSize: null,
+    maxSize: null,
+    rooms: "3+1",
+    preferences: {
+      mustHave: ["site"],
+      preferred: ["site"],
+      mustNotHave: ["site"],
+      primeLearning: { positive: ["site"], negative: [], history: [] },
+    },
+  };
+
+  const result = calculateMatch(demand, listing);
+
+  assert.equal(result.breakdown.preferences, 0, "sitesiz must not satisfy the preferred feature site");
+  assert.equal(result.breakdown.penalty, 0, "sitesiz must not trigger a forbidden site penalty");
+  assert.equal(result.breakdown.learning, 0, "sitesiz must not activate a learned positive site signal");
+  assert.ok(
+    !result.reasons.some((reason) => reason.title === "İstenmeyen özellik bulundu"),
+    "Substring-only matches must not create a forbidden-feature warning.",
+  );
+});

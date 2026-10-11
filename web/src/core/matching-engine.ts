@@ -86,6 +86,14 @@ const normalize = (value: string) =>
     .replace(/ı/g, "i")
     .trim();
 
+const featureText = (value: string) => normalize(value).replace(/[^a-z0-9]+/g, " ").trim();
+
+function matchesFeatureTerm(item: string, term: string) {
+  const normalizedItem = featureText(item);
+  const normalizedTerm = featureText(term);
+  return normalizedTerm.length > 0 && (` ${normalizedItem} `).includes(` ${normalizedTerm} `);
+}
+
 const preferencesObject = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 
@@ -134,8 +142,8 @@ function featureScore(demand: MatchingDemand, listing: MatchingListing) {
   ].map(normalize);
   if (!required.length) return roomScore(demand.rooms, listing.property.rooms);
 
-  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)].map(normalize);
-  const matched = required.filter((wanted) => available.some((item) => item.includes(wanted) || wanted.includes(item))).length;
+  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)];
+  const matched = required.filter((wanted) => available.some((item) => matchesFeatureTerm(item, wanted))).length;
   const room = roomScore(demand.rooms, listing.property.rooms);
   return Math.min(1, (matched / required.length) * 0.7 + room * 0.3);
 }
@@ -155,13 +163,13 @@ function learningAdjustment(demand: MatchingDemand, listing: MatchingListing) {
     listing.property.district,
     listing.property.neighborhood,
     listing.property.rooms ?? "",
-  ].map(normalize);
+  ];
 
   const positiveMatches = learning.positive.filter((term) =>
-    available.some((item) => item.includes(normalize(term)) || normalize(term).includes(item)),
+    available.some((item) => matchesFeatureTerm(item, term)),
   );
   const negativeMatches = learning.negative.filter((term) =>
-    available.some((item) => item.includes(normalize(term)) || normalize(term).includes(item)),
+    available.some((item) => matchesFeatureTerm(item, term)),
   );
 
   const adjustment = Math.min(8, positiveMatches.length * 4) - Math.min(12, negativeMatches.length * 6);
@@ -172,8 +180,8 @@ function preferenceScore(demand: MatchingDemand, listing: MatchingListing) {
   const prefs = preferencesObject(demand.preferences);
   const desired = asStrings(prefs.preferred).map(normalize);
   if (!desired.length) return 0.5;
-  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)].map(normalize);
-  const matched = desired.filter((wanted) => available.some((item) => item.includes(wanted) || wanted.includes(item))).length;
+  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)];
+  const matched = desired.filter((wanted) => available.some((item) => matchesFeatureTerm(item, wanted))).length;
   return matched / desired.length;
 }
 
@@ -189,8 +197,8 @@ export function calculateMatch(demand: MatchingDemand, listing: MatchingListing)
 
   const prefs = preferencesObject(demand.preferences);
   const forbidden = asStrings(prefs.mustNotHave).map(normalize);
-  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)].map(normalize);
-  const forbiddenMatches = forbidden.filter((wanted) => available.some((item) => item.includes(wanted) || wanted.includes(item)));
+  const available = [...asStrings(listing.tags), ...asStrings(listing.highlights)];
+  const forbiddenMatches = forbidden.filter((wanted) => available.some((item) => matchesFeatureTerm(item, wanted)));
   const penalty = Math.min(30, forbiddenMatches.length * 15);
 
   const breakdown = {
