@@ -160,15 +160,18 @@ Release Gate hedefi:
 ## 10. Canonical handoff — current product work
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
-- Active branch: `main`
-- Current main commit at this reconciliation: `b1f69275e9e5cfaa51f2bf77477380434d822766` (always verify live at session start).
+- Active branch: `main`; PR #160 documentation reconciliation merged.
+- Latest verified code commit in this session: `9773a5af42cd3d5e8f689d2e134e476565258297`; the project-state documentation was subsequently updated in commit `333a9c5ddea3ac334c1fe3ffb7d2e4c7000c820e`.
 - PR #154: matching UI API error handling.
 - PR #156: matching request race protection.
 - PR #157: relationship contact outcomes connected to Prime learning and rematching.
 - PR #159: contradictory positive/negative preference signals are reconciled; mixed feedback is neutral.
-- PR #159 post-merge Web Quality #1316 and Production Auth Smoke #366 both passed against main commit `b1f69275e9e5cfaa51f2bf77477380434d822766`.
+- PR #161: canonicalizes equivalent feature variants in Prime learning; merged into main.
+- PR #162: prevents substring-only property feature matches; merged into main.
+- PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed before merge.
+- Latest post-merge main CI/runtime smoke for `9773a5af42cd3d5e8f689d2e134e476565258297` has not yet been independently verified in this session.
 - Foundation release gate: closed.
-- Immediate goal: continue Phase 12 core workflow and ensure outcome feedback reliably changes subsequent matching.
+- Immediate goal: verify post-merge CI/runtime smoke, then inspect customer → demand → matching continuity end-to-end and address the next concrete user-visible gap.
 
 ### Standard handoff
 
@@ -182,4 +185,4 @@ Future sessions begin with:
 
 **Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
 
-_Last reconciled: 2026-10-11._
+_Last reconciled: 2026-10-12._
