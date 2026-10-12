@@ -295,12 +295,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Verify post-merge CI/runtime smoke for main commit 9773a5af42cd3d5e8f689d2e134e476565258297; then inspect customer → demand → matching continuity end-to-end for the next concrete user-visible gap.
-- ACTIVE_BRANCH: none confirmed; current work is on main after PRs #160, #161, and #162 were merged.
+- CURRENT_TASK: PR #163 fixes null/blank budget and area criteria being coerced to zero in matching; verify required CI checks before merge.
+- ACTIVE_BRANCH: fix/matching-null-range-values
 - BASE_MAIN_COMMIT: 9773a5af42cd3d5e8f689d2e134e476565258297
-- ACTIVE_PR: none confirmed; verify live open PRs at next session start.
-- LAST_GREEN_CHECKS: PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed on head 3a32e1aa; latest post-merge main checks for 9773a5af not yet independently verified.
+- ACTIVE_PR: #163 https://github.com/kaankisa-primeestate/primeestate/pull/163 (open; CI not yet visible through current status endpoints).
+- LAST_GREEN_CHECKS: PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed before merge. PR #163 checks not yet independently verified; GitHub status endpoint returned no statuses.
 - PRODUCTION_MIGRATION: PR #159 changes learning logic and tests only; no schema change or migration required
-- NEXT_STEP: Verify post-merge main CI/runtime smoke, then inspect customer → demand → matching workflow end-to-end and implement the next concrete user-visible gap.
-- BLOCKERS: Post-merge main CI/runtime smoke not yet independently verified in this session.
-- LAST_UPDATED_UTC: 2026-10-11
+- NEXT_STEP: Verify PR #163 CI and regression test; merge only when required checks pass, then verify production runtime.
+- BLOCKERS: PR #163 required CI status is not currently exposed by the available status endpoints; do not merge until confirmed.
+- LAST_UPDATED_UTC: 2026-10-12
