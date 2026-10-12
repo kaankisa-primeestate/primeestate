@@ -154,3 +154,42 @@ test("feature preferences do not match unrelated words by substring", () => {
     "Substring-only matches must not create a forbidden-feature warning.",
   );
 });
+
+
+test("unspecified budget and size ranges stay neutral instead of becoming zero", () => {
+  const result = calculateMatch(
+    {
+      propertyType: "DAIRE",
+      type: "SATIN_ALMA",
+      locations: ["Kadıköy"],
+      budgetMin: null,
+      budgetMax: null,
+      currency: "TRY",
+      minSize: null,
+      maxSize: null,
+      rooms: "3+1",
+      preferences: { mustHave: ["otopark"] },
+    },
+    {
+      id: "listing-unspecified-ranges",
+      propertyId: "property-unspecified-ranges",
+      purpose: "SATILIK",
+      status: "AKTIF",
+      price: 8_000_000,
+      currency: "TRY",
+      tags: ["otopark"],
+      highlights: [],
+      property: {
+        propertyType: "DAIRE",
+        city: "İstanbul",
+        district: "Kadıköy",
+        neighborhood: "Bostancı",
+        sizeM2: 120,
+        rooms: "3+1",
+      },
+    },
+  );
+
+  assert.equal(result.breakdown.budget, 10, "An unspecified budget range should receive the neutral 50% budget score.");
+  assert.equal(result.breakdown.size, 5, "An unspecified size range should receive the neutral 50% size score.");
+});

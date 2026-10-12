@@ -160,18 +160,15 @@ Release Gate hedefi:
 ## 10. Canonical handoff — current product work
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
-- Active branch: `main`; PR #160 documentation reconciliation merged.
-- Latest verified code commit in this session: `9773a5af42cd3d5e8f689d2e134e476565258297`; the project-state documentation was subsequently updated in commit `333a9c5ddea3ac334c1fe3ffb7d2e4c7000c820e`.
-- PR #154: matching UI API error handling.
-- PR #156: matching request race protection.
-- PR #157: relationship contact outcomes connected to Prime learning and rematching.
-- PR #159: contradictory positive/negative preference signals are reconciled; mixed feedback is neutral.
+- Active branch: `fix/matching-null-range-values`; PR [#163](https://github.com/kaankisa-primeestate/primeestate/pull/163) is open against `main`.
+- Main code commit inspected: `9773a5af42cd3d5e8f689d2e134e476565258297`.
 - PR #161: canonicalizes equivalent feature variants in Prime learning; merged into main.
 - PR #162: prevents substring-only property feature matches; merged into main.
+- PR #163: treats null, undefined, and blank numeric criteria as unspecified instead of coercing them to zero; regression test added for unspecified budget and size ranges.
 - PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed before merge.
-- Latest post-merge main CI/runtime smoke for `9773a5af42cd3d5e8f689d2e134e476565258297` has not yet been independently verified in this session.
+- PR #163 required CI status is not yet independently verified; current status endpoints returned no status checks or workflow runs. Do not merge until required checks are confirmed green.
 - Foundation release gate: closed.
-- Immediate goal: verify post-merge CI/runtime smoke, then inspect customer → demand → matching continuity end-to-end and address the next concrete user-visible gap.
+- Immediate goal: verify PR #163 checks and test result; merge only when required checks pass, then verify production runtime.
 
 ### Standard handoff
 
