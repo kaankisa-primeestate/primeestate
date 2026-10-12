@@ -160,15 +160,17 @@ Release Gate hedefi:
 ## 10. Canonical handoff — current product work
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
-- Active branch: `fix/matching-null-range-values`; PR [#163](https://github.com/kaankisa-primeestate/primeestate/pull/163) is open against `main`.
-- Main code commit inspected: `9773a5af42cd3d5e8f689d2e134e476565258297`.
-- PR #161: canonicalizes equivalent feature variants in Prime learning; merged into main.
-- PR #162: prevents substring-only property feature matches; merged into main.
-- PR #163: treats null, undefined, and blank numeric criteria as unspecified instead of coercing them to zero; regression test added for unspecified budget and size ranges.
-- PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed before merge.
-- PR #163 required CI status is not yet independently verified; current status endpoints returned no status checks or workflow runs. Do not merge until required checks are confirmed green.
+- Active branch: `main`; PR #163 is merged.
+- Current main commit: `fa655986444378ba875ac5c8861bdaea51f89d98`.
+- PR #161: canonicalizes equivalent feature variants in Prime learning; merged.
+- PR #162: prevents substring-only property feature matches; merged.
+- PR #163: keeps null, undefined, and blank budget/area criteria unspecified; regression test added and merged.
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109452), including migration parity, tests, lint, typecheck, production build, and the Phase 7 real-HTTP customer → demand → listing → matching → showing → offer chain.
+- Main Foundation State Validation [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109533).
+- Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109479): Render commit matched `fa655986444378ba875ac5c8861bdaea51f89d98`; login/session, database health, customers, listings, sales, payments, dashboard and finance passed.
+- Production smoke does not directly call `POST /api/matching`; that endpoint is covered by the CI real-HTTP E2E chain, not by a separate production matching smoke.
 - Foundation release gate: closed.
-- Immediate goal: verify PR #163 checks and test result; merge only when required checks pass, then verify production runtime.
+- Immediate goal: inspect the next concrete user-visible gap in customer → demand → matching and preserve all customer privacy / office portfolio boundaries.
 
 ### Standard handoff
 
