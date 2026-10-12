@@ -71,17 +71,18 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Branch state
 
-PR #157 and PR #159 are merged. PR #160 is the current documentation-only reconciliation PR; verify live PR and CI state at each session start.
+- PR #160 — merged: documentation-only reconciliation.
+- PR #161 — merged into main: canonicalize equivalent learned property features so positive/negative feedback stays consistent.
+- PR #162 — merged into main: prevent substring-only false positives in property-feature matching.
+- No active feature branch is recorded in this handoff; verify live PRs and branches at each session start.
 
 ### Latest main verification
 
-- Main commit after PR #159: `b1f69275e9e5cfaa51f2bf77477380434d822766`. (Latest verified runtime commit; this documentation PR may advance main without changing runtime code.)
-- PR #154 — merged; matching UI API error handling hardened: https://github.com/kaankisa-primeestate/primeestate/pull/154
-- PR #156 — merged; stale matching requests cannot overwrite newer demand results: https://github.com/kaankisa-primeestate/primeestate/pull/156
-- PR #157 — merged; Relationship Workspace contact outcomes now call `/api/prime/action`, connecting outcome capture to Prime learning and active-demand rematching: https://github.com/kaankisa-primeestate/primeestate/pull/157
-- PR #157 pre-merge Web Quality #1311 and Critical Tests #192 — **success**.
-- PR #159 post-merge Web Quality #1316 and Production Auth HTTP Smoke Test #366 both passed against `b1f69275e9e5cfaa51f2bf77477380434d822766`.
-- PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 all passed on head `3a32e1aa8ed035a38fafcf89c57f122f2dcb7800`. This PR is documentation-only; merge only after rechecking its latest head and mergeability.
+- Live main runtime commit: `9773a5af42cd3d5e8f689d2e134e476565258297` (confirmed by comparing main with the feature commits).
+- PR #160's Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed on head `3a32e1aa8ed035a38fafcf89c57f122f2dcb7800`; the PR has since been merged.
+- PR #161 — merged; equivalent feature variants such as “otoparklı” and “otopark” are canonicalized in Prime learning.
+- PR #162 — merged; property feature matching uses whole-term/phrase boundaries, preventing “site” from matching “sitesiz”.
+- The latest post-merge main CI/runtime smoke for `9773a5af42cd3d5e8f689d2e134e476565258297` has not yet been independently verified in this session. Do not claim it is green until the actual run is checked.
 
 ### Immediate next steps
 
@@ -294,12 +295,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Merge PR #160 after confirming latest checks and review findings are addressed; then inspect customer → demand → matching continuity for the next concrete user-visible gap
-- ACTIVE_BRANCH: docs/reconcile-prime159 (documentation-only PR #160; main runtime commit remains b1f69275e9e5cfaa51f2bf77477380434d822766)
-- BASE_MAIN_COMMIT: b1f69275e9e5cfaa51f2bf77477380434d822766
-- ACTIVE_PR: #160 (documentation-only reconciliation)
-- LAST_GREEN_CHECKS: main Web Quality #1316 ✅ and Production Auth Smoke #366 ✅ on b1f69275; PR #160 Web Quality #1317 ✅, Critical Tests #195 ✅, Foundation State Validation #56 ✅ on head 3a32e1aa.
+- CURRENT_TASK: Verify post-merge CI/runtime smoke for main commit 9773a5af42cd3d5e8f689d2e134e476565258297; then inspect customer → demand → matching continuity end-to-end for the next concrete user-visible gap.
+- ACTIVE_BRANCH: none confirmed; current work is on main after PRs #160, #161, and #162 were merged.
+- BASE_MAIN_COMMIT: 9773a5af42cd3d5e8f689d2e134e476565258297
+- ACTIVE_PR: none confirmed; verify live open PRs at next session start.
+- LAST_GREEN_CHECKS: PR #160 Web Quality #1317, Critical Tests #195, and Foundation State Validation #56 passed on head 3a32e1aa; latest post-merge main checks for 9773a5af not yet independently verified.
 - PRODUCTION_MIGRATION: PR #159 changes learning logic and tests only; no schema change or migration required
-- NEXT_STEP: Resolve documentation review note about stale verification history, rerun checks, merge PR #160, then inspect customer → demand → matching workflow end-to-end and implement the next concrete gap
-- BLOCKERS: PR #160 review identified stale historical verification lines; update them before merge
+- NEXT_STEP: Verify post-merge main CI/runtime smoke, then inspect customer → demand → matching workflow end-to-end and implement the next concrete user-visible gap.
+- BLOCKERS: Post-merge main CI/runtime smoke not yet independently verified in this session.
 - LAST_UPDATED_UTC: 2026-10-11
