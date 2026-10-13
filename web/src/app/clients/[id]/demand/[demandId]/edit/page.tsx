@@ -58,7 +58,7 @@ export default function EditDemandPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Talep güncellenemedi.");
-      router.push("/clients"); router.refresh();
+      router.push("/clients/" + encodeURIComponent(id)); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Talep güncellenemedi."); setSaving(false); }
   }
 
