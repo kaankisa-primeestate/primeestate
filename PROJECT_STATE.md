@@ -67,29 +67,29 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Current main commit
 
-`fa655986444378ba875ac5c8861bdaea51f89d98` — PR #163 squash merge.
+`7a9e2d0b674d9cfc53c23af57de839342df55b11` — PR #166 squash merge.
 
 ### Branch state
 
 - PR #161 — merged: canonicalizes equivalent learned property features.
 - PR #162 — merged: prevents substring-only false positives in property-feature matching.
 - PR #163 — merged: null, undefined, and blank budget/area criteria remain unspecified rather than becoming zero.
+- PR #165 — merged: successful demand edits return to the edited customer detail page.
+- PR #166 — merged: adds a visible **Düzenle** action beside **Eşleştir** for active demands on customer detail.
 - Verify live open PRs and branches at each session start.
 
-### Latest main verification — 2026-10-12
+### Latest main verification — 2026-10-13
 
-- `main` points to `fa655986444378ba875ac5c8861bdaea51f89d98`.
-- PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109452): tests, migration parity, lint, typecheck, production build.
-- Foundation State Validation — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109533).
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109479). Render reported the expected commit `fa655986444378ba875ac5c8861bdaea51f89d98`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
-- The Web Quality run passed the Phase 7 real-HTTP customer → demand → listing → matching → showing → offer business-chain test (22 passed, 0 failed in that suite).
-- PR #163's Web Quality, Critical Tests, and Foundation State Validation checks all passed before merge.
+- `main` points to `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #166 squash merge).
+- Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38401035461).
+- PR #166 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38398546250); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38398546399).
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38401035459). Render reported expected live commit `7a9e2d0b674d9cfc53c23af57de839342df55b11`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
+- PR #166 adds the visible demand edit action on customer detail while preserving the existing matching action; no schema or migration change was made.
 - Production smoke does not directly call `POST /api/matching`; matching is covered by CI's real-HTTP E2E chain and matching regression tests. Do not describe the matching endpoint itself as separately production-smoke-tested.
-- No schema change or production migration was introduced by PR #163.
 
 ### Immediate next steps
 
-1. Continue Phase 12 from the customer → demand → matching UI.
+1. Continue Phase 12 from the customer → demand → matching UI; demand editing is now visible from customer detail.
 2. Keep consultant customer privacy and office-wide portfolio visibility enforced server-side.
 3. Identify the next concrete user-visible gap before changing code; connect changes to real APIs and workflow tests.
 4. After each meaningful change, verify CI and post-merge runtime evidence before proceeding.
@@ -299,12 +299,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Continue inspecting the customer → demand → matching UI after PR #163; CI E2E and production auth/runtime smoke are green.
+- CURRENT_TASK: Continue inspecting the customer → demand → matching UI after PR #166; main CI and production auth/runtime smoke are green.
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: fa655986444378ba875ac5c8861bdaea51f89d98
+- BASE_MAIN_COMMIT: 7a9e2d0b674d9cfc53c23af57de839342df55b11
 - ACTIVE_PR: none confirmed; verify live open PRs at next session start.
-- LAST_GREEN_CHECKS: Main Web Quality run 38238109452, Foundation State Validation 38238109533, Production Auth HTTP Smoke 38238109479; PR #163 Web Quality, Critical Tests, and Foundation State Validation also passed.
+- LAST_GREEN_CHECKS: Main Web Quality run 38401035461; Production Auth HTTP Smoke run 38401035459; PR #166 Web Quality run 38398546250 and Critical Tests run 38398546399 all passed.
 - PRODUCTION_MIGRATION: none required; PR #163 changed matching numeric normalization and tests only.
 - NEXT_STEP: Inspect the next concrete user-visible gap in customer → demand → matching; matching is covered by CI real-HTTP E2E but is not separately invoked by production smoke.
 - BLOCKERS: No known CI/runtime blocker. Do not claim production matching endpoint was directly smoke-tested.
-- LAST_UPDATED_UTC: 2026-10-12
+- LAST_UPDATED_UTC: 2026-10-13
