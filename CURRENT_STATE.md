@@ -53,7 +53,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified runtime main: `b1f69275e9e5cfaa51f2bf77477380434d822766` (PR #159 merge; post-merge Web Quality #1316 and Production Auth HTTP Smoke #366 passed. Recheck latest main and CI at each session start).
+Current verified runtime main: `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #166 merge; post-merge Web Quality run 38401035461 and Production Auth HTTP Smoke run 38401035459 passed. Recheck latest main and CI at each session start).
 - PR #154 merged: matching UI safely handles malformed/empty API responses.
 - PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
 - PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
@@ -64,7 +64,7 @@ Current verified runtime main: `b1f69275e9e5cfaa51f2bf77477380434d822766` (PR #1
 
 ### Main / Release-gate baseline
 
-Current main tip is the latest merge commit. The verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
+Current main tip is `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #166). The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
 PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
 
@@ -119,11 +119,11 @@ Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıc
 
 ## 7. CI
 
-Main commit `18dee510bf310aa44a5283f4bbf84bbf19bec1de` için:
-- PrimeEstate Web Quality #1306 ✅ (tests, lint, typecheck, production build)
-- Production Auth Smoke #363 ✅ (Render deployment commit check, login/session, customer authorization)
-- PR #154 checks: Web Quality #1305 ✅; Critical Tests #189 ✅
-- PR #154 changed no schema; no production migration was required.
+Latest main commit `7a9e2d0b674d9cfc53c23af57de839342df55b11` için:
+- PrimeEstate Web Quality run 38401035461 ✅
+- Production Auth HTTP Smoke run 38401035459 ✅ (Render expected commit, login/session, database health, customers, listings, sales, payments, dashboard and finance)
+- PR #166 Web Quality run 38398546250 ✅; Critical Tests run 38398546399 ✅
+- PR #166 changed no schema; no production migration was required.
 
 PR #82'nin public repository sonrasında yeniden çalıştırılan CI'sinde:
 - Web Quality ✅
@@ -160,8 +160,8 @@ Release Gate hedefi:
 ## 10. Canonical handoff — current product work
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
-- Active branch: `main`; PR #163 is merged.
-- Current main commit: `fa655986444378ba875ac5c8861bdaea51f89d98`.
+- Active branch: `main`; PR #166 is merged.
+- Current main commit: `7a9e2d0b674d9cfc53c23af57de839342df55b11`.
 - PR #161: canonicalizes equivalent feature variants in Prime learning; merged.
 - PR #162: prevents substring-only property feature matches; merged.
 - PR #163: keeps null, undefined, and blank budget/area criteria unspecified; regression test added and merged.
@@ -170,6 +170,8 @@ Release Gate hedefi:
 - Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38238109479): Render commit matched `fa655986444378ba875ac5c8861bdaea51f89d98`; login/session, database health, customers, listings, sales, payments, dashboard and finance passed.
 - Production smoke does not directly call `POST /api/matching`; that endpoint is covered by the CI real-HTTP E2E chain, not by a separate production matching smoke.
 - Foundation release gate: closed.
+- PR #165 merged: demand edit success returns to the edited customer detail.
+- PR #166 merged: active demands on customer detail now have a visible **Düzenle** action alongside **Eşleştir**; existing authorization and API remain unchanged.
 - Immediate goal: inspect the next concrete user-visible gap in customer → demand → matching and preserve all customer privacy / office portfolio boundaries.
 
 ### Standard handoff
@@ -184,4 +186,4 @@ Future sessions begin with:
 
 **Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
 
-_Last reconciled: 2026-10-12._
+_Last reconciled: 2026-10-13._
