@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 type Customer = {
   id: string; name: string; phone: string | null; email: string | null;
@@ -54,11 +55,14 @@ export default function Customer360Page(){
         fetch("/api/offers"+q,{cache:"no-store"}),
         fetch("/api/sales"+q,{cache:"no-store"}),
       ]);
-      const [customerData,offerData,saleData]=await Promise.all([customerRes.json(),offerRes.json(),saleRes.json()]);
-      if(!customerRes.ok) throw new Error(customerData.message||"Müşteri yüklenemedi.");
-      if(!offerRes.ok) throw new Error(offerData.message||"Teklifler yüklenemedi.");
-      if(!saleRes.ok) throw new Error(saleData.message||"Satışlar yüklenemedi.");
-      setCustomer(customerData.customer); setOffers(offerData.offers??[]); setSales(saleData.sales??[]);
+      const [customerData,offerData,saleData]=await Promise.all([
+        readApiPayload(customerRes,"Müşteri yüklenemedi."),
+        readApiPayload(offerRes,"Teklifler yüklenemedi."),
+        readApiPayload(saleRes,"Satışlar yüklenemedi."),
+      ]);
+      setCustomer(customerData.customer as Customer);
+      setOffers(Array.isArray(offerData.offers)?offerData.offers as Offer[]:[]);
+      setSales(Array.isArray(saleData.sales)?saleData.sales as Sale[]:[]);
     }catch(e){setError(e instanceof Error?e.message:"Müşteri detayları yüklenemedi.");}
     finally{setLoading(false);}
   }
