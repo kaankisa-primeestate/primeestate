@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 const propertyTypes = [["DAIRE","Daire"],["VILLA","Villa"],["ARSA","Arsa"],["IS_YERI","İş Yeri"],["BINA","Bina"],["DEVRE_MULK","Devre Mülk"]];
 
@@ -25,9 +26,9 @@ export default function EditDemandPage() {
   useEffect(() => {
     fetch("/api/customers/" + encodeURIComponent(id), { cache: "no-store" })
       .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Müşteri alınamadı.");
-        const found = (data.customer?.demands ?? []).find((item: Demand) => item.id === demandId);
+        const data = await readApiPayload(response, "Müşteri alınamadı.");
+        const customer = data.customer as { demands?: Demand[] } | undefined;
+        const found = (customer?.demands ?? []).find((item) => item.id === demandId);
         if (!found) throw new Error("Talep bulunamadı.");
         setDemand(found);
       })
@@ -56,8 +57,7 @@ export default function EditDemandPage() {
           notes: form.get("notes"),
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Talep güncellenemedi.");
+      await readApiPayload(response, "Talep güncellenemedi.");
       router.push("/clients/" + encodeURIComponent(id)); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Talep güncellenemedi."); setSaving(false); }
   }
