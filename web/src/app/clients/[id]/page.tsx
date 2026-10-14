@@ -76,10 +76,11 @@ export default function Customer360Page(){
     setShowingSaving(id); setShowingError(""); setShowingSaved(null);
     try{
       const response=await fetch("/api/showings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,status:draft.status,note:draft.note})});
-      const payload=await response.json();
-      if(!response.ok)throw new Error(payload.message||"Gösterim sonucu kaydedilemedi.");
-      setCustomer(current=>current?{...current,showings:current.showings.map(item=>item.id===id?{...item,status:payload.showing.status,note:payload.showing.note}:item)}:current);
-      setShowingDrafts(current=>({...current,[id]:{status:payload.showing.status,note:payload.showing.note??""}}));
+      const payload=await readApiPayload(response,"Gösterim sonucu kaydedilemedi.");
+      const showing=payload.showing as Customer["showings"][number] | undefined;
+      if(!showing || typeof showing!=="object")throw new Error("Sunucudan gösterim sonucu alınamadı.");
+      setCustomer(current=>current?{...current,showings:current.showings.map(item=>item.id===id?{...item,status:showing.status,note:showing.note}:item)}:current);
+      setShowingDrafts(current=>({...current,[id]:{status:showing.status,note:showing.note??""}}));
       setShowingSaved(id);
     }catch(e){setShowingError(e instanceof Error?e.message:"Gösterim sonucu kaydedilemedi.");}
     finally{setShowingSaving(null);}
