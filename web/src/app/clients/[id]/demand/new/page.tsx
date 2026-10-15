@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 const propertyTypes = [["DAIRE","Daire"],["VILLA","Villa"],["ARSA","Arsa"],["IS_YERI","İş Yeri"],["BINA","Bina"],["DEVRE_MULK","Devre Mülk"]];
 
@@ -33,14 +34,13 @@ export default function NewDemandPage() {
           notes: form.get("notes"),
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Talep oluşturulamadı.");
+      await readApiPayload(response, "Talep oluşturulamadı.");
       router.push("/clients/" + encodeURIComponent(id)); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Talep oluşturulamadı."); setSaving(false); }
   }
 
   return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar /><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-4xl">
-    <button type="button" onClick={() => router.back()} className="mb-5 text-sm font-semibold text-slate-600">← Müşteri detayına dön</button>
+    <button type="button" onClick={() => { router.push("/clients/" + encodeURIComponent(id)); router.refresh(); }} className="mb-5 text-sm font-semibold text-slate-600">← Müşteri detayına dön</button>
     <header className="mb-6"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">CRM · Talep</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Yeni Talep</h1><p className="mt-2 text-sm text-slate-500">Müşterinin aradığı gayrimenkul kriterlerini kaydet.</p></header>
     {error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
     <form onSubmit={submit} className="space-y-5"><section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="space-y-4">
