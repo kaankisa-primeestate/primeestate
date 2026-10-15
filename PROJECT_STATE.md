@@ -67,7 +67,7 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Current main commit
 
-`f2b9473f9c86bde42c89f1545554891456c4dc59` — PR #169 squash merge.
+`36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` — PR #171 squash merge.
 
 ### Branch state
 
@@ -78,20 +78,21 @@ Foundation hardening is closed for the current release gate. Product development
 - PR #166 — merged: adds a visible **Düzenle** action beside **Eşleştir** for active demands on customer detail.
 - PR #168 — merged: demand-edit return/cancel navigation targets the correct customer detail route.
 - PR #169 — merged: safe API response parsing in customer detail, demand edit, and showing-result save flow; no schema/migration/auth-scope change.
+- PR #171 — merged: customer detail returns active demands only; API integration regression test confirms inactive demands do not appear in the “Aktif talepler” workflow. No schema/migration/auth-scope change.
 - Verify live open PRs and branches at each session start.
 
 ### Latest main verification — 2026-10-15
 
-- `main` points to `f2b9473f9c86bde42c89f1545554891456c4dc59` (PR #169 squash merge).
-- Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612161).
-- PR #169 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38534246129); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38534245991).
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612175). Render reported expected live commit `f2b9473f9c86bde42c89f1545554891456c4dc59`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
-- PR #168 fixed demand-edit return/cancel navigation. PR #169 hardened API response parsing for customer details, offers/sales, showing-result save and demand-edit load/save. No schema or migration change was made.
+- `main` points to `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` (PR #171 squash merge).
+- Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333686).
+- PR #171 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915536); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915365).
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333696). Render reported expected live commit `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
+- PR #168 fixed demand-edit return/cancel navigation. PR #169 hardened API response parsing. PR #171 aligned customer detail's demand list with active-demand matching semantics and added a real-HTTP regression test. No schema or migration change was made.
 - Production smoke does not directly call `POST /api/matching`; matching is covered by CI's real-HTTP E2E chain and matching regression tests. Do not describe the matching endpoint itself as separately production-smoke-tested.
 
 ### Immediate next steps
 
-1. Inspect the current customer → demand → matching workflow and identify the next concrete user-visible gap before changing code.
+1. Inspect the next concrete user-visible gap in the customer → demand → matching workflow.
 2. Keep consultant customer privacy and office-wide portfolio visibility enforced server-side.
 3. Connect any fix to real APIs and workflow tests; no static demo data.
 4. After each meaningful change, verify CI and post-merge runtime evidence before proceeding.
@@ -301,12 +302,12 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Inspect the next concrete user-visible gap in customer → demand → matching after PR #169; main CI and production auth/runtime smoke are green.
+- CURRENT_TASK: Inspect the next concrete user-visible gap in customer → demand → matching after PR #171; main CI and production auth/runtime smoke are green.
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: f2b9473f9c86bde42c89f1545554891456c4dc59
-- ACTIVE_PR: none; verified no open PRs on 2026-10-15.
-- LAST_GREEN_CHECKS: Main Web Quality run 38535612161; Production Auth HTTP Smoke run 38535612175; PR #169 Web Quality run 38534246129 and Critical Tests run 38534245991 all passed.
-- PRODUCTION_MIGRATION: none required; PR #168 and #169 changed navigation/API response handling only.
+- BASE_MAIN_COMMIT: 36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f
+- ACTIVE_PR: none; verified no open PRs after PR #171 merge.
+- LAST_GREEN_CHECKS: Main Web Quality run 38726333686; Production Auth HTTP Smoke run 38726333696; PR #171 Web Quality run 38725915536 and Critical Tests run 38725915365 all passed.
+- PRODUCTION_MIGRATION: none required; PR #171 changed the customer-detail query and tests only.
 - NEXT_STEP: Inspect the next concrete user-visible gap in customer → demand → matching; matching is covered by CI real-HTTP E2E but is not separately invoked by production smoke.
 - BLOCKERS: No known CI/runtime blocker. Do not claim production matching endpoint was directly smoke-tested.
 - LAST_UPDATED_UTC: 2026-10-15
