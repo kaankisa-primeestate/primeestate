@@ -302,12 +302,22 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Inspect the next concrete user-visible gap in customer → demand → matching after PR #171; main CI and production auth/runtime smoke are green.
+- CURRENT_TASK: Inspect the next concrete user-visible gap in customer → demand → matching after PR #174; main CI and production auth/runtime smoke are green.
 - ACTIVE_BRANCH: none
-- BASE_MAIN_COMMIT: 36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f
-- ACTIVE_PR: none; verified no open PRs after PR #171 merge.
-- LAST_GREEN_CHECKS: Main Web Quality run 38726333686; Production Auth HTTP Smoke run 38726333696; PR #171 Web Quality run 38725915536 and Critical Tests run 38725915365 all passed.
-- PRODUCTION_MIGRATION: none required; PR #171 changed the customer-detail query and tests only.
+- BASE_MAIN_COMMIT: c88a0665a99d51221518f302e4cea7e279e42528
+- ACTIVE_PR: none; PR #174 merged.
+- LAST_GREEN_CHECKS: PR #174 Web Quality run 38740404917 and Critical Tests run 38740405598 passed; main Web Quality run 38742436619 and Production Auth HTTP Smoke run 38742436560 passed on `c88a0665a99d51221518f302e4cea7e279e42528`.
+- PRODUCTION_MIGRATION: none required; PR #174 changed client-side navigation and API error handling only.
 - NEXT_STEP: Inspect the next concrete user-visible gap in customer → demand → matching; matching is covered by CI real-HTTP E2E but is not separately invoked by production smoke.
 - BLOCKERS: No known CI/runtime blocker. Do not claim production matching endpoint was directly smoke-tested.
 - LAST_UPDATED_UTC: 2026-10-15
+
+## 16. Latest verified product change — PR #174
+
+- PR #174 merged: `https://github.com/kaankisa-primeestate/primeestate/pull/174`.
+- New-demand form “Müşteri detayına dön” and “Vazgeç” navigate directly to the owning customer detail instead of relying on browser history.
+- New-demand creation uses the shared `readApiPayload` helper for safe Turkish errors on empty/malformed API responses.
+- No database/schema/migration or authorization/data-scope changes.
+- Main commit: `c88a0665a99d51221518f302e4cea7e279e42528`.
+- PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917); Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598).
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560).
