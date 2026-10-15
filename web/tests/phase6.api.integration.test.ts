@@ -283,6 +283,45 @@ test("Phase 6 API: protected customer route returns 401 without a session", asyn
   assert.equal(response.status, 401);
 });
 
+test("Phase 12 API: customer detail returns only active demands", async () => {
+  const fixture = await createFixture();
+  const cookie = await login(fixture.agent1);
+
+  const activeDemand = await prisma.demand.create({
+    data: {
+      customerId: fixture.customer1Id,
+      title: "Active customer demand",
+      type: "SATIN_ALMA",
+      propertyType: "DAIRE",
+      locations: ["Kadıköy"],
+      active: true,
+    },
+    select: { id: true },
+  });
+  await prisma.demand.create({
+    data: {
+      customerId: fixture.customer1Id,
+      title: "Inactive customer demand",
+      type: "SATIN_ALMA",
+      propertyType: "DAIRE",
+      locations: ["Bostancı"],
+      active: false,
+    },
+    select: { id: true },
+  });
+
+  const response = await api(`/api/customers/${fixture.customer1Id}`, { cookie });
+  assert.equal(response.status, 200);
+
+  const payload = (await response.json()) as {
+    customer: { demands: Array<{ id: string }> };
+  };
+  assert.deepEqual(
+    payload.customer.demands.map((demand) => demand.id),
+    [activeDemand.id],
+  );
+});
+
 test("Phase 6 API: AGENT customer route is owner-isolated", async () => {
   const fixture = await createFixture();
   const cookie = await login(fixture.agent1);
