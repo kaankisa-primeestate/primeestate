@@ -53,7 +53,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified runtime main: `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174 merge; main Web Quality run [38742436619](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619) and Production Auth HTTP Smoke run [38742436560](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560) passed. Render deployed this exact commit; login/session, database health, customers, listings, sales, payments, dashboard and finance HTTP checks passed. Recheck latest main and CI at each session start).
+Current verified application runtime commit: `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174 merge; GitHub main subsequently advanced to `dd574e2eac527e75f707291a76b8de4141dab2af` via documentation-only PR #175; main Web Quality run [38742436619](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619) and Production Auth HTTP Smoke run [38742436560](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560) passed. Render deployed this exact commit; login/session, database health, customers, listings, sales, payments, dashboard and finance HTTP checks passed. Recheck latest main and CI at each session start).
 - PR #154 merged: matching UI safely handles malformed/empty API responses.
 - PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
 - PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
@@ -64,7 +64,7 @@ Current verified runtime main: `c88a0665a99d51221518f302e4cea7e279e42528` (PR #1
 
 ### Main / Release-gate baseline
 
-Historical main tip at the PR #171 checkpoint was `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`. Current verified main tip is `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174). The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
+Historical main tip at the PR #171 checkpoint was `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`. Current verified GitHub main tip is `dd574e2eac527e75f707291a76b8de4141dab2af` (PR #175, documentation-only); last verified application runtime commit remains `c88a0665a99d51221518f302e4cea7e279e42528`. The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
 PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
 
