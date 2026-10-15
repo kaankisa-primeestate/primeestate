@@ -63,11 +63,11 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Active branch
 
-`feat/matching-empty-state-cta` — PR #176 open for a focused matching empty-state UI improvement.
+`fix/safe-api-parsing-workspaces` — current branch for PR #177, hardening malformed/empty API response handling in Calls, Relationships, and Calendar.
 
 ### Current main commit
 
-`dd574e2eac527e75f707291a76b8de4141dab2af` — PR #175 documentation-only merge; application runtime remains at the previously verified PR #174 commit until deployment evidence says otherwise.
+`ce7774d0ef367f4be66b8ef49f4a6598a45bcedc` — PR #176 merged. Main Web Quality and Production Auth HTTP Smoke are running; last completed production verification remains tied to `c88a0665a99d51221518f302e4cea7e279e42528` until the new smoke passes.
 
 ### Branch state
 
@@ -80,12 +80,15 @@ Foundation hardening is closed for the current release gate. Product development
 - PR #169 — merged: safe API response parsing in customer detail, demand edit, and showing-result save flow; no schema/migration/auth-scope change.
 - PR #171 — merged: customer detail returns active demands only; API integration regression test confirms inactive demands do not appear in the “Aktif talepler” workflow. No schema/migration/auth-scope change.
 - PR #175 — merged: reconciles project handoff documents; no runtime/schema/migration/auth-scope change.
-- PR #176 — open: adds direct next-step actions when matching returns no results; UI-only, checks pending.
+- PR #176 — merged: adds direct next-step actions when matching returns no results; UI-only, no schema/migration/auth-scope change.
+- PR #177 — active work: uses shared safe API response parsing in Calls, Relationships, and Calendar so empty/malformed responses surface controlled errors instead of JSON parsing exceptions; no API/schema/migration/auth-scope change.
 - Verify live open PRs and branches at each session start.
 
 ### Latest main verification — 2026-10-15
 
-- GitHub `main` points to `dd574e2eac527e75f707291a76b8de4141dab2af` (PR #175 documentation-only merge). The last verified application runtime commit is `c88a0665a99d51221518f302e4cea7e279e42528`; confirm Render after any runtime change.
+- GitHub `main` points to `ce7774d0ef367f4be66b8ef49f4a6598a45bcedc` (PR #176 merge).
+- Main Web Quality [running](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38781353333); Production Auth HTTP Smoke [running](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38781353338); Foundation State Validation [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38781353199).
+- Last completed production verification remains `c88a0665a99d51221518f302e4cea7e279e42528`; do not treat the latest runtime deployment as verified until the new smoke completes.
 - Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619).
 - Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560). Render reported the expected live commit `c88a0665a99d51221518f302e4cea7e279e42528`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
 - PR #174 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598).
@@ -94,7 +97,7 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Immediate next steps
 
-1. Inspect the next concrete user-visible gap in the customer → demand → matching workflow.
+1. Complete PR #177 safe response parsing for Calls, Relationships, and Calendar; verify CI and production smoke.
 2. Keep consultant customer privacy and office-wide portfolio visibility enforced server-side.
 3. Connect any fix to real APIs and workflow tests; no static demo data.
 4. After each meaningful change, verify CI and post-merge runtime evidence before proceeding.
