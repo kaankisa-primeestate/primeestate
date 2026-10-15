@@ -53,7 +53,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified runtime main: `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` (PR #171 merge; main Web Quality run [38726333686](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333686) and Production Auth HTTP Smoke run [38726333696](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333696) passed. Render deployed this exact commit; login/session, database health, customers, listings, sales, payments, dashboard and finance HTTP checks passed. Recheck latest main and CI at each session start).
+Current verified runtime main: `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174 merge; main Web Quality run [38742436619](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619) and Production Auth HTTP Smoke run [38742436560](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560) passed. Render deployed this exact commit; login/session, database health, customers, listings, sales, payments, dashboard and finance HTTP checks passed. Recheck latest main and CI at each session start).
 - PR #154 merged: matching UI safely handles malformed/empty API responses.
 - PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
 - PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
@@ -119,7 +119,7 @@ Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıc
 
 ## 7. CI
 
-Latest main commit `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` için:
+Latest verified main commit `c88a0665a99d51221518f302e4cea7e279e42528` için:
 - PrimeEstate Web Quality run [38726333686](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333686) ✅
 - Production Auth HTTP Smoke run [38726333696](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333696) ✅; Render commit `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` ile eşleşti; login/session, database health, customers, listings, sales, payments, dashboard and finance kontrolleri başarılı.
 - PR #171 Web Quality run [38725915536](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915536) ✅; Critical Tests run [38725915365](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915365) ✅
@@ -161,7 +161,7 @@ Release Gate hedefi:
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
 - Active branch: `main`; PR #166, #168, #169 and #171 are merged.
-- Current main commit: `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`.
+- Current main commit: `c88a0665a99d51221518f302e4cea7e279e42528`.
 - PR #161: canonicalizes equivalent feature variants in Prime learning; merged.
 - PR #162: prevents substring-only property feature matches; merged.
 - PR #163: keeps null, undefined, and blank budget/area criteria unspecified; regression test added and merged.
