@@ -67,7 +67,7 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Current main commit
 
-`36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` — PR #171 squash merge.
+`c88a0665a99d51221518f302e4cea7e279e42528` — PR #174 merge.
 
 ### Branch state
 
@@ -83,12 +83,12 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Latest main verification — 2026-10-15
 
-- `main` points to `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f` (PR #171 squash merge).
-- Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333686).
-- PR #171 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915536); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38725915365).
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38726333696). Render reported expected live commit `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
-- PR #168 fixed demand-edit return/cancel navigation. PR #169 hardened API response parsing. PR #171 aligned customer detail's demand list with active-demand matching semantics and added a real-HTTP regression test. No schema or migration change was made.
-- Production smoke does not directly call `POST /api/matching`; matching is covered by CI's real-HTTP E2E chain and matching regression tests. Do not describe the matching endpoint itself as separately production-smoke-tested.
+- `main` points to `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174 merge).
+- Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619).
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560). Render reported the expected live commit `c88a0665a99d51221518f302e4cea7e279e42528`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
+- PR #174 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598).
+- PR #173 added recovery actions for empty matching states; PR #174 stabilized new-demand navigation and safe API response parsing. No schema/migration or authorization changes were made.
+- Production smoke does not directly call `POST /api/matching`; matching is covered by CI's real-HTTP E2E chain.
 
 ### Immediate next steps
 
