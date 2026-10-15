@@ -303,10 +303,10 @@ Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
 - CURRENT_TASK: Inspect the next concrete user-visible gap in customer → demand → matching after PR #174; main CI and production auth/runtime smoke are green.
-- ACTIVE_BRANCH: none
+- ACTIVE_BRANCH: `docs/reconcile-pr-174` (documentation-only PR; not merged)
 - BASE_MAIN_COMMIT: c88a0665a99d51221518f302e4cea7e279e42528
-- ACTIVE_PR: none; PR #174 merged.
-- LAST_GREEN_CHECKS: PR #174 Web Quality run 38740404917 and Critical Tests run 38740405598 passed; main Web Quality run 38742436619 and Production Auth HTTP Smoke run 38742436560 passed on `c88a0665a99d51221518f302e4cea7e279e42528`.
+- ACTIVE_PR: PR #175 open; documentation reconciliation only. Current head `0b632dad6aaf49ffad8d8433df15b3c8b70354c9`; all three latest checks passed.
+- LAST_GREEN_CHECKS: PR #175 Foundation State Validation run 38745969423, Web Quality run 38745969051, and Critical Tests run 38745969361 passed on `0b632dad6aaf49ffad8d8433df15b3c8b70354c9`; main Web Quality run 38742436619 and Production Auth HTTP Smoke run 38742436560 passed on `c88a0665a99d51221518f302e4cea7e279e42528`.
 - PRODUCTION_MIGRATION: none required; PR #174 changed client-side navigation and API error handling only.
 - NEXT_STEP: Inspect the next concrete user-visible gap in customer → demand → matching; matching is covered by CI real-HTTP E2E but is not separately invoked by production smoke.
 - BLOCKERS: No known CI/runtime blocker. Do not claim production matching endpoint was directly smoke-tested.
