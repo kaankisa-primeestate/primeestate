@@ -27,7 +27,7 @@ export async function GET(
     },
     include: {
       roles: true,
-      demands: { orderBy: { updatedAt: "desc" } },
+      demands: { where: { active: true }, orderBy: { updatedAt: "desc" } },
       owner: { select: { id: true, name: true, email: true, teamId: true } },
       activities: { orderBy: { occurredAt: "desc" }, take: 20 },
       tasks: { orderBy: { dueAt: "asc" }, take: 20 },
