@@ -53,7 +53,7 @@ PrimeEstate, gayrimenkule özel, AI destekli, uçtan uca entegre bir Office Oper
 
 **Foundation final audit: CLOSED — 2026-10-08.**
 
-Current verified runtime main: `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #166 merge; post-merge Web Quality run 38401035461 and Production Auth HTTP Smoke run 38401035459 passed. Recheck latest main and CI at each session start).
+Current verified runtime main: `f2b9473f9c86bde42c89f1545554891456c4dc59` (PR #169 merge; main Web Quality run [38535612161](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612161) and Production Auth HTTP Smoke run [38535612175](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612175) passed. Render deployed this exact commit; login/session, database health, customers, listings, sales, payments, dashboard and finance HTTP checks passed. Recheck latest main and CI at each session start).
 - PR #154 merged: matching UI safely handles malformed/empty API responses.
 - PR #156 merged: stale matching requests cannot overwrite newer selected-demand results.
 - PR #157 merged: Relationship Workspace contact outcomes now use `/api/prime/action`, so Prime learning and active-demand rematching run through the existing authorized workflow.
@@ -64,7 +64,7 @@ Current verified runtime main: `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #1
 
 ### Main / Release-gate baseline
 
-Current main tip is `7a9e2d0b674d9cfc53c23af57de839342df55b11` (PR #166). The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
+Current main tip is `f2b9473f9c86bde42c89f1545554891456c4dc59` (PR #169). The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
 PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
 
@@ -119,11 +119,11 @@ Render UI bu ortamdan yönetilmez. Production durumu GitHub smoke veya kullanıc
 
 ## 7. CI
 
-Latest main commit `7a9e2d0b674d9cfc53c23af57de839342df55b11` için:
-- PrimeEstate Web Quality run 38401035461 ✅
-- Production Auth HTTP Smoke run 38401035459 ✅ (Render expected commit, login/session, database health, customers, listings, sales, payments, dashboard and finance)
-- PR #166 Web Quality run 38398546250 ✅; Critical Tests run 38398546399 ✅
-- PR #166 changed no schema; no production migration was required.
+Latest main commit `f2b9473f9c86bde42c89f1545554891456c4dc59` için:
+- PrimeEstate Web Quality run [38535612161](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612161) ✅
+- Production Auth HTTP Smoke run [38535612175](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38535612175) ✅; Render commit `f2b9473f9c86bde42c89f1545554891456c4dc59` ile eşleşti; login/session, database health, customers, listings, sales, payments, dashboard and finance kontrolleri başarılı.
+- PR #169 Web Quality run 38534246129 ✅; Critical Tests run 38534245991 ✅
+- PR #168 demand-edit navigation fix and PR #169 safe API response parsing merged. No schema or production migration change was required.
 
 PR #82'nin public repository sonrasında yeniden çalıştırılan CI'sinde:
 - Web Quality ✅
@@ -160,8 +160,8 @@ Release Gate hedefi:
 ## 10. Canonical handoff — current product work
 
 - Active phase: **Phase 12 — Product Development / Core Workflow Experience**
-- Active branch: `main`; PR #166 is merged.
-- Current main commit: `7a9e2d0b674d9cfc53c23af57de839342df55b11`.
+- Active branch: `main`; PR #166, #168 and #169 are merged.
+- Current main commit: `f2b9473f9c86bde42c89f1545554891456c4dc59`.
 - PR #161: canonicalizes equivalent feature variants in Prime learning; merged.
 - PR #162: prevents substring-only property feature matches; merged.
 - PR #163: keeps null, undefined, and blank budget/area criteria unspecified; regression test added and merged.
@@ -172,7 +172,10 @@ Release Gate hedefi:
 - Foundation release gate: closed.
 - PR #165 merged: demand edit success returns to the edited customer detail.
 - PR #166 merged: active demands on customer detail now have a visible **Düzenle** action alongside **Eşleştir**; existing authorization and API remain unchanged.
-- Immediate goal: inspect the next concrete user-visible gap in customer → demand → matching and preserve all customer privacy / office portfolio boundaries.
+- PR #168 merged: demand-edit “Müşteri detayına dön” and “Vazgeç” navigate to the correct customer detail route rather than browser history.
+- PR #169 merged: added resilient API response parsing for customer detail, offer/sale loading, showing-result updates, and demand edit/load/save; malformed or empty API bodies now produce a safe Turkish error instead of a raw JSON parse exception.
+- PR #169 post-merge main Web Quality and Production Auth HTTP Smoke both passed; Render was confirmed on `f2b9473f9c86bde42c89f1545554891456c4dc59`.
+- Immediate goal: inspect the next concrete user-visible gap in the customer → demand → matching workflow and preserve all customer privacy / office portfolio boundaries.
 
 ### Standard handoff
 
@@ -186,4 +189,4 @@ Future sessions begin with:
 
 **Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
 
-_Last reconciled: 2026-10-13._
+_Last reconciled: 2026-10-15._
