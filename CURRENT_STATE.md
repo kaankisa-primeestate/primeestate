@@ -191,3 +191,13 @@ Future sessions begin with:
 **Current handoff: FOUNDATION CLOSED → PRODUCT DEVELOPMENT ACTIVE.**
 
 _Last reconciled: 2026-10-15 (after PR #171)._
+
+
+## Latest verified update — PR #174 (2026-10-15)
+
+- PR #174 merged: [Fix new demand navigation and API errors](https://github.com/kaankisa-primeestate/primeestate/pull/174).
+- New-demand form back/cancel controls now navigate directly to the owning customer detail; new-demand API responses use shared safe parsing.
+- No schema/migration or authorization changes.
+- Current main commit: `c88a0665a99d51221518f302e4cea7e279e42528`.
+- PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917), Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598), main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619), and Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560).
+- Next: inspect the next concrete user-visible gap in customer → demand → matching. Do not claim the matching endpoint itself was separately production-smoke-tested.
