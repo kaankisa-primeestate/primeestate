@@ -63,11 +63,11 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Active branch
 
-**none** — latest product fix is merged; next work starts from the verified `main`.
+`feat/matching-empty-state-cta` — PR #176 open for a focused matching empty-state UI improvement.
 
 ### Current main commit
 
-`c88a0665a99d51221518f302e4cea7e279e42528` — PR #174 merge.
+`dd574e2eac527e75f707291a76b8de4141dab2af` — PR #175 documentation-only merge; application runtime remains at the previously verified PR #174 commit until deployment evidence says otherwise.
 
 ### Branch state
 
@@ -79,11 +79,13 @@ Foundation hardening is closed for the current release gate. Product development
 - PR #168 — merged: demand-edit return/cancel navigation targets the correct customer detail route.
 - PR #169 — merged: safe API response parsing in customer detail, demand edit, and showing-result save flow; no schema/migration/auth-scope change.
 - PR #171 — merged: customer detail returns active demands only; API integration regression test confirms inactive demands do not appear in the “Aktif talepler” workflow. No schema/migration/auth-scope change.
+- PR #175 — merged: reconciles project handoff documents; no runtime/schema/migration/auth-scope change.
+- PR #176 — open: adds direct next-step actions when matching returns no results; UI-only, checks pending.
 - Verify live open PRs and branches at each session start.
 
 ### Latest main verification — 2026-10-15
 
-- `main` points to `c88a0665a99d51221518f302e4cea7e279e42528` (PR #174 merge).
+- GitHub `main` points to `dd574e2eac527e75f707291a76b8de4141dab2af` (PR #175 documentation-only merge). The last verified application runtime commit is `c88a0665a99d51221518f302e4cea7e279e42528`; confirm Render after any runtime change.
 - Main PrimeEstate Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619).
 - Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560). Render reported the expected live commit `c88a0665a99d51221518f302e4cea7e279e42528`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
 - PR #174 Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917); Critical Tests — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598).
