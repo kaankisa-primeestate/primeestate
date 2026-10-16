@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 type Task = {
   id: string;
@@ -100,16 +101,15 @@ export default function CalendarPage() {
           fetch("/api/showings", { cache: "no-store" }),
           fetch("/api/customers", { cache: "no-store" }),
         ]);
-        const payloads = await Promise.all(responses.map((response) => response.json()));
-        const [taskResponse, showingResponse, customerResponse] = responses;
-        const [taskPayload, showingPayload, customerPayload] = payloads;
-        if (!taskResponse.ok) throw new Error(taskPayload.message ?? "Görevler alınamadı.");
-        if (!showingResponse.ok) throw new Error(showingPayload.message ?? "Gösterimler alınamadı.");
-        if (!customerResponse.ok) throw new Error(customerPayload.message ?? "Müşteriler alınamadı.");
+        const [taskPayload, showingPayload, customerPayload] = await Promise.all([
+          readApiPayload(responses[0], "Görevler alınamadı."),
+          readApiPayload(responses[1], "Gösterimler alınamadı."),
+          readApiPayload(responses[2], "Müşteriler alınamadı."),
+        ]);
         if (!cancelled) {
-          setTasks(taskPayload.tasks ?? []);
-          setShowings(showingPayload.showings ?? []);
-          setCustomers(customerPayload.customers ?? []);
+          setTasks(Array.isArray(taskPayload.tasks) ? taskPayload.tasks as Task[] : []);
+          setShowings(Array.isArray(showingPayload.showings) ? showingPayload.showings as Showing[] : []);
+          setCustomers(Array.isArray(customerPayload.customers) ? customerPayload.customers as Customer[] : []);
         }
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Takvim verileri alınamadı.");

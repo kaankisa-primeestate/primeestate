@@ -64,7 +64,7 @@ Current verified application runtime commit: `c88a0665a99d51221518f302e4cea7e279
 
 ### Main / Release-gate baseline
 
-Historical main tip at the PR #171 checkpoint was `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`. Current verified GitHub main tip is `dd574e2eac527e75f707291a76b8de4141dab2af` (PR #175, documentation-only); last verified application runtime commit remains `c88a0665a99d51221518f302e4cea7e279e42528`. The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
+Historical main tip at the PR #171 checkpoint was `36daad13dda9c3cf16bcb4b1e6fc49e2db404f8f`. Current GitHub main tip is `ce7774d0ef367f4be66b8ef49f4a6598a45bcedc` (PR #176 merge). Last completed production verification remains `c88a0665a99d51221518f302e4cea7e279e42528`; current main Web Quality and Production Auth HTTP Smoke are running. The historical verified release-gate baseline is `2da8953f06304e6a2b6f049571a2df991b1e61e9`.
 
 PR #90 established the release-gate documentation baseline. Production runtime verification remains tied to application commit `2aca0b13...`; PR #90 and the subsequent state-reconciliation commits did not change application runtime code or the database schema.
 

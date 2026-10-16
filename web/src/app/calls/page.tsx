@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 type Customer={id:string;name:string;phone:string|null;location:string|null};
 type Activity={id:string;occurredAt:string;summary:string;outcome:string|null;customer:{id:string;name:string}};
 function formatDate(v:string){return new Intl.DateTimeFormat("tr-TR",{dateStyle:"medium",timeStyle:"short"}).format(new Date(v));}
 function initials(n:string){return n.split(/\s+/).slice(0,2).map(x=>x[0]??"").join("").toUpperCase();}
 export default function CallsPage(){
  const [customers,setCustomers]=useState<Customer[]>([]),[calls,setCalls]=useState<Activity[]>([]),[query,setQuery]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
- async function load(){setLoading(true);setError("");try{const [cr,ar]=await Promise.all([fetch("/api/customers",{cache:"no-store"}),fetch("/api/activities?limit=100",{cache:"no-store"})]);const [c,a]=await Promise.all([cr.json(),ar.json()]);if(!cr.ok)throw new Error(c.message??"Müşteriler alınamadı.");if(!ar.ok)throw new Error(a.message??"Aramalar alınamadı.");setCustomers(c.customers??[]);setCalls((a.activities??[]).filter((x:Activity)=>x.customer));}catch(e){setError(e instanceof Error?e.message:"Arama verileri alınamadı.");}finally{setLoading(false);}}
+ async function load(){setLoading(true);setError("");try{const [cr,ar]=await Promise.all([fetch("/api/customers",{cache:"no-store"}),fetch("/api/activities?limit=100",{cache:"no-store"})]);const [c,a]=await Promise.all([readApiPayload(cr,"Müşteriler alınamadı."),readApiPayload(ar,"Aramalar alınamadı.")]);setCustomers(Array.isArray(c.customers)?c.customers as Customer[]:[]);setCalls((Array.isArray(a.activities)?a.activities as Activity[]:[]).filter((x)=>x.customer));}catch(e){setError(e instanceof Error?e.message:"Arama verileri alınamadı.");}finally{setLoading(false);}}
  // Data fetching synchronizes React state with external API data.\n // eslint-disable-next-line react-hooks/set-state-in-effect\n useEffect(()=>{void load();},[]);
  const filtered=useMemo(()=>{const q=query.trim().toLocaleLowerCase("tr-TR");return customers.filter(c=>!q||[c.name,c.phone??"",c.location??""].join(" ").toLocaleLowerCase("tr-TR").includes(q));},[customers,query]);
  const today=new Date().toDateString(),todayCalls=calls.filter(c=>new Date(c.occurredAt).toDateString()===today);
