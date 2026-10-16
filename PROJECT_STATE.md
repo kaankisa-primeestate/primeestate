@@ -63,11 +63,11 @@ Foundation hardening is closed for the current release gate. Product development
 
 ### Active branch
 
-`fix/safe-api-parsing-showing-offer-forms` — active PR #180; hardens malformed/empty API response handling in new Showing and Offer forms.
+No active product PR is assumed. Verify open PRs and CI at the start of each session; the next task is to inspect the next concrete user-visible gap in the core consultant workflow.
 
 ### Current main commit
 
-`982a5c9ac26b8371adc77b8a2368dd67690bd756` — PR #179 merged. Main Web Quality and Production Auth HTTP Smoke both passed; Render is confirmed running this exact commit.
+`e6a071cf1c1808d49b6917b7fa48d179772ce38a` — PR #182 merged. Main Web Quality and Production Auth HTTP Smoke passed; Render is confirmed running this exact commit.
 
 ### Branch state
 
@@ -84,18 +84,21 @@ Foundation hardening is closed for the current release gate. Product development
 - PR #177 — merged: shared safe API response parsing in Calls, Relationships, and Calendar; no API/schema/migration/auth-scope change.
 - PR #178 — merged: simplified live-data dashboard workspace.
 - PR #179 — merged: preserves Prime Brief customer selection by stable customer ID and handles empty/malformed API responses safely.
-- PR #180 — active: shared safe API response parsing in new Showing and Offer forms; no schema/migration/auth-scope or business-rule changes.
+- PR #180 — merged: shared safe API response parsing in new Showing and Offer forms; no schema/migration/auth-scope or business-rule changes.
+- PR #181 — merged: safe API response handling in the sales workflow; no schema/migration/auth-scope or business-rule changes.
+- PR #182 — merged: safe API response handling and payload-shape validation in global search; prevents stale results from being displayed for a new/failed query; no schema/migration/auth-scope or search-rule changes.
 - Verify live open PRs and branches at each session start.
 
 ### Latest main verification — 2026-10-16
 
-- GitHub `main` points to `982a5c9ac26b8371adc77b8a2368dd67690bd756` (PR #179 merge).
-- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38871721604).
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38871721688). Render's `/api/deployment-check` confirmed live commit `982a5c9ac26b8371adc77b8a2368dd67690bd756`; login/session, database health, customers, listings, sales, payments, dashboard and finance checks returned successfully.
-- PR #179 merged: Prime Brief selection is preserved by customer ID and malformed/empty API responses produce controlled errors. PR checks passed before merge.
-- PR #180 is the current active change: safely parse API responses in new Showing and Offer forms. Await Web Quality and Critical Tests; do not merge until all required checks pass.
-- PR #180 is UI/API-response handling only; no schema/migration/auth-scope/business-rule changes.
-- Render's npm install logs reported 16 dependency audit findings (15 high, 1 critical). This did not fail deployment smoke; review separately without blindly applying breaking dependency upgrades.
+- GitHub `main` points to `e6a071cf1c1808d49b6917b7fa48d179772ce38a` (PR #182 merge).
+- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38913862930).
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38913863438). Render's `/api/deployment-check` confirmed the live commit exactly matches `e6a071cf1c1808d49b6917b7fa48d179772ce38a`.
+- Production smoke verified sign-in, session, database health, authenticated customers, dashboard and finance pages, listings, sales, and payments all returned successful responses without HTTP 500s.
+- PR #182 merged: global search safely parses malformed/empty API responses, validates query/customer/listing payload shapes, and avoids displaying stale results for a pending or failed query.
+- PR #181 also merged before PR #182: safe API response handling in the sales workflow.
+- Current release gate is green; no schema/migration/auth-scope changes were included in PR #182.
+- Dependency install logs reported 16 npm audit findings (15 high, 1 critical). This remains separate technical debt; do not apply blind or breaking upgrades.
 
 ## 5. RECENT COMPLETED WORK
 
@@ -302,14 +305,14 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Complete PR #180 safe API parsing in new Showing and Offer forms; after merge, verify main CI and Render runtime, then inspect the next concrete user-visible gap in the customer → demand → matching → showing → offer workflow.
-- ACTIVE_BRANCH: `fix/safe-api-parsing-showing-offer-forms` (PR #180 open)
-- BASE_MAIN_COMMIT: 982a5c9ac26b8371adc77b8a2368dd67690bd756
-- ACTIVE_PR: PR #180 open; safe API response handling in showing/offer forms. Current head `befa20c3841203beec1d0bafeba235385c963ba6`; checks pending.
-- LAST_GREEN_CHECKS: Main Web Quality run 38871721604 and Production Auth HTTP Smoke run 38871721688 passed on `982a5c9ac26b8371adc77b8a2368dd67690bd756`. PR #180 checks pending.
-- PRODUCTION_MIGRATION: none required; PR #174 changed client-side navigation and API error handling only.
-- NEXT_STEP: Verify PR #180 Web Quality + Critical Tests; if green, merge and verify production smoke; then inspect next user-visible workflow gap.
-- BLOCKERS: PR #180 CI pending. Production smoke confirms commit/runtime and core auth/data pages; matching itself is covered by CI real-HTTP E2E, not directly by production smoke.
+- CURRENT_TASK: Inspect the next concrete user-visible gap in the customer → demand → matching → showing → offer workflow; verify open PRs, main CI, and Render runtime before coding.
+- ACTIVE_BRANCH: `main` at last verified snapshot; confirm live branch/PR state at session start.
+- BASE_MAIN_COMMIT: e6a071cf1c1808d49b6917b7fa48d179772ce38a
+- ACTIVE_PR: No active product PR is carried forward in this snapshot; verify live open PRs before starting new work.
+- LAST_GREEN_CHECKS: Main Web Quality run 38913862930 and Production Auth HTTP Smoke run 38913863438 passed on `e6a071cf1c1808d49b6917b7fa48d179772ce38a`; Render live commit matches exactly.
+- PRODUCTION_MIGRATION: none required for PR #182; no schema/migration changes.
+- NEXT_STEP: Inspect the live open-PR list and the next core workflow UI gap, then make one narrow, testable change through branch → PR → green checks → merge → production SHA verification.
+- BLOCKERS: No release blocker from PR #182. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
 - LAST_UPDATED_UTC: 2026-10-16
 
 ## 16. Latest verified product change — PR #174
