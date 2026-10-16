@@ -154,143 +154,182 @@ export default function DashboardLive() {
   const recentActivities = a.filter((x) => inRange(x.occurredAt) && matchesQuery(`${x.customer.name} ${x.summary}`));
 
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
+    <div className="min-h-screen bg-[#f7f8fa] md:flex">
       <Sidebar />
-      <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
-        <div className="mx-auto max-w-7xl">
-          <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <main className="min-w-0 flex-1">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-7 xl:px-10">
+          <header className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[.18em] text-slate-400">PrimeEstate · Live Workspace</p>
-              <h1 className="mt-2 text-3xl font-semibold">Günaydın, Kaan.</h1>
-              <p className="mt-2 text-sm text-slate-500">Dashboard gerçek CRM verileriyle çalışıyor ve 30 saniyede bir yenileniyor.</p>
+              <p className="text-xs font-semibold uppercase tracking-[.16em] text-slate-400">PrimeEstate / Çalışma alanı</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Bugün</h1>
+              <p className="mt-1 text-sm text-slate-500">İlişkilerini, önceliklerini ve fırsatlarını tek yerden yönet.</p>
             </div>
-            <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
-              {lastUpdated && <span className="hidden text-xs text-slate-400 sm:inline">Son güncelleme {lastUpdated.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>}
-              <button onClick={() => void load()} disabled={busy} className="flex-1 rounded-xl border bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50 sm:flex-none">{busy ? "Yükleniyor…" : "↻ Yenile"}</button>
+            <div className="flex items-center gap-3">
+              {lastUpdated && <span className="hidden text-xs text-slate-400 lg:inline">Son güncelleme {lastUpdated.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>}
+              <button onClick={() => void load()} disabled={busy} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50">{busy ? "Yenileniyor…" : "↻ Yenile"}</button>
             </div>
           </header>
 
-          <section className="mt-5 rounded-2xl border bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex-1">
-                <label className="sr-only" htmlFor="dashboard-search">Dashboard ara</label>
-                <input id="dashboard-search" value={dashboardQuery} onChange={(event) => setDashboardQuery(event.target.value)} placeholder="Müşteri, görev, gösterim veya aktivite ara…" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-400" />
-              </div>
-              <div className="flex max-w-full gap-2 overflow-x-auto pb-0.5">
-                {[
-                  ["TODAY", "Bugün"],
-                  ["WEEK", "7 gün"],
-                  ["ALL", "Tümü"],
-                ].map(([value, label]) => (
-                  <button key={value} type="button" onClick={() => setDashboardRange(value as "TODAY" | "WEEK" | "ALL")} className={`rounded-xl px-3 py-2 text-sm font-semibold ${dashboardRange === value ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>{label}</button>
-                ))}
-              </div>
+          <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative min-w-0 flex-1">
+              <label className="sr-only" htmlFor="dashboard-search">Dashboard ara</label>
+              <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span>
+              <input id="dashboard-search" value={dashboardQuery} onChange={(event) => setDashboardQuery(event.target.value)} placeholder="İsim, görev, gösterim veya aktivite ara…" className="min-h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200" />
             </div>
-          </section>
-
-          {err && <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
-
-          <PrimeBriefLive />
-
-          <section className="mt-6 rounded-3xl border bg-white p-5 shadow-sm">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[.16em] text-slate-400">Hızlı Aksiyonlar</p>
-              <h2 className="mt-1 text-xl font-semibold">Bugün ne yapmak istiyorsun?</h2>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="flex shrink-0 gap-1 rounded-xl border border-slate-200 bg-white p-1">
               {[
-                ["＋", "Yeni Müşteri", "/clients", "Müşteri kaydı aç"],
-                ["🏡", "Yeni Portföy", "/portfolio", "İlan / portföy ekle"],
-                ["🎯", "Eşleştirme", "/matching", "Talebe uygun portföy bul"],
-                ["🧭", "Akış Merkezi", "/crm", "Satış sürecini takip et"],
-              ].map(([icon, title, href, text]) => (
-                <Link key={title} href={href} className="rounded-2xl border bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white">
-                  <span className="text-xl">{icon}</span>
-                  <p className="mt-3 font-semibold">{title}</p>
-                  <p className="mt-1 text-xs text-slate-500">{text}</p>
-                </Link>
+                ["TODAY", "Bugün"],
+                ["WEEK", "7 gün"],
+                ["ALL", "Tümü"],
+              ].map(([value, label]) => (
+                <button key={value} type="button" onClick={() => setDashboardRange(value as "TODAY" | "WEEK" | "ALL")} className={`rounded-lg px-3 py-2 text-sm font-medium transition ${dashboardRange === value ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>{label}</button>
               ))}
             </div>
-          </section>
+          </div>
 
-          <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {err && <div role="status" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div>}
+
+          <section aria-label="Hızlı işlemler" className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Hızlı erişim</span>
             {[
-              ["👥", "Müşteriler", c.length, "/relationships"],
-              ["🏡", "Aktif Portföy", activeListings.length, "/portfolio"],
-              ["🔥", "Açık Fırsat", openO.length, "/sales"],
-              ["💼", "Açık Satış", finance?.openSales ?? 0, "/finance"],
-            ].map(([e, n, v, h]) => (
-              <Link key={String(n)} href={String(h)} className="rounded-2xl border bg-white p-5 shadow-sm">
-                <span className="text-2xl">{e}</span>
-                <p className="mt-3 text-xs uppercase tracking-wide text-slate-400">{n}</p>
-                <p className="mt-1 text-3xl font-bold">{(!hasLoaded && busy) || (n === "Açık Satış" && !financeLoaded) ? "—" : v}</p>
+              ["＋", "Müşteri ekle", "/clients"],
+              ["↗", "Portföy ekle", "/portfolio"],
+              ["⌕", "Eşleştirme", "/matching"],
+              ["＋", "Görüşme planla", "/calendar"],
+            ].map(([icon, label, href]) => (
+              <Link key={label} href={href} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                <span className="text-base text-slate-400">{icon}</span>{label}
               </Link>
             ))}
           </section>
 
-          <section className="mt-6 rounded-3xl border bg-white p-5">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <section aria-label="Genel durum" className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {[
+              { label: "İlişkiler", value: c.length, href: "/relationships", hint: "Kayıtlı müşteri ilişkileri", mark: "01" },
+              { label: "Aktif portföy", value: activeListings.length, href: "/portfolio", hint: "Yayındaki portföyler", mark: "02" },
+              { label: "Açık fırsat", value: openO.length, href: "/sales", hint: "Takipteki teklifler", mark: "03" },
+              { label: "Açık satış", value: finance?.openSales ?? 0, href: "/finance", hint: "Süreçteki satışlar", mark: "04" },
+            ].map((item) => (
+              <Link key={item.label} href={item.href} className="group rounded-2xl border border-slate-200/80 bg-white p-4 transition hover:border-slate-300 hover:shadow-sm sm:p-5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-slate-500">{item.label}</p>
+                  <span className="text-[10px] font-semibold tracking-widest text-slate-300">{item.mark}</span>
+                </div>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{(!hasLoaded && busy) || (item.label === "Açık satış" && !financeLoaded) ? "—" : item.value}</p>
+                <p className="mt-1 text-xs text-slate-400">{item.hint}</p>
+              </Link>
+            ))}
+          </section>
+
+          <div className="mt-6 grid items-start gap-5 2xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]">
+            <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">İlişkiler</p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">Takip etmen gerekenler</h2>
+                </div>
+                <Link href="/relationships" className="shrink-0 text-sm font-semibold text-slate-600 hover:text-slate-950">Tüm ilişkiler ↗</Link>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {recentActivities.slice(0, 5).map((item) => (
+                  <Link key={item.id} href="/relationships" className="flex items-start gap-3 px-5 py-4 transition hover:bg-slate-50">
+                    <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">{item.customer.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toLocaleUpperCase("tr-TR")}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-slate-800">{item.customer.name}</span>
+                      <span className="mt-1 block text-sm leading-5 text-slate-500">{item.summary}</span>
+                      <span className="mt-1 block text-xs text-slate-400">{dt(item.occurredAt)}</span>
+                    </span>
+                    <span aria-hidden="true" className="pt-1 text-slate-300">↗</span>
+                  </Link>
+                ))}
+                {recentActivities.length === 0 && <div className="px-5 py-8 text-sm text-slate-500">Bu dönem için hareket bulunamadı.</div>}
+              </div>
+            </section>
+
+            <section className="min-w-0 rounded-2xl border border-slate-200/80 bg-white">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Öncelikler</p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">Bugünün işleri</h2>
+                </div>
+                <Link href="/sales" className="shrink-0 text-sm font-semibold text-slate-600 hover:text-slate-950">Tüm işler ↗</Link>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {openT.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 px-5 py-4">
+                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400 ring-4 ring-amber-50" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">{item.customer?.name ?? "Genel görev"}</p>
+                      <p className="mt-1 text-xs text-slate-400">{dt(item.dueAt)} · {item.priority}</p>
+                    </div>
+                  </div>
+                ))}
+                {openT.length === 0 && <div className="px-5 py-8 text-sm text-slate-500">Seçili dönemde açık görev bulunmuyor.</div>}
+              </div>
+            </section>
+          </div>
+
+          <section className="mt-5 rounded-2xl border border-slate-200/80 bg-white">
+            <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[.16em] text-slate-400">Finans Özeti</p>
-                <h2 className="mt-1 text-xl font-semibold">Satıştan tahsilata canlı görünüm</h2>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Portföy</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Son aktif ilanlar</h2>
               </div>
-              <Link href="/finance" className="text-sm font-semibold">Finans →</Link>
+              <Link href="/portfolio" className="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-700">Portföyü aç <span className="ml-2">↗</span></Link>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Açık satış</p><p className="mt-1 text-2xl font-semibold">{financeLoaded ? finance.openSales : "—"}</p></div>
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-400">Tahsil edilen</p><div className="mt-1 space-y-1">{financeLoaded ? (Object.entries(paidByCurrency).length ? Object.entries(paidByCurrency).map(([currency, value]) => <p key={currency} className="text-lg font-semibold">{money(value, currency)}</p>) : <p className="text-2xl font-semibold">0</p>) : <p className="text-2xl font-semibold">—</p>}</div></div>
-              
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-400">Ofis payı tahsilatı</p><div className="mt-1 space-y-1">{financeLoaded ? (formatCurrencyMap(officeCollectedByCurrency).length ? formatCurrencyMap(officeCollectedByCurrency).map((value) => <p key={value} className="text-lg font-semibold">{value}</p>) : <p className="text-lg font-semibold">0</p>) : <p className="text-lg font-semibold">—</p>}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-400">Danışman payı tahsilatı</p><div className="mt-1 space-y-1">{financeLoaded ? (formatCurrencyMap(consultantCollectedByCurrency).length ? formatCurrencyMap(consultantCollectedByCurrency).map((value) => <p key={value} className="text-lg font-semibold">{value}</p>) : <p className="text-lg font-semibold">0</p>) : <p className="text-lg font-semibold">—</p>}</div></div></div><div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500"><span className="rounded-full bg-slate-100 px-3 py-1.5">{financeLoaded ? finance.paymentCount : "—"} tahsilat</span></div>{financeLoaded && finance.consultantFeeSummary ? <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bu ay · Danışman Aidatları</p><p className="mt-1 text-sm text-slate-600">{finance.consultantFeeSummary.paid} ödendi · {finance.consultantFeeSummary.pending} bekliyor · {finance.consultantFeeSummary.overdue} gecikti</p></div><Link href="/consultant-fees" className="text-sm font-semibold">Aidat takibi →</Link></div><div className="mt-3 flex flex-wrap gap-2">{Object.entries(finance.consultantFeeSummary.paidTotals).map(([currency,value]) => <span key={currency} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700">{money(value,currency)} tahsil edildi</span>)}{finance.consultantFeeSummary.count === 0 ? <span className="text-sm text-slate-500">Bu ay için henüz aidat kaydı oluşturulmamış.</span> : null}</div></div> : null}
-          </section>
-
-          <section className="mt-6 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-3xl bg-slate-950 p-6 text-white">
-              <p className="text-xs uppercase tracking-[.16em] text-slate-400">CRM Akış Merkezi</p>
-              <h2 className="mt-2 text-2xl font-semibold">Müşteriden tahsilata tek akış</h2>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {["Müşteri", "Talep", "Eşleşme", "Gösterim", "Teklif", "Satış", "Komisyon", "Tahsilat"].map((x, i) => (
-                  <div key={x} className="rounded-xl bg-white/10 p-3">
-                    <p className="text-[10px] text-slate-400">0{i + 1}</p>
-                    <p className="text-sm font-semibold">{x}</p>
+            <div className="grid gap-0 border-t border-slate-100 md:grid-cols-2 xl:grid-cols-3">
+              {activeListings.slice(0, 3).map((item, index) => (
+                <Link key={item.id} href="/portfolio" className={`min-w-0 p-5 transition hover:bg-slate-50 ${index > 0 ? "border-t border-slate-100 md:border-l xl:border-t-0" : ""}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold tracking-wide text-slate-400">{item.code}</span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">Aktif</span>
                   </div>
-                ))}
-              </div>
-              <Link href="/crm" className="mt-5 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950">Akış Merkezini Aç →</Link>
+                  <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-slate-800">{item.title}</p>
+                  <p className="mt-2 text-base font-semibold text-slate-950">{money(item.price, item.currency)}</p>
+                  <p className="mt-1 truncate text-xs text-slate-400">{item.property?.district ?? "—"} · {item.property?.neighborhood ?? "—"}</p>
+                </Link>
+              ))}
+              {activeListings.length === 0 && <div className="p-5 text-sm text-slate-500">Aktif portföy bulunmuyor. Yeni portföy ekleyerek başlayabilirsin.</div>}
             </div>
-            <div className="rounded-3xl border bg-white p-6">
-              <p className="text-xs uppercase tracking-[.16em] text-slate-400">Bugün</p>
-              <h2 className="mt-2 text-xl font-semibold">{todayS.length} gösterim · {financeLoaded ? finance.openSales : "—"} açık satış</h2>
-              <div className="mt-4 space-y-2">
-                {todayS.slice(0, 4).map((x) => (
-                  <div key={x.id} className="rounded-xl bg-slate-50 p-3">
-                    <p className="text-sm font-semibold">{x.customer.name}</p>
-                    <p className="text-xs text-slate-500">{x.listing.code} · {dt(x.dateTime)}</p>
+          </section>
+
+          <section className="mt-5 rounded-2xl border border-slate-200/80 bg-white">
+            <details>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
+                <span>
+                  <span className="block text-sm font-semibold text-slate-800">Prime Brain ve işletme özeti</span>
+                  <span className="mt-1 block text-xs text-slate-500">Günlük yapay zekâ önerileri, finans ve aidat detayları</span>
+                </span>
+                <span className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600">Detayları aç ＋</span>
+              </summary>
+              <div className="border-t border-slate-100 p-4 sm:p-5">
+                <PrimeBriefLive />
+                <section className="mt-5 rounded-2xl border border-slate-200 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Finans</p>
+                      <h2 className="mt-1 text-lg font-semibold text-slate-900">Tahsilat özeti</h2>
+                    </div>
+                    <Link href="/finance" className="text-sm font-semibold text-slate-600 hover:text-slate-950">Finansa git ↗</Link>
                   </div>
-                ))}
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">Açık satış</p><p className="mt-2 text-xl font-semibold">{financeLoaded ? finance.openSales : "—"}</p></div>
+                    <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">Tahsil edilen</p><div className="mt-2 space-y-1">{financeLoaded ? (Object.entries(paidByCurrency).length ? Object.entries(paidByCurrency).map(([currency, value]) => <p key={currency} className="text-base font-semibold">{money(value, currency)}</p>) : <p className="text-base font-semibold">0</p>) : <p className="text-base font-semibold">—</p>}</div></div>
+                    <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">Ofis payı tahsilatı</p><div className="mt-2 space-y-1">{financeLoaded ? (formatCurrencyMap(officeCollectedByCurrency).length ? formatCurrencyMap(officeCollectedByCurrency).map((value) => <p key={value} className="text-base font-semibold">{value}</p>) : <p className="text-base font-semibold">0</p>) : <p className="text-base font-semibold">—</p>}</div></div>
+                    <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">Danışman payı tahsilatı</p><div className="mt-2 space-y-1">{financeLoaded ? (formatCurrencyMap(consultantCollectedByCurrency).length ? formatCurrencyMap(consultantCollectedByCurrency).map((value) => <p key={value} className="text-base font-semibold">{value}</p>) : <p className="text-base font-semibold">0</p>) : <p className="text-base font-semibold">—</p>}</div></div>
+                  </div>
+                  {financeLoaded && finance.consultantFeeSummary ? <div className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold text-slate-800">Danışman aidatları</p><p className="mt-1 text-xs text-slate-500">{finance.consultantFeeSummary.paid} ödendi · {finance.consultantFeeSummary.pending} bekliyor · {finance.consultantFeeSummary.overdue} gecikti</p></div><Link href="/consultant-fees" className="text-sm font-semibold text-slate-600 hover:text-slate-950">Aidat takibi ↗</Link></div> : null}
+                </section>
+                <section className="mt-5 rounded-2xl border border-slate-200 p-5">
+                  <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Takvim</p><h2 className="mt-1 text-lg font-semibold text-slate-900">Gösterimler</h2></div><Link href="/calendar" className="text-sm font-semibold text-slate-600 hover:text-slate-950">Takvime git ↗</Link></div>
+                  <div className="mt-3 divide-y divide-slate-100">
+                    {todayS.slice(0, 4).map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 py-3"><div><p className="text-sm font-semibold text-slate-800">{item.customer.name}</p><p className="mt-1 text-xs text-slate-500">{item.listing.code} · {item.listing.title}</p></div><span className="text-xs text-slate-400">{dt(item.dateTime)}</span></div>)}
+                    {todayS.length === 0 && <p className="py-4 text-sm text-slate-500">Seçili dönemde gösterim bulunmuyor.</p>}
+                  </div>
+                </section>
               </div>
-            </div>
-          </section>
-
-          <section className="mt-6 grid gap-5 lg:grid-cols-2">
-            <div className="rounded-3xl border bg-white p-4 sm:p-5">
-              <div className="flex justify-between"><h2 className="text-xl font-semibold">Bugünün işleri</h2><Link href="/sales" className="text-sm font-semibold">Tümü →</Link></div>
-              <div className="mt-4 space-y-3">{openT.slice(0, 5).map((x) => <div key={x.id} className="rounded-2xl bg-slate-50 p-4"><p className="font-semibold">{x.title}</p><p className="mt-1 text-xs text-slate-500">{x.customer?.name ?? "Genel"} · {dt(x.dueAt)} · {x.priority}</p></div>)}</div>
-            </div>
-            <div className="rounded-3xl border bg-white p-5">
-              <h2 className="text-xl font-semibold">Son Hareketler</h2>
-              <div className="mt-4 space-y-3">{recentActivities.slice(0, 5).map((x) => <div key={x.id} className="rounded-2xl bg-slate-50 p-4"><p className="text-sm font-semibold">{x.customer.name}</p><p className="text-sm text-slate-600">{x.summary}</p><p className="mt-1 text-xs text-slate-400">{dt(x.occurredAt)}</p></div>)}</div>
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-3xl border bg-white p-5">
-            <div className="flex justify-between">
-              <div><p className="text-xs uppercase tracking-wide text-slate-400">Portföy Hareketi</p><h2 className="mt-1 text-xl font-semibold">Son aktif ilanlar</h2></div>
-              <Link href="/portfolio" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ İlan / Portföy</Link>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {l.slice(0, 6).map((x) => <Link key={x.id} href="/portfolio" className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">{x.code}</p><p className="mt-2 font-semibold">{x.title}</p><p className="mt-1 text-sm text-slate-500">{money(x.price, x.currency)}</p><p className="text-xs text-slate-400">{x.property?.district ?? "—"} / {x.property?.neighborhood ?? "—"}</p></Link>)}
-            </div>
+            </details>
           </section>
         </div>
       </main>
