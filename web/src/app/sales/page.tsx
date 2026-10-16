@@ -167,8 +167,9 @@ export default function SalesPage() {
         }),
       });
       const payload = await readApiPayload(response, "Teklif oluşturulamadı.") as { offer?: ApiOffer };
-      if (!payload.offer) throw new Error("Sunucudan oluşturulan teklif alınamadı.");
-      setOffers((current) => [payload.offer, ...current]);
+      const createdOffer = payload.offer;
+      if (!createdOffer) throw new Error("Sunucudan oluşturulan teklif alınamadı.");
+      setOffers((current) => [createdOffer, ...current]);
       setOfferForm({ customerId: "", listingId: "", amount: "", nextAction: "" });
       setOfferFormOpen(false);
     } catch (error) {
@@ -181,8 +182,9 @@ export default function SalesPage() {
   async function updateSale(id: string, status: string) {
     const response = await fetch("/api/sales/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const payload = await readApiPayload(response, "Satış güncellenemedi.") as { sale?: ApiSale };
-    if (!payload.sale) throw new Error("Sunucudan güncellenen satış alınamadı.");
-    setSales((current) => current.map((sale) => sale.id === id ? payload.sale : sale));
+    const updatedSale = payload.sale;
+    if (!updatedSale) throw new Error("Sunucudan güncellenen satış alınamadı.");
+    setSales((current) => current.map((sale) => sale.id === id ? updatedSale : sale));
   }
 
   async function updateSaleApproval(id: string, approvalStatus: string, approvalNote?: string) {
@@ -192,16 +194,19 @@ export default function SalesPage() {
       body: JSON.stringify({ approvalStatus, approvalNote }),
     });
     const payload = await readApiPayload(response, "Satış onayı güncellenemedi.") as { sale?: ApiSale };
-    if (!payload.sale) throw new Error("Sunucudan güncellenen satış alınamadı.");
-    setSales((current) => current.map((sale) => sale.id === id ? payload.sale : sale));
+    const updatedSale = payload.sale;
+    if (!updatedSale) throw new Error("Sunucudan güncellenen satış alınamadı.");
+    setSales((current) => current.map((sale) => sale.id === id ? updatedSale : sale));
   }
 
   async function updateShowing(id: string, status: string, note?: string) {
     const response = await fetch("/api/showings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, ...(note !== undefined ? { note } : {}) }) });
     const payload = await readApiPayload(response, "Gösterim güncellenemedi.") as { showing?: { status: string; note: string | null }; task?: ApiTask };
-    if (!payload.showing) throw new Error("Sunucudan güncellenen gösterim alınamadı.");
-    setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: payload.showing.status, note: payload.showing.note ?? showing.note } : showing));
-    if (payload.task) setTasks((current) => [payload.task, ...current]);
+    const updatedShowing = payload.showing;
+    if (!updatedShowing) throw new Error("Sunucudan güncellenen gösterim alınamadı.");
+    setShowings((current) => current.map((showing) => showing.id === id ? { ...showing, status: updatedShowing.status, note: updatedShowing.note ?? showing.note } : showing));
+    const createdTask = payload.task;
+    if (createdTask) setTasks((current) => [createdTask, ...current]);
   }
 
   async function saveShowingFeedback(id: string) {
@@ -225,10 +230,12 @@ export default function SalesPage() {
         body: JSON.stringify({ action: "OFFER_STATUS", offerId: id, status: data.status, outcome: data.nextAction }),
       });
       const payload = await readApiPayload(response, "Teklif güncellenemedi.") as { offer?: ApiOffer; sale?: ApiSale };
-      if (!payload.offer) throw new Error("Sunucudan güncellenen teklif alınamadı.");
-      setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
-      if (payload.sale) {
-        setSales((current) => [payload.sale, ...current]);
+      const updatedOffer = payload.offer;
+      if (!updatedOffer) throw new Error("Sunucudan güncellenen teklif alınamadı.");
+      setOffers((current) => current.map((offer) => offer.id === id ? updatedOffer : offer));
+      const createdSale = payload.sale;
+      if (createdSale) {
+        setSales((current) => [createdSale, ...current]);
         setTab("Satışlar");
       }
       return;
@@ -239,8 +246,9 @@ export default function SalesPage() {
       body: JSON.stringify(data),
     });
     const payload = await readApiPayload(response, "Teklif güncellenemedi.") as { offer?: ApiOffer };
-    if (!payload.offer) throw new Error("Sunucudan güncellenen teklif alınamadı.");
-    setOffers((current) => current.map((offer) => offer.id === id ? payload.offer : offer));
+    const updatedOffer = payload.offer;
+    if (!updatedOffer) throw new Error("Sunucudan güncellenen teklif alınamadı.");
+    setOffers((current) => current.map((offer) => offer.id === id ? updatedOffer : offer));
   }
   const filteredShowings = showings.filter((showing) => {
     const query = showingSearch.trim().toLocaleLowerCase("tr-TR");
@@ -296,7 +304,7 @@ export default function SalesPage() {
         </nav>
 
         {tab === "Bugün" && <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Bugünün çalışma sırası</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Önce bunlar</h2></div><Pill>Önceliklendirilmiş</Pill></div><div className="mt-5 space-y-3">{tasks.filter((t) => t.status !== "TAMAMLANDI").slice(0, 4).map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={task.priority === "YUKSEK" ? "bg-amber-50 text-amber-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}>{task.priority === "YUKSEK" ? "Yüksek" : task.priority === "DUSUK" ? "Düşük" : "Normal"}</Pill><span className="text-xs text-slate-400">{new Date(task.dueAt).toLocaleString("tr-TR")}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customer ? <Link href={`/clients/${task.customer.id}`} className="hover:underline">{task.customer.name}</Link> : "Genel görev"} · {task.source ?? "Manuel"}</p></div><button type="button" onClick={async () => { try { const response = await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "TAMAMLANDI" }) }); const payload = await readApiPayload(response, "Görev güncellenemedi.") as { task?: ApiTask }; if (!payload.task) throw new Error("Sunucudan güncellenen görev alınamadı."); setTasks((current) => current.map((item) => item.id === task.id ? payload.task : item)); } catch (error) { setOpsError(error instanceof Error ? error.message : "Görev güncellenemedi."); } }} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">Tamamla</button></div>)}</div></section>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Bugünün çalışma sırası</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Önce bunlar</h2></div><Pill>Önceliklendirilmiş</Pill></div><div className="mt-5 space-y-3">{tasks.filter((t) => t.status !== "TAMAMLANDI").slice(0, 4).map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={task.priority === "YUKSEK" ? "bg-amber-50 text-amber-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}>{task.priority === "YUKSEK" ? "Yüksek" : task.priority === "DUSUK" ? "Düşük" : "Normal"}</Pill><span className="text-xs text-slate-400">{new Date(task.dueAt).toLocaleString("tr-TR")}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customer ? <Link href={`/clients/${task.customer.id}`} className="hover:underline">{task.customer.name}</Link> : "Genel görev"} · {task.source ?? "Manuel"}</p></div><button type="button" onClick={async () => { try { const response = await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "TAMAMLANDI" }) }); const payload = await readApiPayload(response, "Görev güncellenemedi.") as { task?: ApiTask }; const updatedTask = payload.task; if (!updatedTask) throw new Error("Sunucudan güncellenen görev alınamadı."); setTasks((current) => current.map((item) => item.id === task.id ? updatedTask : item)); } catch (error) { setOpsError(error instanceof Error ? error.message : "Görev güncellenemedi."); } }} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">Tamamla</button></div>)}</div></section>
           <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Prime akış özeti · V1</p><h2 className="mt-2 text-2xl font-semibold">Eşleşmeden kapanışa</h2><div className="mt-6 space-y-3">{[["01", "Aktivite", "Müşteriyle temas kayda girer"],["02", "Görev", "Sonraki aksiyon unutulmaz"],["03", "Gösterim", "Müşteri + portföy aynı kayıtta"],["04", "Teklif", "Fiyat ve durum takip edilir"]].map(([no,title,desc]) => <div key={no} className="flex gap-3 rounded-2xl bg-white/10 p-3"><span className="text-xs font-bold text-slate-400">{no}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-slate-400">{desc}</p></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-400">Müşteri, portföy, gösterim, teklif ve satış kayıtları yetki kapsamı içinde gerçek veriden ilerler.</p></section>
         </div>}
 
@@ -320,7 +328,7 @@ export default function SalesPage() {
           <select value={taskCustomerFilter} onChange={(e) => setTaskCustomerFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700"><option value="ALL">Tüm müşteriler</option>{Array.from(new Map(tasks.filter((task) => task.customer).map((task) => [task.customer!.id, task.customer!.name])).entries()).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-slate-400"><span>{filteredTasks.length} görev gösteriliyor</span>{(taskSearch || taskStatusFilter !== "ALL" || taskCustomerFilter !== "ALL") && <button type="button" onClick={() => { setTaskSearch(""); setTaskStatusFilter("ALL"); setTaskCustomerFilter("ALL"); }} className="font-semibold text-slate-600 hover:text-slate-900">Filtreleri temizle</button>}</div>
-        <div className="mt-3 space-y-3">{filteredTasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status === "TAMAMLANDI" ? "Tamamlandı" : task.status === "GECIKTI" ? "Gecikti" : "Bekliyor"}</Pill><Pill tone={task.priority === "YUKSEK" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority === "YUKSEK" ? "Yüksek" : task.priority === "DUSUK" ? "Düşük" : "Normal"}</Pill><span className="text-xs text-slate-400">{new Date(task.dueAt).toLocaleString("tr-TR")}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customer?.name ?? "Genel görev"} · {task.source ?? "Manuel"}</p></div>{task.status !== "TAMAMLANDI" && <button type="button" onClick={async () => { try { const response = await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "TAMAMLANDI" }) }); const payload = await readApiPayload(response, "Görev güncellenemedi.") as { task?: ApiTask }; if (!payload.task) throw new Error("Sunucudan güncellenen görev alınamadı."); setTasks((current) => current.map((item) => item.id === task.id ? payload.task : item)); } catch (error) { setOpsError(error instanceof Error ? error.message : "Görev güncellenemedi."); } }} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
+        <div className="mt-3 space-y-3">{filteredTasks.map((task) => <div key={task.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><Pill tone={taskTone[task.status]}>{task.status === "TAMAMLANDI" ? "Tamamlandı" : task.status === "GECIKTI" ? "Gecikti" : "Bekliyor"}</Pill><Pill tone={task.priority === "YUKSEK" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"}>{task.priority === "YUKSEK" ? "Yüksek" : task.priority === "DUSUK" ? "Düşük" : "Normal"}</Pill><span className="text-xs text-slate-400">{new Date(task.dueAt).toLocaleString("tr-TR")}</span></div><p className="mt-2 font-semibold text-slate-900">{task.title}</p><p className="mt-1 text-xs text-slate-500">{task.customer?.name ?? "Genel görev"} · {task.source ?? "Manuel"}</p></div>{task.status !== "TAMAMLANDI" && <button type="button" onClick={async () => { try { const response = await fetch(`/api/tasks/${task.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "TAMAMLANDI" }) }); const payload = await readApiPayload(response, "Görev güncellenemedi.") as { task?: ApiTask }; const updatedTask = payload.task; if (!updatedTask) throw new Error("Sunucudan güncellenen görev alınamadı."); setTasks((current) => current.map((item) => item.id === task.id ? updatedTask : item)); } catch (error) { setOpsError(error instanceof Error ? error.message : "Görev güncellenemedi."); } }} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Tamamlandı işaretle</button>}</div>)}</div></section>}
 
         {tab === "Gösterimler" && <section className="mt-5 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Takvimli görüşmeler</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Gösterimler</h2></div><Link href="/sales/showing/new" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white">+ Gösterim</Link></div>
