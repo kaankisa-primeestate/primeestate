@@ -3,6 +3,7 @@
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 type Customer={id:string;name:string};
 type Listing={id:string;code:string;title:string;price:string|number;currency:string};
@@ -18,12 +19,48 @@ function OfferForm(){
  const router=useRouter(); const params=useSearchParams();
  const preCustomerId=params.get("customerId")??""; const preListingId=params.get("listingId")??"";
  const [customers,setCustomers]=useState<Customer[]>([]),[listings,setListings]=useState<Listing[]>([]),[showingFeedback,setShowingFeedback]=useState(""),[saving,setSaving]=useState(false),[error,setError]=useState("");
- useEffect(()=>{void Promise.all([
-   fetch("/api/customers",{cache:"no-store"}).then(r=>r.json()).then(d=>setCustomers(d.customers??[])),
-   fetch("/api/listings?status=AKTIF",{cache:"no-store"}).then(r=>r.json()).then(d=>setListings(d.listings??[])),
-   preCustomerId ? fetch(`/api/showings?customerId=${encodeURIComponent(preCustomerId)}`,{cache:"no-store"}).then(r=>r.json()).then(d=>{ const match=(d.showings??[] as Showing[]).filter((s:Showing)=>s.status==="GERCEKLESTI" && (!preListingId || s.listing.id===preListingId)).sort((a:Showing,b:Showing)=>new Date(b.dateTime).getTime()-new Date(a.dateTime).getTime())[0]; setShowingFeedback(match?.note??""); }) : Promise.resolve()
- ]).catch(()=>setError("Form verileri alınamadı."));},[preCustomerId,preListingId]);
- async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,amount:Number(data.amount)})});const d=await r.json();if(!r.ok)throw new Error(d.message??"Teklif oluşturulamadı.");router.push("/clients/"+encodeURIComponent(String(data.customerId)));}catch(err){setError(err instanceof Error?err.message:"Teklif oluşturulamadı.");setSaving(false);}}
+ useEffect(() => {
+  let cancelled = false;
+  async function loadFormData() {
+    try {
+      const [customersResponse, listingsResponse, showingsResponse] = await Promise.all([
+        fetch("/api/customers", { cache: "no-store" }),
+        fetch("/api/listings?status=AKTIF", { cache: "no-store" }),
+        preCustomerId
+          ? fetch(`/api/showings?customerId=${encodeURIComponent(preCustomerId)}`, { cache: "no-store" })
+          : Promise.resolve(null),
+      ]);
+      const [customersData, listingsData] = await Promise.all([
+        readApiPayload(customersResponse, "Müşteriler alınamadı."),
+        readApiPayload(listingsResponse, "Aktif portföyler alınamadı."),
+      ]);
+      if (!Array.isArray(customersData.customers) || !Array.isArray(listingsData.listings)) {
+        throw new Error("Form verileri beklenen formatta değil.");
+      }
+      let nextFeedback = "";
+      if (showingsResponse) {
+        const showingsData = await readApiPayload(showingsResponse, "Gösterim geçmişi alınamadı.");
+        if (!Array.isArray(showingsData.showings)) {
+          throw new Error("Gösterim geçmişi beklenen formatta değil.");
+        }
+        const match = (showingsData.showings as Showing[])
+          .filter((showing) => showing.status === "GERCEKLESTI" && (!preListingId || showing.listing.id === preListingId))
+          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())[0];
+        nextFeedback = match?.note ?? "";
+      }
+      if (!cancelled) {
+        setCustomers(customersData.customers as Customer[]);
+        setListings(listingsData.listings as Listing[]);
+        setShowingFeedback(nextFeedback);
+      }
+    } catch (err) {
+      if (!cancelled) setError(err instanceof Error ? err.message : "Form verileri alınamadı.");
+    }
+  }
+  void loadFormData();
+  return () => { cancelled = true; };
+}, [preCustomerId, preListingId]);
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,amount:Number(data.amount)})});await readApiPayload(r, "Teklif oluşturulamadı.");router.push("/clients/"+encodeURIComponent(String(data.customerId)));}catch(err){setError(err instanceof Error?err.message:"Teklif oluşturulamadı.");setSaving(false);}}
  const selectedListing=listings.find(l=>l.id===preListingId);
  return <div className="min-h-screen bg-slate-50 md:flex"><Sidebar/><main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-3xl">
  <button type="button" onClick={()=>router.back()} className="mb-5 text-sm font-semibold text-slate-600">← İş Akışına dön</button>
