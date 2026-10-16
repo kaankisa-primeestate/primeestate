@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 type Decision = {
   client: { id: string; name: string; phone: string | null; relationshipHealth: "strong" | "normal" | "risk" };
@@ -35,16 +36,20 @@ export default function PrimeBriefLive() {
   const [dueAt, setDueAt] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [success, setSuccess] = useState("");
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   async function load() {
     try {
       const response = await fetch("/api/prime/brief", { cache: "no-store" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message ?? "Prime Brief alınamadı.");
-      setDecisions(data.decisions ?? []);
-      setSelectedIndex((current) => Math.min(current, Math.max(0, (data.decisions ?? []).length - 1)));
-      setGeneratedAt(data.generatedAt ?? null);
+      const data = await readApiPayload(response, "Prime Brief alınamadı.");
+      const nextDecisions = Array.isArray(data.decisions) ? data.decisions as Decision[] : [];
+      setDecisions(nextDecisions);
+      setSelectedCustomerId((current) =>
+        nextDecisions.some((item) => item.client.id === current)
+          ? current
+          : nextDecisions[0]?.client.id ?? null,
+      );
+      setGeneratedAt(typeof data.generatedAt === "string" ? data.generatedAt : null);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Prime Brief alınamadı.");
@@ -74,8 +79,10 @@ export default function PrimeBriefLive() {
           outcome: outcome.trim() || null,
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message ?? "Prime aksiyonu kaydedilemedi.");
+      const data = await readApiPayload(response, "Prime aksiyonu kaydedilemedi.") as {
+        demandChanges?: string[];
+        nextAction: { label: string };
+      };
       setOutcome("");
       setSuccess(
         data.demandChanges?.length
@@ -118,8 +125,7 @@ export default function PrimeBriefLive() {
           source: "PRIME_BRAIN",
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message ?? "Görev oluşturulamadı.");
+      await readApiPayload(response, "Görev oluşturulamadı.");
       setDueAt("");
       setSuccess(customerName + " için görev oluşturuldu.");
       await load();
@@ -130,7 +136,7 @@ export default function PrimeBriefLive() {
     }
   }
 
-  const lead = decisions[selectedIndex] ?? decisions[0];
+  const lead = decisions.find((item) => item.client.id === selectedCustomerId) ?? decisions[0];
   const priorityCount = decisions.filter((item) => item.today.priority === "critical" || item.today.priority === "high").length;
 
   return (
@@ -171,8 +177,8 @@ export default function PrimeBriefLive() {
               <button
                 key={item.client.id}
                 type="button"
-                onClick={() => setSelectedIndex(index)}
-                className={`rounded-2xl border p-4 text-left transition ${index === selectedIndex ? "border-slate-900 bg-slate-950 text-white shadow-lg" : "bg-white hover:border-slate-300"}`}
+                onClick={() => setSelectedCustomerId(item.client.id)}
+                className={`rounded-2xl border p-4 text-left transition ${item.client.id === lead?.client.id ? "border-slate-900 bg-slate-950 text-white shadow-lg" : "bg-white hover:border-slate-300"}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${index === selectedIndex ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}>{priorityLabel[item.today.priority]}</span>
