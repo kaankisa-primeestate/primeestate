@@ -173,7 +173,7 @@ export default function PrimeBriefLive() {
             </div>
           </div>
           <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            {decisions.slice(0, 3).map((item, index) => (
+            {decisions.slice(0, 3).map((item) => (
               <button
                 key={item.client.id}
                 type="button"
@@ -181,12 +181,12 @@ export default function PrimeBriefLive() {
                 className={`rounded-2xl border p-4 text-left transition ${item.client.id === lead?.client.id ? "border-slate-900 bg-slate-950 text-white shadow-lg" : "bg-white hover:border-slate-300"}`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${index === selectedIndex ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}>{priorityLabel[item.today.priority]}</span>
-                  <span className={`text-xs ${index === selectedIndex ? "text-slate-300" : "text-slate-400"}`}>%{item.today.confidence}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${item.client.id === lead?.client.id ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}>{priorityLabel[item.today.priority]}</span>
+                  <span className={`text-xs ${item.client.id === lead?.client.id ? "text-slate-300" : "text-slate-400"}`}>%{item.today.confidence}</span>
                 </div>
                 <p className="mt-4 text-base font-semibold">{item.client.name}</p>
-                <p className={`mt-1 text-xs ${index === selectedIndex ? "text-slate-300" : "text-slate-500"}`}>{item.nextStep}</p>
-                {item.opportunities.length > 0 && <p className={`mt-3 text-xs font-medium ${index === selectedIndex ? "text-emerald-300" : "text-emerald-700"}`}>{item.opportunities.length} uygun portföy fırsatı</p>}
+                <p className={`mt-1 text-xs ${item.client.id === lead?.client.id ? "text-slate-300" : "text-slate-500"}`}>{item.nextStep}</p>
+                {item.opportunities.length > 0 && <p className={`mt-3 text-xs font-medium ${item.client.id === lead?.client.id ? "text-emerald-300" : "text-emerald-700"}`}>{item.opportunities.length} uygun portföy fırsatı</p>}
               </button>
             ))}
           </div>
