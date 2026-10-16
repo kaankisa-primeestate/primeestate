@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
 
 type SearchResponse = {
   query: string;
@@ -54,8 +55,14 @@ export default function SearchPage() {
           cache: "no-store",
           signal: controller.signal,
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message ?? "Arama yapılamadı.");
+        const payload = await readApiPayload(response, "Arama yapılamadı.") as unknown as SearchResponse;
+        if (
+          typeof payload.query !== "string" ||
+          !Array.isArray(payload.customers) ||
+          !Array.isArray(payload.listings)
+        ) {
+          throw new Error("Arama sonuçları beklenen formatta değil.");
+        }
         setData(payload);
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
@@ -72,8 +79,9 @@ export default function SearchPage() {
   }, [query]);
 
   const hasSearchQuery = query.trim().length >= 2;
-  const customerCount = data?.customers.length ?? 0;
-  const listingCount = data?.listings.length ?? 0;
+  const currentData = data?.query === query.trim() ? data : null;
+  const customerCount = currentData?.customers.length ?? 0;
+  const listingCount = currentData?.listings.length ?? 0;
 
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
@@ -115,7 +123,7 @@ export default function SearchPage() {
             </div>
           )}
 
-          {hasSearchQuery && data && (
+          {hasSearchQuery && currentData && !error && (
             <div className="mt-8 space-y-6">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -134,7 +142,7 @@ export default function SearchPage() {
                   <Link href="/clients" className="text-sm font-semibold text-slate-600">Tüm müşteriler →</Link>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
-                  {data.customers.map((customer) => (
+                  {currentData.customers.map((customer) => (
                     <Link key={customer.id} href={"/clients/" + customer.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-slate-300">
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -146,7 +154,7 @@ export default function SearchPage() {
                       </div>
                     </Link>
                   ))}
-                  {!data.customers.length && <p className="text-sm text-slate-500">Müşteri sonucu yok.</p>}
+                  {!currentData.customers.length && <p className="text-sm text-slate-500">Müşteri sonucu yok.</p>}
                 </div>
               </section>
 
@@ -156,7 +164,7 @@ export default function SearchPage() {
                   <Link href="/portfolio" className="text-sm font-semibold text-slate-600">Portföyü aç →</Link>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
-                  {data.listings.map((listing) => (
+                  {currentData.listings.map((listing) => (
                     <Link key={listing.id} href="/portfolio" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-slate-300">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -168,7 +176,7 @@ export default function SearchPage() {
                       </div>
                     </Link>
                   ))}
-                  {!data.listings.length && <p className="text-sm text-slate-500">Portföy sonucu yok.</p>}
+                  {!currentData.listings.length && <p className="text-sm text-slate-500">Portföy sonucu yok.</p>}
                 </div>
               </section>
             </div>
