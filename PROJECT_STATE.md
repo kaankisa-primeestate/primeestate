@@ -67,7 +67,7 @@ No active product PR is assumed. Verify open PRs and CI at the start of each ses
 
 ### Current main commit
 
-`e6a071cf1c1808d49b6917b7fa48d179772ce38a` — PR #182 merged. Main Web Quality and Production Auth HTTP Smoke passed; Render is confirmed running this exact commit.
+`576b2ebfd51918799a11fac1dcd8d81701966bcf` — PR #186 merged. Main Web Quality and Production Auth HTTP Smoke passed; Render is confirmed running this exact commit.
 
 ### Branch state
 
@@ -91,14 +91,15 @@ No active product PR is assumed. Verify open PRs and CI at the start of each ses
 
 ### Latest main verification — 2026-10-17
 
-- GitHub `main` points to `770a5e1a72cf040e0db173943084df057869a28e` (PR #184 merge).
-- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471048) on `770a5e1a72cf040e0db173943084df057869a28e`.
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471124) on `770a5e1a72cf040e0db173943084df057869a28e`. Render's `/api/deployment-check` confirmed the live commit exactly matches `770a5e1a72cf040e0db173943084df057869a28e` at 2026-10-17 06:54:21 UTC.
+- GitHub `main` points to `576b2ebfd51918799a11fac1dcd8d81701966bcf` (PR #186 merge).
+- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39013309315) on `576b2ebfd51918799a11fac1dcd8d81701966bcf`.
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39013309352) on `576b2ebfd51918799a11fac1dcd8d81701966bcf`. Render's `/api/deployment-check` confirmed the live commit exactly matches `576b2ebfd51918799a11fac1dcd8d81701966bcf` at 2026-10-17 07:23:41 UTC.
 - Production smoke verified sign-in, session, database health, authenticated customers, dashboard and finance pages, listings, sales, and payments all returned successful responses without HTTP 500s.
 - PR #182 merged: global search safely parses malformed/empty API responses, validates query/customer/listing payload shapes, and avoids displaying stale results for a pending or failed query.
 - PR #184 merged: showing/offer links preserve matching customer/demand context, and forms use deterministic in-app return routes rather than browser-history navigation. No API, database, migration, authorization, or business-rule changes.
 - PR #181 also merged before PR #182: safe API response handling in the sales workflow.
-- Current release gate is green; no schema/migration/auth-scope changes were included in PR #182.
+- PR #186 merged: malformed matching payloads are now reported as a response error rather than silently rendered as zero matches.
+- Current release gate is green; no schema/migration/auth-scope changes were included in PR #186.
 - Dependency install logs reported 16 npm audit findings (15 high, 1 critical). This remains separate technical debt; do not apply blind or breaking upgrades.
 
 ## 5. RECENT COMPLETED WORK
@@ -308,12 +309,12 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
 - CURRENT_TASK: Inspect the next concrete user-visible gap in the customer → demand → matching → showing → offer workflow; verify open PRs, main CI, and Render runtime before coding.
 - ACTIVE_BRANCH: `main` at last verified snapshot; confirm live branch/PR state at session start.
-- BASE_MAIN_COMMIT: 770a5e1a72cf040e0db173943084df057869a28e
+- BASE_MAIN_COMMIT: 576b2ebfd51918799a11fac1dcd8d81701966bcf
 - ACTIVE_PR: No active product PR is carried forward in this snapshot; verify live open PRs before starting new work.
-- LAST_GREEN_CHECKS: Main Web Quality run 39011471048 and Production Auth HTTP Smoke run 39011471124 passed on `770a5e1a72cf040e0db173943084df057869a28e`; Render live commit matches exactly.
-- PRODUCTION_MIGRATION: none required for PR #184; no schema/migration changes.
+- LAST_GREEN_CHECKS: Main Web Quality run 39013309315 and Production Auth HTTP Smoke run 39013309352 passed on `576b2ebfd51918799a11fac1dcd8d81701966bcf`; Render live commit matches exactly.
+- PRODUCTION_MIGRATION: none required for PR #186; no schema/migration changes.
 - NEXT_STEP: Inspect the next concrete user-visible gap in the core consultant workflow, then make one narrow, testable change through branch → PR → green checks → merge → production SHA verification.
-- BLOCKERS: No release blocker from PR #184. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
+- BLOCKERS: No release blocker from PR #186. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
 - LAST_UPDATED_UTC: 2026-10-17
 
 ## 16. Latest verified product change — PR #174
@@ -336,3 +337,13 @@ Keep these fields current:
 - Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471048); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471124).
 - Render `/api/deployment-check` confirmed live commit `770a5e1a72cf040e0db173943084df057869a28e` exactly; production auth/session/customer-authorization smoke passed.
 - No API, database, migration, authorization, or business-rule changes.
+
+
+## 18. Latest verified product change — PR #186
+
+- PR #186 merged: `https://github.com/kaankisa-primeestate/primeestate/pull/186`.
+- Matching now validates that successful `/api/matching` responses contain a `matches` array in both automatic matching and manual refresh. A malformed payload is surfaced as an explicit Turkish error rather than being misrepresented as no matching portfolios.
+- Main commit: `576b2ebfd51918799a11fac1dcd8d81701966bcf`.
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39013309315); Critical Tests passed on the PR branch; Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39013309352).
+- Render `/api/deployment-check` confirmed live commit `576b2ebfd51918799a11fac1dcd8d81701966bcf` exactly; sign-in, session, database health, authenticated customer access, dashboard, finance, listing, sales, and payment checks passed without HTTP 500s.
+- No API, database, migration, authorization, or matching-score/business-rule changes.
