@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Sidebar from "@/components/Sidebar";
 
@@ -151,6 +151,7 @@ function CustomerList({ items, selectedId, onSelect }: {
 
 export default function ClientsPage() {
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
+  const customerLoadRequest = useRef(0);
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("Tümü");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -176,6 +177,7 @@ export default function ClientsPage() {
   const [taskSaving, setTaskSaving] = useState(false);
 
   async function loadCustomers() {
+    const requestId = ++customerLoadRequest.current;
     setLoading(true); setError("");
     try {
       const params = new URLSearchParams();
@@ -184,14 +186,22 @@ export default function ClientsPage() {
       const res = await fetch("/api/customers?" + params.toString(), { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Müşteriler yüklenemedi.");
-      const next: ApiCustomer[] = data.customers ?? [];
+      if (!data || !Array.isArray(data.customers)) {
+        throw new Error("Müşteri yanıtı beklenen formatta değil.");
+      }
+      if (requestId !== customerLoadRequest.current) return;
+      const next: ApiCustomer[] = data.customers;
       setCustomers(next);
       const nextSelectedId = selectedId && next.some((x) => x.id === selectedId) ? selectedId : null;
       setSelectedId(nextSelectedId);
       if (nextSelectedId) void loadCustomerOps(nextSelectedId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Müşteriler yüklenemedi.");
-    } finally { setLoading(false); }
+      if (requestId === customerLoadRequest.current) {
+        setError(e instanceof Error ? e.message : "Müşteriler yüklenemedi.");
+      }
+    } finally {
+      if (requestId === customerLoadRequest.current) setLoading(false);
+    }
   }
 
   useEffect(() => {
