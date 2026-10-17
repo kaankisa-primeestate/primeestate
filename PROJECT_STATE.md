@@ -89,13 +89,14 @@ No active product PR is assumed. Verify open PRs and CI at the start of each ses
 - PR #182 — merged: safe API response handling and payload-shape validation in global search; prevents stale results from being displayed for a new/failed query; no schema/migration/auth-scope or search-rule changes.
 - Verify live open PRs and branches at each session start.
 
-### Latest main verification — 2026-10-16
+### Latest main verification — 2026-10-17
 
-- GitHub `main` points to `e6a071cf1c1808d49b6917b7fa48d179772ce38a` (PR #182 merge).
-- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38913862930).
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38913863438). Render's `/api/deployment-check` confirmed the live commit exactly matches `e6a071cf1c1808d49b6917b7fa48d179772ce38a`.
+- GitHub `main` points to `770a5e1a72cf040e0db173943084df057869a28e` (PR #184 merge).
+- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471048) on `770a5e1a72cf040e0db173943084df057869a28e`.
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471124) on `770a5e1a72cf040e0db173943084df057869a28e`. Render's `/api/deployment-check` confirmed the live commit exactly matches `770a5e1a72cf040e0db173943084df057869a28e` at 2026-10-17 06:54:21 UTC.
 - Production smoke verified sign-in, session, database health, authenticated customers, dashboard and finance pages, listings, sales, and payments all returned successful responses without HTTP 500s.
 - PR #182 merged: global search safely parses malformed/empty API responses, validates query/customer/listing payload shapes, and avoids displaying stale results for a pending or failed query.
+- PR #184 merged: showing/offer links preserve matching customer/demand context, and forms use deterministic in-app return routes rather than browser-history navigation. No API, database, migration, authorization, or business-rule changes.
 - PR #181 also merged before PR #182: safe API response handling in the sales workflow.
 - Current release gate is green; no schema/migration/auth-scope changes were included in PR #182.
 - Dependency install logs reported 16 npm audit findings (15 high, 1 critical). This remains separate technical debt; do not apply blind or breaking upgrades.
@@ -307,13 +308,13 @@ Keep these fields current:
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
 - CURRENT_TASK: Inspect the next concrete user-visible gap in the customer → demand → matching → showing → offer workflow; verify open PRs, main CI, and Render runtime before coding.
 - ACTIVE_BRANCH: `main` at last verified snapshot; confirm live branch/PR state at session start.
-- BASE_MAIN_COMMIT: e6a071cf1c1808d49b6917b7fa48d179772ce38a
+- BASE_MAIN_COMMIT: 770a5e1a72cf040e0db173943084df057869a28e
 - ACTIVE_PR: No active product PR is carried forward in this snapshot; verify live open PRs before starting new work.
-- LAST_GREEN_CHECKS: Main Web Quality run 38913862930 and Production Auth HTTP Smoke run 38913863438 passed on `e6a071cf1c1808d49b6917b7fa48d179772ce38a`; Render live commit matches exactly.
-- PRODUCTION_MIGRATION: none required for PR #182; no schema/migration changes.
-- NEXT_STEP: Inspect the live open-PR list and the next core workflow UI gap, then make one narrow, testable change through branch → PR → green checks → merge → production SHA verification.
-- BLOCKERS: No release blocker from PR #182. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
-- LAST_UPDATED_UTC: 2026-10-16
+- LAST_GREEN_CHECKS: Main Web Quality run 39011471048 and Production Auth HTTP Smoke run 39011471124 passed on `770a5e1a72cf040e0db173943084df057869a28e`; Render live commit matches exactly.
+- PRODUCTION_MIGRATION: none required for PR #184; no schema/migration changes.
+- NEXT_STEP: Inspect the next concrete user-visible gap in the core consultant workflow, then make one narrow, testable change through branch → PR → green checks → merge → production SHA verification.
+- BLOCKERS: No release blocker from PR #184. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
+- LAST_UPDATED_UTC: 2026-10-17
 
 ## 16. Latest verified product change — PR #174
 
@@ -324,3 +325,14 @@ Keep these fields current:
 - Main commit: `c88a0665a99d51221518f302e4cea7e279e42528`.
 - PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917); Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598).
 - Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560).
+
+
+## 17. Latest verified product change — PR #184
+
+- PR #184 merged: `https://github.com/kaankisa-primeestate/primeestate/pull/184`.
+- Matching page showing/offer links preserve `/matching?customerId=...&demandId=...` context using `returnTo`.
+- Showing and offer forms navigate deterministically back to a validated matching route, customer detail, or sales workspace; no reliance on `router.back()`.
+- Main commit: `770a5e1a72cf040e0db173943084df057869a28e`.
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471048); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39011471124).
+- Render `/api/deployment-check` confirmed live commit `770a5e1a72cf040e0db173943084df057869a28e` exactly; production auth/session/customer-authorization smoke passed.
+- No API, database, migration, authorization, or business-rule changes.
