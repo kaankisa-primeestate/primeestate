@@ -89,18 +89,15 @@ No active product PR is assumed. Verify open PRs and CI at the start of each ses
 - PR #182 — merged: safe API response handling and payload-shape validation in global search; prevents stale results from being displayed for a new/failed query; no schema/migration/auth-scope or search-rule changes.
 - Verify live open PRs and branches at each session start.
 
-### Latest main verification — 2026-10-17
+### Latest main verification — 2026-10-19
 
-- GitHub `main` points to `fb0f7db161aad32aabc8c79a9c0d257238a5ac8f` (PR #188 merge).
-- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39025511153) on `fb0f7db161aad32aabc8c79a9c0d257238a5ac8f`.
-- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39025511177) on `fb0f7db161aad32aabc8c79a9c0d257238a5ac8f`. Render's `/api/deployment-check` confirmed the live commit exactly matches the expected SHA at 2026-10-17 10:37:57 UTC.
+- GitHub `main` points to `043e795893903806ef1c849bfdd3637f3fd364cf` (PR #190 merge).
+- Main Web Quality — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39254234883) on `043e795893903806ef1c849bfdd3637f3fd364cf`.
+- Production Auth HTTP Smoke — [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39254235076) on `043e795893903806ef1c849bfdd3637f3fd364cf`. Render's `/api/deployment-check` reported the expected commit exactly before the production smoke suite ran.
 - Production smoke verified sign-in, session, database health, authenticated customers, dashboard and finance pages, listings, sales, and payments all returned successful responses without HTTP 500s.
-- PR #188 merged: customer search now ignores out-of-order responses from earlier searches and validates that the customer API payload contains a `customers` array. Main commit and Render runtime match exactly; no API/schema/migration/authorization/business-rule changes.
-- PR #182 merged: global search safely parses malformed/empty API responses, validates query/customer/listing payload shapes, and avoids displaying stale results for a pending or failed query.
-- PR #184 merged: showing/offer links preserve matching customer/demand context, and forms use deterministic in-app return routes rather than browser-history navigation. No API, database, migration, authorization, or business-rule changes.
-- PR #181 also merged before PR #182: safe API response handling in the sales workflow.
-- PR #186 merged: malformed matching payloads are now reported as a response error rather than silently rendered as zero matches.
-- Current release gate is green; no schema/migration/auth-scope changes were included in PR #186.
+- PR #190 merged: customer workflow requests now use a request sequence so responses from a previously selected customer cannot overwrite the currently selected customer's activities, tasks, showings, offers, sales, errors, or loading state. Closing customer detail invalidates pending requests. No API/schema/migration/authorization/business-rule changes.
+- PR #188 remains the prior customer-search race fix: stale search results are ignored and customer payloads are shape-validated.
+- Current release gate is green; PR #190 changed only `web/src/app/clients/page.tsx`, with no schema/migration/auth-scope changes.
 - Dependency install logs reported 16 npm audit findings (15 high, 1 critical). This remains separate technical debt; do not apply blind or breaking upgrades.
 
 ## 5. RECENT COMPLETED WORK
@@ -308,15 +305,15 @@ This gives us **one current source of truth without duplicating Git's history**.
 Keep these fields current:
 
 - CURRENT_PHASE: Phase 12 — Product Development / Core Workflow Experience
-- CURRENT_TASK: Inspect and fix the customer workspace race where switching selected customers can allow an older customer-operations response to overwrite the newer customer's activity/task/showing/offer/sale data; preserve server-side authorization and add focused verification.
-- ACTIVE_BRANCH: `main` at last verified snapshot; confirm live branch/PR state at session start.
-- BASE_MAIN_COMMIT: fb0f7db161aad32aabc8c79a9c0d257238a5ac8f
-- ACTIVE_PR: No active product PR is carried forward in this snapshot; verify live open PRs before starting new work.
-- LAST_GREEN_CHECKS: Main Web Quality run 39025511153 and Production Auth HTTP Smoke run 39025511177 passed on `fb0f7db161aad32aabc8c79a9c0d257238a5ac8f`; Render live commit matches exactly.
-- PRODUCTION_MIGRATION: none required for PR #188; no schema/migration changes.
-- NEXT_STEP: Address stale customer-operations responses when switching customers in the client workspace; use one narrow branch/PR, wait for green checks, merge, then verify main CI and live runtime SHA.
-- BLOCKERS: No release blocker from PR #188. npm audit findings (15 high, 1 critical) need a separate risk review; do not run blind/force upgrades.
-- LAST_UPDATED_UTC: 2026-10-17
+- CURRENT_TASK: Inspect the customer workspace's direct `.json()` response parsing in `loadCustomerOps` and harden malformed/empty API response handling without changing business rules, API contracts, or authorization; add focused tests for the affected UI flow.
+- ACTIVE_BRANCH: `main` at last verified snapshot; docs refresh branch/PR may be open while state validation runs.
+- BASE_MAIN_COMMIT: 043e795893903806ef1c849bfdd3637f3fd364cf
+- ACTIVE_PR: No active product PR; confirm live open PRs before starting the next product task.
+- LAST_GREEN_CHECKS: Main Web Quality run 39254234883 and Production Auth HTTP Smoke run 39254235076 passed on `043e795893903806ef1c849bfdd3637f3fd364cf`; Render live commit matches exactly.
+- PRODUCTION_MIGRATION: none required for PR #190; no schema/migration changes.
+- NEXT_STEP: Review `web/src/app/clients/page.tsx` and existing safe API response helpers/tests; implement the smallest robust response-parsing fix on a dedicated branch, require green CI, merge, then verify main CI and live runtime SHA.
+- BLOCKERS: No release blocker. npm audit findings (15 high, 1 critical) remain separate technical debt; do not run blind/force upgrades.
+- LAST_UPDATED_UTC: 2026-10-19
 
 ## 16. Latest verified product change — PR #174
 
@@ -358,3 +355,15 @@ Keep these fields current:
 - Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39025511153); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39025511177).
 - Render `/api/deployment-check` confirmed live commit `fb0f7db161aad32aabc8c79a9c0d257238a5ac8f` exactly at 2026-10-17 10:37:57 UTC. Sign-in, session, database health, customer authorization, dashboard, finance, listings, sales, and payments checks passed.
 - No API, database, migration, authorization, or business-rule changes.
+
+ 
+## 20. Latest verified product change — PR #190 (2026-10-19)
+
+- PR #190 merged: https://github.com/kaankisa-primeestate/primeestate/pull/190.
+- Main commit: `043e795893903806ef1c849bfdd3637f3fd364cf`.
+- PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39026271654) and Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39026271649).
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39254234883); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/39254235076).
+- Render `/api/deployment-check` confirmed live commit `043e795893903806ef1c849bfdd3637f3fd364cf` exactly. Production sign-in, session, database health, authenticated customer access, dashboard, finance, listings, sales, and payments checks passed.
+- The change prevents older customer workflow responses from overwriting the newly selected customer's activity/task/showing/offer/sale data and invalidates pending requests when customer detail is closed.
+- No API, schema, migration, authorization, or business-rule changes.
+- Next task: harden `loadCustomerOps` against empty/malformed JSON API responses, reusing the existing safe-response pattern and adding focused verification.
