@@ -152,6 +152,7 @@ function CustomerList({ items, selectedId, onSelect }: {
 export default function ClientsPage() {
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   const customerLoadRequest = useRef(0);
+  const customerOpsLoadRequest = useRef(0);
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("Tümü");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -212,6 +213,9 @@ export default function ClientsPage() {
   const selected = useMemo(() => customers.find((x) => x.id === selectedId) ?? null, [customers, selectedId]);
 
   async function loadCustomerOps(customerId: string) {
+    const requestId = ++customerOpsLoadRequest.current;
+    setError("");
+    setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]);
     setActivityLoading(true); setTaskLoading(true); setCommercialLoading(true);
     try {
       const customerQuery = "?customerId=" + encodeURIComponent(customerId);
@@ -230,16 +234,21 @@ export default function ClientsPage() {
       if (!showingRes.ok) throw new Error(showingData.message || "Gösterimler yüklenemedi.");
       if (!offerRes.ok) throw new Error(offerData.message || "Teklifler yüklenemedi.");
       if (!saleRes.ok) throw new Error(saleData.message || "Satışlar yüklenemedi.");
+      if (requestId !== customerOpsLoadRequest.current) return;
       setActivities(activityData.activities ?? []);
       setTasks(taskData.tasks ?? []);
       setShowings(showingData.showings ?? []);
       setOffers(offerData.offers ?? []);
       setSales(saleData.sales ?? []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Müşteri iş akışı yüklenemedi.");
-      setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]);
+      if (requestId === customerOpsLoadRequest.current) {
+        setError(e instanceof Error ? e.message : "Müşteri iş akışı yüklenemedi.");
+        setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]);
+      }
     } finally {
-      setActivityLoading(false); setTaskLoading(false); setCommercialLoading(false);
+      if (requestId === customerOpsLoadRequest.current) {
+        setActivityLoading(false); setTaskLoading(false); setCommercialLoading(false);
+      }
     }
   }
 
@@ -405,7 +414,7 @@ export default function ClientsPage() {
         
 
         {selected ? <section className="min-w-0">
-          <button type="button" onClick={() => { setSelectedId(null); setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]); }} className="mb-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+          <button type="button" onClick={() => { customerOpsLoadRequest.current += 1; setSelectedId(null); setError(""); setActivityLoading(false); setTaskLoading(false); setCommercialLoading(false); setActivities([]); setTasks([]); setShowings([]); setOffers([]); setSales([]); }} className="mb-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
             ← Müşteri listesine dön
           </button>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
