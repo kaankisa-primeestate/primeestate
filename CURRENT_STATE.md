@@ -212,3 +212,8 @@ _Last reconciled: 2026-10-15 (after PR #174; PR #175 documentation reconciliatio
 - Production smoke passed sign-in, session, database health, authenticated customer access, dashboard, finance, listings, sales, and payments; no HTTP 500s were reported in checked pages.
 - PR #194 validates collection payload keys in Relationships and Calendar so malformed/missing collections show an explicit error rather than falsely appearing empty. No database/schema/migration/auth-scope/business-rule changes.
 - Last reconciled: 2026-10-27, after PR #194 production verification.
+
+
+## Customer test-data handling preference — 2026-10-27
+
+The user confirms that customer records currently entered are test data, not real customer records. Deleting/resetting these customer test records is acceptable when useful for development, testing, or troubleshooting; their preservation is not a hard constraint. Scope destructive actions carefully: this permission does not automatically authorize deleting credentials, production configuration, schema/migrations, or unrelated system data. Explain any broader reset before doing it.
