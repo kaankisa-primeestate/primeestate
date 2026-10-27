@@ -395,3 +395,10 @@ Keep these fields current:
 - Render `/api/deployment-check` confirmed live commit `eec386771e831d497b453070a132040b2177446d` exactly before smoke tests. Sign-in, session, database health, authenticated customers, dashboard, finance, listings, sales, and payments checks passed without HTTP 500s.
 - No API contract, database/schema, migration, authorization, or business-rule changes; no production data changed.
 - Next: inspect the next concrete user-visible gap in the core consultant workflow after verifying current main, open PRs, CI, and live commit.
+
+
+## 23. Test-data handling preference (2026-10-27)
+
+- The user confirms that customer records currently entered in the live/test environment are test data, not real customer records.
+- It is acceptable for those customer records to be deleted or lost when needed for development, testing, troubleshooting, or data-reset work.
+- Do not treat preservation of these test customer records as a hard blocker. Before destructive operations, still scope the action carefully: this permission applies to customer test records, not automatically to credentials, production configuration, schema/migrations, or unrelated system data. Explain any broad reset that would affect other data.
