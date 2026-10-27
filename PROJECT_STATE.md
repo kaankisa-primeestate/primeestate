@@ -367,3 +367,18 @@ Keep these fields current:
 - The change prevents older customer workflow responses from overwriting the newly selected customer's activity/task/showing/offer/sale data and invalidates pending requests when customer detail is closed.
 - No API, schema, migration, authorization, or business-rule changes.
 - Next task: harden `loadCustomerOps` against empty/malformed JSON API responses, reusing the existing safe-response pattern and adding focused verification.
+
+
+## 21. Latest verified product change — PR #192 (2026-10-27)
+
+- PR #192 merged: https://github.com/kaankisa-primeestate/primeestate/pull/192.
+- Main and production commit: `d0356965924d12ce87665075f4947d7e623beae9`.
+- Customer detail `loadCustomerOps` now uses the shared `readApiPayload` helper for activities, tasks, showings, offers, and sales.
+- Each successful response is checked for its expected array key. Empty arrays remain valid; missing or malformed collections produce an explicit Turkish error rather than silently appearing as no records.
+- Existing stale-request protection is preserved.
+- Focused tests cover valid empty arrays and missing/malformed collections.
+- PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40472529944) and Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40472529997).
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40495409842); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40495409994).
+- Production Auth HTTP Smoke confirmed Render was running the expected main commit and passed login, session, and customer-authorization checks.
+- No API contract, database/schema, migration, authorization, or business-rule changes.
+- Next: continue from the next customer workflow / usability issue only after verifying current main and production SHA; do not reopen completed response-parsing work without new evidence.
