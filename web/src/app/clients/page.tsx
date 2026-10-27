@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Sidebar from "@/components/Sidebar";
+import { readApiPayload } from "@/lib/read-api-payload";
+import { readCustomerOpsArray } from "@/lib/customer-ops-payload";
 
 type ApiDemand = {
   id: string;
@@ -227,19 +229,23 @@ export default function ClientsPage() {
         fetch("/api/sales" + customerQuery, { cache: "no-store" }),
       ]);
       const [activityData, taskData, showingData, offerData, saleData] = await Promise.all([
-        activityRes.json(), taskRes.json(), showingRes.json(), offerRes.json(), saleRes.json(),
+        readApiPayload(activityRes, "Aktiviteler yüklenemedi."),
+        readApiPayload(taskRes, "Görevler yüklenemedi."),
+        readApiPayload(showingRes, "Gösterimler yüklenemedi."),
+        readApiPayload(offerRes, "Teklifler yüklenemedi."),
+        readApiPayload(saleRes, "Satışlar yüklenemedi."),
       ]);
-      if (!activityRes.ok) throw new Error(activityData.message || "Aktiviteler yüklenemedi.");
-      if (!taskRes.ok) throw new Error(taskData.message || "Görevler yüklenemedi.");
-      if (!showingRes.ok) throw new Error(showingData.message || "Gösterimler yüklenemedi.");
-      if (!offerRes.ok) throw new Error(offerData.message || "Teklifler yüklenemedi.");
-      if (!saleRes.ok) throw new Error(saleData.message || "Satışlar yüklenemedi.");
+      const nextActivities = readCustomerOpsArray<ApiActivity>(activityData, "activities", "Aktivite yanıtı beklenen biçimde değil.");
+      const nextTasks = readCustomerOpsArray<ApiTask>(taskData, "tasks", "Görev yanıtı beklenen biçimde değil.");
+      const nextShowings = readCustomerOpsArray<ApiShowing>(showingData, "showings", "Gösterim yanıtı beklenen biçimde değil.");
+      const nextOffers = readCustomerOpsArray<ApiOffer>(offerData, "offers", "Teklif yanıtı beklenen biçimde değil.");
+      const nextSales = readCustomerOpsArray<ApiSale>(saleData, "sales", "Satış yanıtı beklenen biçimde değil.");
       if (requestId !== customerOpsLoadRequest.current) return;
-      setActivities(activityData.activities ?? []);
-      setTasks(taskData.tasks ?? []);
-      setShowings(showingData.showings ?? []);
-      setOffers(offerData.offers ?? []);
-      setSales(saleData.sales ?? []);
+      setActivities(nextActivities);
+      setTasks(nextTasks);
+      setShowings(nextShowings);
+      setOffers(nextOffers);
+      setSales(nextSales);
     } catch (e) {
       if (requestId === customerOpsLoadRequest.current) {
         setError(e instanceof Error ? e.message : "Müşteri iş akışı yüklenemedi.");
