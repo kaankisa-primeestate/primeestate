@@ -67,7 +67,7 @@ No active product PR is assumed. Verify open PRs and CI at the start of each ses
 
 ### Current main commit
 
-`fb0f7db161aad32aabc8c79a9c0d257238a5ac8f` — PR #188 merged. Main Web Quality and Production Auth HTTP Smoke passed; Render is confirmed running this exact commit.
+`eec386771e831d497b453070a132040b2177446d` — PR #194 merged. Main Web Quality and Production Auth HTTP Smoke passed; Render is confirmed running this exact commit.
 
 ### Branch state
 
@@ -382,3 +382,23 @@ Keep these fields current:
 - Production Auth HTTP Smoke confirmed Render was running the expected main commit and passed login, session, and customer-authorization checks.
 - No API contract, database/schema, migration, authorization, or business-rule changes.
 - Next: continue from the next customer workflow / usability issue only after verifying current main and production SHA; do not reopen completed response-parsing work without new evidence.
+
+
+## 22. Latest verified product change — PR #194 (2026-10-27)
+
+- PR #194 merged: https://github.com/kaankisa-primeestate/primeestate/pull/194.
+- Main and production runtime commit: `eec386771e831d497b453070a132040b2177446d`.
+- Relationships and Calendar now validate expected collection keys from API payloads instead of silently converting missing/malformed collections into empty arrays.
+- Added focused tests for valid empty arrays and malformed/missing collection values.
+- PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40496787184) and Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40496787187).
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40498321708); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40498321663).
+- Render `/api/deployment-check` confirmed live commit `eec386771e831d497b453070a132040b2177446d` exactly before smoke tests. Sign-in, session, database health, authenticated customers, dashboard, finance, listings, sales, and payments checks passed without HTTP 500s.
+- No API contract, database/schema, migration, authorization, or business-rule changes; no production data changed.
+- Next: inspect the next concrete user-visible gap in the core consultant workflow after verifying current main, open PRs, CI, and live commit.
+
+
+## 23. Test-data handling preference (2026-10-27)
+
+- The user confirms that customer records currently entered in the live/test environment are test data, not real customer records.
+- It is acceptable for those customer records to be deleted or lost when needed for development, testing, troubleshooting, or data-reset work.
+- Do not treat preservation of these test customer records as a hard blocker. Before destructive operations, still scope the action carefully: this permission applies to customer test records, not automatically to credentials, production configuration, schema/migrations, or unrelated system data. Explain any broad reset that would affect other data.

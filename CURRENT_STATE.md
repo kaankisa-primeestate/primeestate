@@ -201,3 +201,19 @@ _Last reconciled: 2026-10-15 (after PR #174; PR #175 documentation reconciliatio
 - Current main commit: `c88a0665a99d51221518f302e4cea7e279e42528`.
 - PR Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740404917), Critical Tests [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38740405598), main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436619), and Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/38742436560).
 - Next: inspect the next concrete user-visible gap in customer → demand → matching. Do not claim the matching endpoint itself was separately production-smoke-tested.
+
+
+## Latest verified production update — PR #194 (2026-10-27)
+
+- PR #194 merged: https://github.com/kaankisa-primeestate/primeestate/pull/194.
+- Current main and live Render commit: `eec386771e831d497b453070a132040b2177446d`.
+- Main Web Quality [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40498321708); Production Auth HTTP Smoke [passed](https://github.com/kaankisa-primeestate/primeestate/actions/runs/40498321663).
+- Deployment verification observed Render transition from the previous commit to the expected commit before executing production smoke tests.
+- Production smoke passed sign-in, session, database health, authenticated customer access, dashboard, finance, listings, sales, and payments; no HTTP 500s were reported in checked pages.
+- PR #194 validates collection payload keys in Relationships and Calendar so malformed/missing collections show an explicit error rather than falsely appearing empty. No database/schema/migration/auth-scope/business-rule changes.
+- Last reconciled: 2026-10-27, after PR #194 production verification.
+
+
+## Customer test-data handling preference — 2026-10-27
+
+The user confirms that customer records currently entered are test data, not real customer records. Deleting/resetting these customer test records is acceptable when useful for development, testing, or troubleshooting; their preservation is not a hard constraint. Scope destructive actions carefully: this permission does not automatically authorize deleting credentials, production configuration, schema/migrations, or unrelated system data. Explain any broader reset before doing it.
