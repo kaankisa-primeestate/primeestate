@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { readApiPayload } from "@/lib/read-api-payload";
+import { readArrayPayload } from "@/lib/read-array-payload";
 
 type Task = {
   id: string;
@@ -107,9 +108,9 @@ export default function CalendarPage() {
           readApiPayload(responses[2], "Müşteriler alınamadı."),
         ]);
         if (!cancelled) {
-          setTasks(Array.isArray(taskPayload.tasks) ? taskPayload.tasks as Task[] : []);
-          setShowings(Array.isArray(showingPayload.showings) ? showingPayload.showings as Showing[] : []);
-          setCustomers(Array.isArray(customerPayload.customers) ? customerPayload.customers as Customer[] : []);
+          setTasks(readArrayPayload<Task>(taskPayload, "tasks", "Görev yanıtı beklenen biçimde değil."));
+          setShowings(readArrayPayload<Showing>(showingPayload, "showings", "Gösterim yanıtı beklenen biçimde değil."));
+          setCustomers(readArrayPayload<Customer>(customerPayload, "customers", "Müşteri yanıtı beklenen biçimde değil."));
         }
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Takvim verileri alınamadı.");
